@@ -26,3 +26,12 @@ test:
 
 ui:
 	pnpm --filter ui dev
+
+cluster-up:
+	kind create cluster --config local/kind-config.yaml
+
+cluster-down:
+	kind delete cluster --name o2c
+
+sync:
+	uv sync --all-packages
