@@ -24,4 +24,14 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - Record important decisions as ADRs in docs/adr/.
 
 ## Commands
-(Added in E2 when the local stack exists.)
+- make up: start local stack (Postgres, Kafka, SeaweedFS, MLflow, LiteLLM, Langfuse)
+- make down: stop it
+- make ps / make logs: status and logs
+- make buckets: create S3 buckets
+- make lint: run all pre-commit checks
+- make clean: stop and DELETE all local data
+
+Local URLs: MLflow http://localhost:5000,
+LiteLLM http://localhost:4000,
+Langfuse http://localhost:3000,
+SeaweedFS http://localhost:9333
