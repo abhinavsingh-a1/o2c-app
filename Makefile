@@ -20,3 +20,6 @@ lint:
 
 clean:
 	docker compose down -v
+
+test:
+	uv run pytest
