@@ -30,6 +30,9 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make buckets: create S3 buckets
 - make lint: run all pre-commit checks
 - make clean: stop and DELETE all local data
+- make sync: install all Python workspace packages
+- make test: run Python tests
+- make ui: start the React UI at http://localhost:5173
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

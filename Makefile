@@ -23,3 +23,6 @@ clean:
 
 test:
 	uv run pytest
+
+ui:
+	pnpm --filter ui dev

@@ -21,3 +21,11 @@ repos:
     hooks:
       - id: sqlfluff-lint
         args: [--dialect, postgres]
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: pnpm --dir ui lint
+        language: system
+        files: ^ui/.*\.(ts|tsx)$
+        pass_filenames: false
