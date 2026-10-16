@@ -62,7 +62,7 @@ services:
       KAFKA_NUM_PARTITIONS: 3
 
   s3:
-    image: chrislusf/seaweedfs:latest
+    image: chrislusf/seaweedfs:4.48
     command: server -dir=/data -s3
     ports:
       - "8333:8333"
