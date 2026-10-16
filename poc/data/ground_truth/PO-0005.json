@@ -1,0 +1,66 @@
+{
+  "po_number": "PO-2026-18132",
+  "po_date": "2026-04-23",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "10",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "49.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "68",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "1271.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "35",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "651.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "200",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "690.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "38",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "3416.20"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "1335.00"
+    }
+  ],
+  "total_amount": "7412.80"
+}

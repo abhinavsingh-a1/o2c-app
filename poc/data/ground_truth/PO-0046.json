@@ -1,0 +1,75 @@
+{
+  "po_number": "NSH039133",
+  "po_date": "2026-06-03",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-06-27",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "13",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "241.80"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "33",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "4257.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "9",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "247.50"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "18",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "1602.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2970.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "134.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1694.70"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    }
+  ],
+  "total_amount": "11082.00"
+}

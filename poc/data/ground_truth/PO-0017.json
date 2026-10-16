@@ -1,0 +1,57 @@
+{
+  "po_number": "BP0072421",
+  "po_date": "2026-01-27",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-02-11",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "114",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "210.90"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "8",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "719.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "57",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "5073.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "10",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "540.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "54",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1728.00"
+    }
+  ],
+  "total_amount": "8271.10"
+}

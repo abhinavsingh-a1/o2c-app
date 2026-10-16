@@ -1,0 +1,21 @@
+{
+  "po_number": "AFT/40307",
+  "po_date": "2026-07-15",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "32",
+      "unit": "ROL",
+      "unit_price": "15.50",
+      "line_total": "496.00"
+    }
+  ],
+  "total_amount": "496.00"
+}

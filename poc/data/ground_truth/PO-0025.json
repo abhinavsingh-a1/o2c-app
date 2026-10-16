@@ -1,0 +1,66 @@
+{
+  "po_number": "PO-2026-31359",
+  "po_date": "2026-08-26",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-10-01",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "29",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "3741.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "48",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4272.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "29",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "475.60"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "16",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "156.80"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "18",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "700.20"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "34",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1836.00"
+    }
+  ],
+  "total_amount": "11181.60"
+}

@@ -1,0 +1,66 @@
+{
+  "po_number": "PO-2026-56347",
+  "po_date": "2026-06-07",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-07-10",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "25",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "800.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "78.30"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "37",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1998.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "145",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1827.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "20",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "98.00"
+    }
+  ],
+  "total_amount": "5146.30"
+}

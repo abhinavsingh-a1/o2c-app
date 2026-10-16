@@ -1,0 +1,30 @@
+{
+  "po_number": "SAT-013834",
+  "po_date": "2026-10-04",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-11-03",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "22",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "215.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "112.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "2103.75"
+    }
+  ],
+  "total_amount": "2319.35"
+}

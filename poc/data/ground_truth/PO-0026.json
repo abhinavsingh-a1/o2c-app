@@ -1,0 +1,48 @@
+{
+  "po_number": "NSH071122",
+  "po_date": "2026-02-13",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "9",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "421.20"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "97.50"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "46",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2484.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "27",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "86.40"
+    }
+  ],
+  "total_amount": "3089.10"
+}

@@ -1,0 +1,30 @@
+{
+  "po_number": "4500062297",
+  "po_date": "2026-05-08",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "53",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "169.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "49",
+      "unit": "PC",
+      "unit_price": "106.37",
+      "line_total": "5212.13"
+    }
+  ],
+  "total_amount": "5381.73"
+}

@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH071119",
+  "po_date": "2026-02-19",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-03-18",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "7224.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    }
+  ],
+  "total_amount": "7293.00"
+}

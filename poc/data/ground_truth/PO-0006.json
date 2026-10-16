@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH069353",
+  "po_date": "2026-02-20",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "179",
+      "unit": "M",
+      "unit_price": "14.56",
+      "line_total": "2606.24"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "157.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "2945.25"
+    }
+  ],
+  "total_amount": "5551.49"
+}

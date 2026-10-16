@@ -1,0 +1,204 @@
+{
+  "customers": [
+    {
+      "customer_number": "1000101",
+      "name": "Steirische Metallbau GmbH",
+      "address": "Industriestraße 12, 8020 Graz, Austria",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000102",
+      "name": "Donautal Maschinenbau AG",
+      "address": "Hafenstraße 45, 4020 Linz, Austria",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000103",
+      "name": "Alpenland Fördertechnik GmbH",
+      "address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000104",
+      "name": "Wienerwald Anlagenbau GmbH",
+      "address": "Brunner Straße 88, 1230 Wien, Austria",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000105",
+      "name": "Bayerische Präzisionsteile GmbH",
+      "address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000106",
+      "name": "Schwarzwald Antriebstechnik KG",
+      "address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000107",
+      "name": "Salzach Kunststofftechnik GmbH",
+      "address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+      "currency": "EUR"
+    },
+    {
+      "customer_number": "1000108",
+      "name": "Niederrhein Stahlhandel GmbH",
+      "address": "Hafenweg 21, 47119 Duisburg, Germany",
+      "currency": "EUR"
+    }
+  ],
+  "materials": [
+    {
+      "material_number": "400101",
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "unit": "PAK",
+      "list_price": "14.90"
+    },
+    {
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "unit": "PAK",
+      "list_price": "6.40"
+    },
+    {
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "unit": "PAK",
+      "list_price": "3.20"
+    },
+    {
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "unit": "PC",
+      "list_price": "8.75"
+    },
+    {
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "unit": "M",
+      "list_price": "12.60"
+    },
+    {
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "unit": "M",
+      "list_price": "1.85"
+    },
+    {
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "unit": "PAK",
+      "list_price": "4.90"
+    },
+    {
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "unit": "BOX",
+      "list_price": "27.50"
+    },
+    {
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "unit": "PC",
+      "list_price": "46.80"
+    },
+    {
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "unit": "PC",
+      "list_price": "1.35"
+    },
+    {
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "unit": "PC",
+      "list_price": "3.90"
+    },
+    {
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "unit": "PC",
+      "list_price": "7.20"
+    },
+    {
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "unit": "L",
+      "list_price": "3.45"
+    },
+    {
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "unit": "PC",
+      "list_price": "38.90"
+    },
+    {
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "unit": "PC",
+      "list_price": "89.00"
+    },
+    {
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "unit": "PAK",
+      "list_price": "18.60"
+    },
+    {
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "unit": "PC",
+      "list_price": "9.80"
+    },
+    {
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "unit": "PC",
+      "list_price": "54.00"
+    },
+    {
+      "material_number": "400119",
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "unit": "ROL",
+      "list_price": "6.25"
+    },
+    {
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "unit": "ROL",
+      "list_price": "16.40"
+    },
+    {
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "unit": "M",
+      "list_price": "18.70"
+    },
+    {
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "unit": "KG",
+      "list_price": "2.15"
+    },
+    {
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "unit": "BOX",
+      "list_price": "32.00"
+    },
+    {
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "unit": "PC",
+      "list_price": "89.90"
+    },
+    {
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "unit": "PC",
+      "list_price": "129.00"
+    }
+  ]
+}

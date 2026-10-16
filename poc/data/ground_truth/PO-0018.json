@@ -1,0 +1,21 @@
+{
+  "po_number": "B-26/73386",
+  "po_date": "2026-03-11",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-04-10",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "44",
+      "unit": "PC",
+      "unit_price": "8.01",
+      "line_total": "352.44"
+    }
+  ],
+  "total_amount": "352.44"
+}

@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH052489",
+  "po_date": "2026-07-02",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-07-29",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "110",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "203.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "74.10"
+    }
+  ],
+  "total_amount": "277.60"
+}

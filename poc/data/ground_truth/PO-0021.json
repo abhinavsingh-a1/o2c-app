@@ -1,0 +1,75 @@
+{
+  "po_number": "PO-2026-81679",
+  "po_date": "2026-08-15",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-09-11",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "3",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "49.20"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "1",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "9.80"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "52",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "455.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "48",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "300.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "24",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "117.60"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "43",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "2012.40"
+    }
+  ],
+  "total_amount": "3661.60"
+}

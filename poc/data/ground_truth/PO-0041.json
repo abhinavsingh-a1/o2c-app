@@ -1,0 +1,30 @@
+{
+  "po_number": "BP0075393",
+  "po_date": "2026-09-18",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-10-23",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "48",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "787.20"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "17",
+      "unit": "PAK",
+      "unit_price": "6.76",
+      "line_total": "114.92"
+    }
+  ],
+  "total_amount": "902.12"
+}

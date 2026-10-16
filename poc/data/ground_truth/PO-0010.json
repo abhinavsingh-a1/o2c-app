@@ -1,0 +1,75 @@
+{
+  "po_number": "BP0008835",
+  "po_date": "2026-10-02",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "29",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "142.10"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "29",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1566.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "15",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "480.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "258.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "20.25"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "41",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "295.20"
+    }
+  ],
+  "total_amount": "2830.55"
+}

@@ -1,0 +1,48 @@
+{
+  "po_number": "B-26/31286",
+  "po_date": "2026-03-07",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "27",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "168.75"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "37",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "606.80"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "60",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "384.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "43",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "137.60"
+    }
+  ],
+  "total_amount": "1297.15"
+}

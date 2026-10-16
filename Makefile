@@ -35,3 +35,6 @@ cluster-down:
 
 sync:
 	uv sync --all-packages
+
+poc:
+	uv run --group poc jupyter lab
