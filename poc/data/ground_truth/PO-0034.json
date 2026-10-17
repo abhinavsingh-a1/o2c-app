@@ -1,0 +1,39 @@
+{
+  "po_number": "SAT-072849",
+  "po_date": "2026-01-19",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-02-15",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "52",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "967.20"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "18",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "88.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "324.00"
+    }
+  ],
+  "total_amount": "1379.40"
+}

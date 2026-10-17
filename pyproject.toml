@@ -11,6 +11,15 @@ dev = [
     "httpx>=0.28.1",
     "pytest>=8",
 ]
+poc = [
+    "faker>=40.43.0",
+    "jupyterlab>=4.6.4",
+    "openai>=3.31.0",
+    "pydantic>=2.14.1",
+    "pypdf>=6.20.1",
+    "python-dotenv>=1.2.4",
+    "reportlab>=5.0.1",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["libs", "services"]

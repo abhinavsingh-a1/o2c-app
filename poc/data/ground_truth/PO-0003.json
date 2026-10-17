@@ -1,0 +1,30 @@
+{
+  "po_number": "BP0046567",
+  "po_date": "2026-02-14",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "24",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1123.20"
+    }
+  ],
+  "total_amount": "1468.20"
+}

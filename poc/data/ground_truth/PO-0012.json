@@ -1,0 +1,75 @@
+{
+  "po_number": "WA-26-49673",
+  "po_date": "2026-04-12",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-04-27",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "30",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "55.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "35",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1638.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "6",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "534.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "55",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1512.50"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "27",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "86.40"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "14",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "448.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "3132.00"
+    }
+  ],
+  "total_amount": "7406.40"
+}

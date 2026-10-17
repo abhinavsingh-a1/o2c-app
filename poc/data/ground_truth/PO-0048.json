@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH053737",
+  "po_date": "2026-01-23",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-02-20",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "34",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3026.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "1",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "8.75"
+    }
+  ],
+  "total_amount": "3034.75"
+}

@@ -1,0 +1,84 @@
+{
+  "po_number": "B-26/8908",
+  "po_date": "2026-05-20",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "14",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "18.90"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "38",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1478.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "4",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "128.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "4",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "216.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "31",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "576.60"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "140.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1770.30"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "33",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "161.70"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "12",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1548.00"
+    }
+  ],
+  "total_amount": "5897.70"
+}

@@ -1,0 +1,39 @@
+{
+  "po_number": "4500084247",
+  "po_date": "2026-07-23",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-08-24",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "35",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3115.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "105.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1329.30"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "43",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "705.20"
+    }
+  ],
+  "total_amount": "5149.50"
+}

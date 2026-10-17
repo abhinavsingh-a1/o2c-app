@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH006583",
+  "po_date": "2026-07-28",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-08-04",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1935.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1750.50"
+    }
+  ],
+  "total_amount": "3685.50"
+}

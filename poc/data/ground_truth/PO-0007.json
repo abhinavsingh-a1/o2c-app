@@ -1,0 +1,57 @@
+{
+  "po_number": "4500066541",
+  "po_date": "2026-03-04",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-04-14",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "11",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1419.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "189.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "3543.65"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "17",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "66.30"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "49",
+      "unit": "PC",
+      "unit_price": "9.58",
+      "line_total": "469.42"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "20",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "27.00"
+    }
+  ],
+  "total_amount": "5525.37"
+}

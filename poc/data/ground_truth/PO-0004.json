@@ -1,0 +1,48 @@
+{
+  "po_number": "BP0052582",
+  "po_date": "2026-02-10",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-02-27",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "168.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "311.73"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "1335.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "3",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "140.40"
+    }
+  ],
+  "total_amount": "1856.13"
+}

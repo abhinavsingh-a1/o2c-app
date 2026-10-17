@@ -1,0 +1,66 @@
+{
+  "po_number": "B-26/86674",
+  "po_date": "2026-06-28",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-07-18",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "17",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "148.75"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "47",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "150.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "3225.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "5.35",
+      "line_total": "101.65"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "185",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "3459.50"
+    }
+  ],
+  "total_amount": "7154.30"
+}
