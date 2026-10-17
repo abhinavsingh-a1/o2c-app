@@ -1,0 +1,404 @@
+[
+  {
+    "doc_id": "PO-0001",
+    "tokens": 1469,
+    "cost": 0.0010796,
+    "correct": 32,
+    "total": 32,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0002",
+    "tokens": 1687,
+    "cost": 0.0013444,
+    "correct": 44,
+    "total": 44,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0003",
+    "tokens": 1170,
+    "cost": 0.0007715999999999999,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0004",
+    "tokens": 1393,
+    "cost": 0.0010444,
+    "correct": 32,
+    "total": 32,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0005",
+    "tokens": 1641,
+    "cost": 0.0013319999999999999,
+    "correct": 44,
+    "total": 44,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0006",
+    "tokens": 1188,
+    "cost": 0.0007836,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0007",
+    "tokens": 1549,
+    "cost": 0.0011872,
+    "correct": 38,
+    "total": 38,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0008",
+    "tokens": 1044,
+    "cost": 0.0006252,
+    "correct": 14,
+    "total": 14,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0009",
+    "tokens": 1253,
+    "cost": 0.0008192,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0010",
+    "tokens": 1709,
+    "cost": 0.0014287999999999998,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0011",
+    "tokens": 1932,
+    "cost": 0.0016356,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0012",
+    "tokens": 1800,
+    "cost": 0.001488,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0013",
+    "tokens": 1891,
+    "cost": 0.0016036,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0014",
+    "tokens": 1468,
+    "cost": 0.0010828,
+    "correct": 32,
+    "total": 32,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0015",
+    "tokens": 1936,
+    "cost": 0.0016395999999999997,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0016",
+    "tokens": 1293,
+    "cost": 0.0009168,
+    "correct": 25,
+    "total": 26,
+    "errors": [
+      "line.material_number"
+    ]
+  },
+  {
+    "doc_id": "PO-0017",
+    "tokens": 1524,
+    "cost": 0.0011963999999999998,
+    "correct": 38,
+    "total": 38,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0018",
+    "tokens": 1141,
+    "cost": 0.0006808000000000001,
+    "correct": 14,
+    "total": 14,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0019",
+    "tokens": 1280,
+    "cost": 0.0009067999999999999,
+    "correct": 26,
+    "total": 26,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0020",
+    "tokens": 1863,
+    "cost": 0.0016032,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0021",
+    "tokens": 1730,
+    "cost": 0.0014408,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0022",
+    "tokens": 1621,
+    "cost": 0.0013084,
+    "correct": 44,
+    "total": 44,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0023",
+    "tokens": 1833,
+    "cost": 0.0015696,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0024",
+    "tokens": 1197,
+    "cost": 0.0007871999999999999,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0025",
+    "tokens": 1611,
+    "cost": 0.0012971999999999999,
+    "correct": 44,
+    "total": 44,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0026",
+    "tokens": 1417,
+    "cost": 0.0010576,
+    "correct": 32,
+    "total": 32,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0027",
+    "tokens": 1800,
+    "cost": 0.0014844,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0028",
+    "tokens": 1364,
+    "cost": 0.0009487999999999999,
+    "correct": 26,
+    "total": 26,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0029",
+    "tokens": 1712,
+    "cost": 0.0014299999999999998,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0030",
+    "tokens": 1314,
+    "cost": 0.0009276,
+    "correct": 26,
+    "total": 26,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0031",
+    "tokens": 1492,
+    "cost": 0.0011644,
+    "correct": 38,
+    "total": 38,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0032",
+    "tokens": 1204,
+    "cost": 0.0007899999999999999,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0033",
+    "tokens": 1793,
+    "cost": 0.0014792,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0034",
+    "tokens": 1337,
+    "cost": 0.0009452,
+    "correct": 26,
+    "total": 26,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0035",
+    "tokens": 1953,
+    "cost": 0.00165,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0036",
+    "tokens": 1508,
+    "cost": 0.001178,
+    "correct": 38,
+    "total": 38,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0037",
+    "tokens": 1206,
+    "cost": 0.0008075999999999999,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0038",
+    "tokens": 1780,
+    "cost": 0.0014919999999999998,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0039",
+    "tokens": 1413,
+    "cost": 0.001062,
+    "correct": 32,
+    "total": 32,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0040",
+    "tokens": 1935,
+    "cost": 0.0016403999999999998,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0041",
+    "tokens": 1190,
+    "cost": 0.0007928,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0042",
+    "tokens": 1283,
+    "cost": 0.0009116,
+    "correct": 26,
+    "total": 26,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0043",
+    "tokens": 1181,
+    "cost": 0.0007748,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0044",
+    "tokens": 1180,
+    "cost": 0.0007708,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0045",
+    "tokens": 1924,
+    "cost": 0.0016324,
+    "correct": 56,
+    "total": 56,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0046",
+    "tokens": 1745,
+    "cost": 0.0014552,
+    "correct": 50,
+    "total": 50,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0047",
+    "tokens": 1602,
+    "cost": 0.0012959999999999998,
+    "correct": 44,
+    "total": 44,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0048",
+    "tokens": 1192,
+    "cost": 0.000784,
+    "correct": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0049",
+    "tokens": 1481,
+    "cost": 0.0011492,
+    "correct": 38,
+    "total": 38,
+    "errors": []
+  },
+  {
+    "doc_id": "PO-0050",
+    "tokens": 1440,
+    "cost": 0.0010776,
+    "correct": 32,
+    "total": 32,
+    "errors": []
+  }
+]

@@ -3,9 +3,14 @@ from datetime import date
 from decimal import Decimal
 
 from generate_pos import DATA_DIR, fmt_date, fmt_number, generate
+from pypdf import PdfReader
 from schema import PurchaseOrder
 
 PO_IDS = [f"PO-{i:04d}" for i in range(1, 51)]
+
+
+def normalise(text: str) -> str:
+    return " ".join(text.split())
 
 
 def test_50_pdfs_and_ground_truth_files_exist():
@@ -16,6 +21,18 @@ def test_50_pdfs_and_ground_truth_files_exist():
         PurchaseOrder.model_validate_json(gt.read_text(encoding="utf-8"))
     assert len(list((DATA_DIR / "pos").glob("PO-*.pdf"))) == 50
     assert len(list((DATA_DIR / "ground_truth").glob("PO-*.json"))) == 50
+
+
+def test_descriptions_and_customer_name_are_printed_in_full():
+    for po_id in PO_IDS:
+        po = PurchaseOrder.model_validate_json(
+            (DATA_DIR / "ground_truth" / f"{po_id}.json").read_text(encoding="utf-8")
+        )
+        reader = PdfReader(DATA_DIR / "pos" / f"{po_id}.pdf")
+        text = normalise(" ".join(page.extract_text() for page in reader.pages))
+        assert normalise(po.customer_name) in text, po_id
+        for line in po.lines:
+            assert normalise(line.description) in text, (po_id, line.line_no)
 
 
 def test_labels_mark_exactly_10_price_deviations():
