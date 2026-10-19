@@ -165,6 +165,18 @@ services:
       redis:
         condition: service_started
 
+  erp-mock:
+    build:
+      context: .
+      dockerfile: services/erp-mock/Dockerfile
+    environment:
+      ERP_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/erp
+    ports:
+      - "8100:8100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
   s3data:
