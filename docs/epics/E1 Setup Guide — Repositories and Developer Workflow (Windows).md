@@ -290,7 +290,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 
 ## Rules
 - Never commit secrets. This repo is public. Use .env (git-ignored).
-- All LLM calls go through LiteLLM, never directly to OpenAI.
+- All LLM calls go through LiteLLM, never directly to the Anthropic API.
 - Tests use recorded LLM responses; no live LLM calls in tests.
 - Every Kafka consumer must be idempotent (use the idempotency key).
 - Commit messages and PR titles follow Conventional Commits.
@@ -335,6 +335,19 @@ The app must be deployed to Dev, Test and Prod with a clear audit trail.
 ```
 
 Commit `docs: add ADR-001 three-repo layout` and merge through a PR.
+
+## Troubleshooting — Git and PR workflow problems (found during E2–E4)
+
+| # | Symptom | Cause | Fix |
+| --- | --- | --- | --- |
+| 1 | Commit silently not made; PR merged without the latest changes | A pre-commit hook failed or fixed files, which aborts the commit | After every commit, check the output ends with `[branch abc1234] message`. If hooks fixed files, run `git add .` and commit again |
+| 2 | ruff: `invalid-syntax: Unexpected indentation` in a `.ipynb` file | A notebook cell starts with spaces | Remove the leading spaces in that cell, save, commit again |
+| 3 | `gh pr create`: *could not find any commits between origin/main and the branch* | The commit failed (see #1), so nothing new was pushed | Fix the hook error, commit, then `git push` and create the PR |
+| 4 | `gh pr merge`: *local changes would be overwritten by checkout* | Uncommitted files on the branch when merging | `git stash -u` → `git checkout main` → `git pull` → `git checkout -b <new-branch>` → `git stash pop` → commit → PR |
+| 5 | Merged branch still visible as `remotes/origin/<branch>` | `gh pr merge` aborted before deleting the remote branch | `git push origin --delete <branch>` then `git fetch --prune` |
+| 6 | `make`, `kind` or another tool *not recognized* right after `winget install` | The terminal still has the old PATH | Close **all** terminals (including VS Code) and open a new one |
+
+Before every PR, run `git status`: it must say *nothing to commit, working tree clean*.
 
 ## Cheat sheet — the workflow for every change
 
