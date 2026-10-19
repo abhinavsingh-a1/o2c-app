@@ -7,7 +7,11 @@ authors = [
     { name = "Abhinav", email = "a1.abhinavsingh@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "confluent-kafka>=2.16.0",
+    "psycopg[binary]>=3.3.6",
+    "sqlalchemy>=2.1.4",
+]
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]

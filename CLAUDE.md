@@ -18,6 +18,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - All LLM calls go through LiteLLM, never directly to OpenAI.
 - Tests use recorded LLM responses; no live LLM calls in tests.
 - Every Kafka consumer must be idempotent (use the idempotency key).
+- Every Kafka consumer uses o2c_common.kafka.EventConsumer; every event is an o2c_common.events.Envelope.
+- Outgoing events are created with envelope.child(...), never Envelope.new(...), except at intake.
 - Commit messages and PR titles follow Conventional Commits.
 - Work on a branch and open a PR; never push to main.
 - Write tests for every new function.
@@ -35,6 +37,9 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make ui: start the React UI at http://localhost:5173
 - make erp-migrate / make erp-seed / make erp-seed-history: ERP database setup
 - make erp-api: run the ERP mock API locally at http://localhost:8100/docs
+- make topics / make topics-reset: create Kafka topics / delete and recreate them (localhost only)
+- make dlq-list / make dlq-replay: inspect / replay the dead-letter queue
+- make lag: consumer lag of all groups
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,
