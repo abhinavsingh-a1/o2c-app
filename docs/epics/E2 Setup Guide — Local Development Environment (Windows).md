@@ -398,6 +398,8 @@ cluster-down:
 
 `make clean` deletes all local data (databases, buckets, traces).
 
+**Added later in E4:** a `poc` target (`uv run --group poc jupyter lab`) in the Makefile, and an `o2c-embed` embedding model (`openai/text-embedding-3-small`) in `local/litellm/config.yaml`. See the E4 guide.
+
 ## Step 8 — Python workspace (uv)
 
 ```powershell

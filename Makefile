@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate
 
 up:
 	docker compose up -d --build
@@ -34,7 +34,13 @@ cluster-down:
 	kind delete cluster --name o2c
 
 sync:
-	uv sync --all-packages
+	uv sync --all-packages --all-groups
 
 poc:
 	uv run --group poc jupyter lab
+
+erp-migrate:
+	uv run alembic -c services/erp-mock/alembic.ini upgrade head
+
+erp-seed:
+	uv run python -m erp_mock.seed
