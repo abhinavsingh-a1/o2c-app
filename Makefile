@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history
 
 up:
 	docker compose up -d --build
@@ -44,3 +44,9 @@ erp-migrate:
 
 erp-seed:
 	uv run python -m erp_mock.seed
+
+erp-api:
+	uv run uvicorn erp_mock.api:app --port 8100 --reload
+
+erp-seed-history:
+	uv run python -m erp_mock.seed_history

@@ -33,6 +33,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make sync: install all Python workspace packages
 - make test: run Python tests
 - make ui: start the React UI at http://localhost:5173
+- make erp-migrate / make erp-seed / make erp-seed-history: ERP database setup
+- make erp-api: run the ERP mock API locally at http://localhost:8100/docs
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,
