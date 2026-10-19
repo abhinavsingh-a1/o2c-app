@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset
 
 up:
 	docker compose up -d --build
@@ -59,3 +59,9 @@ dlq-list:
 
 dlq-replay:
 	uv run python -m o2c_common.dlq
+
+lag:
+	docker compose exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --all-groups
+
+topics-reset:
+	uv run python -m o2c_common.topics --reset

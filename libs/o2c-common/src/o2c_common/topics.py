@@ -1,4 +1,6 @@
 import os
+import sys
+import time
 
 from confluent_kafka import KafkaError, KafkaException
 from confluent_kafka.admin import AdminClient, NewTopic
@@ -38,5 +40,26 @@ def create_topics(bootstrap: str, replication: int = 1) -> None:
                 raise
 
 
+def delete_topics(bootstrap: str) -> None:
+    admin = AdminClient({"bootstrap.servers": bootstrap})
+    for name, future in admin.delete_topics(list(TOPICS)).items():
+        try:
+            future.result()
+            print(f"deleted {name}")
+        except KafkaException as exc:
+            if exc.args[0].code() == KafkaError.UNKNOWN_TOPIC_OR_PART:
+                print(f"missing {name}")
+            else:
+                raise
+
+
 if __name__ == "__main__":
-    create_topics(os.environ.get("KAFKA_BOOTSTRAP", "localhost:9092"))
+    bootstrap = os.environ.get("KAFKA_BOOTSTRAP", "localhost:9092")
+    if "--reset" in sys.argv:
+        if "localhost" not in bootstrap:
+            sys.exit("refusing to reset topics outside localhost")
+        delete_topics(bootstrap)
+        time.sleep(5)  # Kafka deletes topics in the background
+        create_topics(bootstrap)
+    else:
+        create_topics(bootstrap)
