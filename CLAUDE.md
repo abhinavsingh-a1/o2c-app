@@ -27,6 +27,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - The agent never lets the LLM decide whether an order is posted; code decides from explicit rules.
 - LLM outputs that reference master data (e.g. material numbers) must be checked against real ERP data before use.
 - The agent always runs through agent.checkpoint.run_or_resume with thread_id = idempotency key; never invoke the graph without a checkpointer in services.
+- Every /reviews endpoint requires a logged-in user (CurrentUser); the reviewer is always taken from the token.
+- review_decisions is append-only: never update or delete audit rows.
 
 ## Commands
 - make up: start local stack (Postgres, Kafka, SeaweedFS, MLflow, LiteLLM, Langfuse)
@@ -52,6 +54,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - Review a paused order: GET/POST http://localhost:8400/reviews/{idempotency_key}
 - make gen-api: regenerate ui/src/api/schema.d.ts from the agent's OpenAPI (agent must be running)
 - Review API: GET /reviews?status=awaiting_review|all|posted, GET /reviews/{key}, GET /reviews/{key}/document, POST /reviews/{key}
+- uv run python -m agent.auth add-user <username> "<Full Name>": create a reviewer in local/users.json (git-ignored)
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

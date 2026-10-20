@@ -261,3 +261,32 @@ button:disabled {
 .total-line {
   text-align: right;
 }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user {
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login {
+  max-width: 360px;
+  margin: 60px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #616e7c;
+}

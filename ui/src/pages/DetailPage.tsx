@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router";
 import { api } from "../api/client";
 import type { ReviewDetail } from "../api/types";
 import DecisionPanel from "../components/DecisionPanel";
+import History from "../components/History";
 import { label, money } from "../format";
 
 export default function DetailPage() {
@@ -165,6 +166,7 @@ export default function DetailPage() {
               ))}
             </tbody>
           </table>
+          <History idempotencyKey={key} reload={reload} />
         </div>
       </div>
     </section>

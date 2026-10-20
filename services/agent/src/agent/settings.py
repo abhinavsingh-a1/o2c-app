@@ -21,3 +21,5 @@ class Settings(BaseSettings):
     prompts_dir: Path = REPO_ROOT / "prompts"
     contracts_dir: Path = REPO_ROOT / "poc" / "data" / "contracts"
     auto_post_limit: Decimal = Decimal(10000)
+    auth_jwt_secret: str
+    auth_users_file: Path = REPO_ROOT / "local" / "users.json"

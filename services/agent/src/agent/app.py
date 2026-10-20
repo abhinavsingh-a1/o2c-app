@@ -3,12 +3,13 @@ import json
 import logging
 import threading
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Annotated, Any
 from uuid import NAMESPACE_URL, uuid5
 
 import boto3
 from botocore.exceptions import ClientError
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from langgraph.checkpoint.postgres import PostgresSaver
 from o2c_common.events import Envelope
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
@@ -18,6 +19,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import ValidationError
 
 from agent.anomaly import anomaly_score
+from agent.auth import Authenticator, LoginRequest, LoginResponse, User
 from agent.checkpoint import (
     is_awaiting_review,
     resume_with_review,
@@ -29,12 +31,20 @@ from agent.erp import ErpClient
 from agent.explain import make_explainer
 from agent.graph import Deps, build_graph
 from agent.materials import make_material_matcher
-from agent.reviews import DecisionResult, ReviewDetail, ReviewStore, ReviewSummary
+from agent.reviews import (
+    AuditEntry,
+    DecisionResult,
+    ReviewDetail,
+    ReviewRequest,
+    ReviewStore,
+    ReviewSummary,
+)
 from agent.settings import Settings
 from agent.state import AgentState, Review
 
 log = logging.getLogger("agent")
 DOCUMENT_FIELDS = ("s3_bucket", "s3_key", "filename", "sender")
+bearer = HTTPBearer(auto_error=False)
 
 
 def make_deps(settings: Settings) -> Deps:
@@ -127,6 +137,18 @@ def make_handler(graph, producer: EventProducer, reviews: ReviewStore):
     return handle
 
 
+def current_user(
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+) -> User:
+    if credentials is None:
+        raise HTTPException(401, "login required")
+    return request.app.state.auth.verify(credentials.credentials)
+
+
+CurrentUser = Annotated[User, Depends(current_user)]
+
+
 def create_app(
     settings: Settings | None = None,
     deps: Deps | None = None,
@@ -134,6 +156,7 @@ def create_app(
     producer=None,
     review_store=None,
     s3=None,
+    auth: Authenticator | None = None,
     start_consumer: bool = True,
 ) -> FastAPI:
     settings = settings or Settings()
@@ -164,6 +187,9 @@ def create_app(
             settings.kafka_bootstrap, "agent"
         )
         app.state.reviews = review_store or ReviewStore(settings.events_database_url)
+        app.state.auth = auth or Authenticator(
+            settings.auth_users_file, settings.auth_jwt_secret
+        )
         app.state.s3 = s3 or boto3.client(
             "s3",
             endpoint_url=settings.s3_endpoint_url,
@@ -190,7 +216,7 @@ def create_app(
         if pool is not None:
             pool.close()
 
-    app = FastAPI(title="Order agent", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="Order agent", version="0.3.0", lifespan=lifespan)
 
     def _state(request: Request, idempotency_key: str):
         snapshot = request.app.state.graph.get_state(thread_config(idempotency_key))
@@ -205,14 +231,27 @@ def create_app(
             raise HTTPException(503, "consumer not running")
         return {"status": "ok"}
 
+    @app.post("/auth/login", response_model=LoginResponse)
+    def login(body: LoginRequest, request: Request) -> LoginResponse:
+        result = request.app.state.auth.login(body.username, body.password)
+        if result is None:
+            raise HTTPException(401, "wrong username or password")
+        return result
+
+    @app.get("/auth/me", response_model=User)
+    def me(user: CurrentUser) -> User:
+        return user
+
     @app.get("/reviews", response_model=list[ReviewSummary])
     def list_reviews(
-        request: Request, status: str = "awaiting_review"
+        request: Request, user: CurrentUser, status: str = "awaiting_review"
     ) -> list[ReviewSummary]:
-        return request.app.state.reviews.list(None if status == "all" else status)
+        return request.app.state.reviews.query(None if status == "all" else status)
 
     @app.get("/reviews/{idempotency_key}", response_model=ReviewDetail)
-    def get_review(idempotency_key: str, request: Request) -> ReviewDetail:
+    def get_review(
+        idempotency_key: str, request: Request, user: CurrentUser
+    ) -> ReviewDetail:
         snapshot, state = _state(request, idempotency_key)
         return ReviewDetail(
             awaiting_review=is_awaiting_review(snapshot),
@@ -226,7 +265,9 @@ def create_app(
         )
 
     @app.get("/reviews/{idempotency_key}/document")
-    def get_document(idempotency_key: str, request: Request) -> Response:
+    def get_document(
+        idempotency_key: str, request: Request, user: CurrentUser
+    ) -> Response:
         _, state = _state(request, idempotency_key)
         doc = state.source_document
         if not doc.get("s3_key"):
@@ -245,23 +286,39 @@ def create_app(
             },
         )
 
+    @app.get("/reviews/{idempotency_key}/audit", response_model=list[AuditEntry])
+    def get_audit(
+        idempotency_key: str, request: Request, user: CurrentUser
+    ) -> list[AuditEntry]:
+        return request.app.state.reviews.history(idempotency_key)
+
     @app.post("/reviews/{idempotency_key}", response_model=DecisionResult)
     def post_review(
-        idempotency_key: str, review: Review, request: Request
+        idempotency_key: str, body: ReviewRequest, request: Request, user: CurrentUser
     ) -> DecisionResult:
+        if body.action == "reject" and not (body.comment or "").strip():
+            raise HTTPException(422, "a reason is required to reject an order")
+        _, before = _state(request, idempotency_key)
+        review = Review(
+            action=body.action,
+            reviewer=user.username,
+            comment=body.comment,
+            edited_po=body.edited_po,
+        )
         try:
-            state = resume_with_review(request.app.state.graph, idempotency_key, review)
+            after = resume_with_review(request.app.state.graph, idempotency_key, review)
         except ValueError as exc:
             raise HTTPException(409, str(exc)) from exc
-        request.app.state.reviews.upsert(state)
-        for topic, out in outcome_events(state, None):
+        request.app.state.reviews.upsert(after)
+        request.app.state.reviews.record_decision(before, review, user.name, after)
+        for topic, out in outcome_events(after, None):
             request.app.state.producer.send(topic, out)
         request.app.state.producer.flush()
         return DecisionResult(
-            status=state.status,
-            sales_order_number=state.sales_order_number,
-            issues=state.issues,
-            explanation=state.explanation,
+            status=after.status,
+            sales_order_number=after.sales_order_number,
+            issues=after.issues,
+            explanation=after.explanation,
         )
 
     return app
