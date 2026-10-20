@@ -40,6 +40,10 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make topics / make topics-reset: create Kafka topics / delete and recreate them (localhost only)
 - make dlq-list / make dlq-replay: inspect / replay the dead-letter queue
 - make lag: consumer lag of all groups
+- make intake: run the intake webhook at http://localhost:8200
+- make classifier: run the classifier consumer
+- make extractor: run the extractor at http://localhost:8300/docs
+- Prompts live in prompts/*.md; {schema} is replaced with the JSON schema at startup.
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

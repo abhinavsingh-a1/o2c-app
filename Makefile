@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor
 
 up:
 	docker compose up -d --build
@@ -71,3 +71,6 @@ intake:
 
 classifier:
 	uv run python -m classifier.app
+
+extractor:
+	uv run uvicorn extractor.app:create_app --factory --port 8300
