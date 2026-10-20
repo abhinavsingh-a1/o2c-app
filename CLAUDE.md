@@ -44,6 +44,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make classifier: run the classifier consumer
 - make extractor: run the extractor at http://localhost:8300/docs
 - Prompts live in prompts/*.md; {schema} is replaced with the JSON schema at startup.
+- make send PDF=<path>: send a PDF to intake (the full pipeline runs in Docker via make up)
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,
