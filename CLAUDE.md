@@ -26,6 +26,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - Record important decisions as ADRs in docs/adr/.
 - The agent never lets the LLM decide whether an order is posted; code decides from explicit rules.
 - LLM outputs that reference master data (e.g. material numbers) must be checked against real ERP data before use.
+- The agent always runs through agent.checkpoint.run_or_resume with thread_id = idempotency key; never invoke the graph without a checkpointer in services.
 
 ## Commands
 - make up: start local stack (Postgres, Kafka, SeaweedFS, MLflow, LiteLLM, Langfuse)
