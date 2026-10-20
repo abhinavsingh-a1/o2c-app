@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     events_database_url: (
         str  # o2c database: processed events, checkpoints, contract vectors
     )
+    s3_endpoint_url: str = "http://localhost:8333"
+    s3_access_key: str
+    s3_secret_key: str
     prompts_dir: Path = REPO_ROOT / "prompts"
     contracts_dir: Path = REPO_ROOT / "poc" / "data" / "contracts"
     auto_post_limit: Decimal = Decimal(10000)

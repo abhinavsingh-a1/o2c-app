@@ -6,7 +6,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
-from fastapi import FastAPI, HTTPException, Request
+import boto3
+from botocore.exceptions import ClientError
+from fastapi import FastAPI, HTTPException, Request, Response
 from langgraph.checkpoint.postgres import PostgresSaver
 from o2c_common.events import Envelope
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
@@ -27,6 +29,7 @@ from agent.erp import ErpClient
 from agent.explain import make_explainer
 from agent.graph import Deps, build_graph
 from agent.materials import make_material_matcher
+from agent.reviews import DecisionResult, ReviewDetail, ReviewStore, ReviewSummary
 from agent.settings import Settings
 from agent.state import AgentState, Review
 
@@ -48,7 +51,6 @@ def make_deps(settings: Settings) -> Deps:
 def _event(
     state: AgentState, topic: str, payload: dict[str, Any], parent: Envelope | None
 ) -> Envelope:
-    # Same content -> same event_id, so re-publishing after a crash or replay is deduplicated.
     fingerprint = hashlib.sha256(
         json.dumps(payload, sort_keys=True).encode()
     ).hexdigest()[:16]
@@ -102,7 +104,7 @@ def outcome_events(
     return [(topic, _event(state, topic, payload, parent)) for topic, payload in events]
 
 
-def make_handler(graph, producer: EventProducer):
+def make_handler(graph, producer: EventProducer, reviews: ReviewStore):
     def handle(event: Envelope) -> None:
         p = event.payload
         try:
@@ -117,6 +119,7 @@ def make_handler(graph, producer: EventProducer):
             source_document={k: p.get(k) for k in DOCUMENT_FIELDS},
         )
         state = run_or_resume(graph, initial)
+        reviews.upsert(state)
         log.info("%s -> %s", po.po_number, state.status)
         for topic, out in outcome_events(state, event):
             producer.send(topic, out)
@@ -129,6 +132,8 @@ def create_app(
     deps: Deps | None = None,
     checkpointer=None,
     producer=None,
+    review_store=None,
+    s3=None,
     start_consumer: bool = True,
 ) -> FastAPI:
     settings = settings or Settings()
@@ -140,9 +145,7 @@ def create_app(
         )
         pool = None
         saver = checkpointer
-        if (
-            saver is None
-        ):  # real run: a pool shared safely by the consumer thread and the API
+        if saver is None:
             pool = ConnectionPool(
                 settings.events_database_url.replace(
                     "postgresql+psycopg://", "postgresql://"
@@ -160,13 +163,22 @@ def create_app(
         app.state.producer = producer or EventProducer(
             settings.kafka_bootstrap, "agent"
         )
+        app.state.reviews = review_store or ReviewStore(settings.events_database_url)
+        app.state.s3 = s3 or boto3.client(
+            "s3",
+            endpoint_url=settings.s3_endpoint_url,
+            aws_access_key_id=settings.s3_access_key,
+            aws_secret_access_key=settings.s3_secret_key,
+        )
         app.state.consumer = None
         if start_consumer:
             consumer = EventConsumer(
                 bootstrap=settings.kafka_bootstrap,
                 group_id="agent",
                 topics=["orders.extracted"],
-                handler=make_handler(app.state.graph, app.state.producer),
+                handler=make_handler(
+                    app.state.graph, app.state.producer, app.state.reviews
+                ),
                 producer=app.state.producer,
                 store=PostgresStore(settings.events_database_url),
             )
@@ -178,7 +190,13 @@ def create_app(
         if pool is not None:
             pool.close()
 
-    app = FastAPI(title="Order agent", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Order agent", version="0.2.0", lifespan=lifespan)
+
+    def _state(request: Request, idempotency_key: str):
+        snapshot = request.app.state.graph.get_state(thread_config(idempotency_key))
+        if not snapshot.values:
+            raise HTTPException(404, "unknown order")
+        return snapshot, AgentState.model_validate(snapshot.values)
 
     @app.get("/health")
     def health(request: Request) -> dict[str, str]:
@@ -187,42 +205,63 @@ def create_app(
             raise HTTPException(503, "consumer not running")
         return {"status": "ok"}
 
-    @app.get("/reviews/{idempotency_key}")
-    def get_review(idempotency_key: str, request: Request) -> dict[str, Any]:
-        snapshot = request.app.state.graph.get_state(thread_config(idempotency_key))
-        if not snapshot.values:
-            raise HTTPException(404, "unknown order")
-        state = AgentState.model_validate(snapshot.values)
-        return {
-            "awaiting_review": is_awaiting_review(snapshot),
-            **state.model_dump(
-                mode="json",
-                include={
-                    "status",
-                    "explanation",
-                    "issues",
-                    "purchase_order",
-                    "sales_order_number",
-                    "source_document",
-                    "customer_number",
-                },
-            ),
-        }
+    @app.get("/reviews", response_model=list[ReviewSummary])
+    def list_reviews(
+        request: Request, status: str = "awaiting_review"
+    ) -> list[ReviewSummary]:
+        return request.app.state.reviews.list(None if status == "all" else status)
 
-    @app.post("/reviews/{idempotency_key}")
+    @app.get("/reviews/{idempotency_key}", response_model=ReviewDetail)
+    def get_review(idempotency_key: str, request: Request) -> ReviewDetail:
+        snapshot, state = _state(request, idempotency_key)
+        return ReviewDetail(
+            awaiting_review=is_awaiting_review(snapshot),
+            status=state.status,
+            explanation=state.explanation,
+            issues=state.issues,
+            purchase_order=state.purchase_order,
+            customer_number=state.customer_number,
+            sales_order_number=state.sales_order_number,
+            source_document=state.source_document,
+        )
+
+    @app.get("/reviews/{idempotency_key}/document")
+    def get_document(idempotency_key: str, request: Request) -> Response:
+        _, state = _state(request, idempotency_key)
+        doc = state.source_document
+        if not doc.get("s3_key"):
+            raise HTTPException(404, "no document stored for this order")
+        try:
+            obj = request.app.state.s3.get_object(
+                Bucket=doc["s3_bucket"], Key=doc["s3_key"]
+            )
+        except ClientError as exc:
+            raise HTTPException(404, "document not found in storage") from exc
+        return Response(
+            content=obj["Body"].read(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="{doc.get("filename", "order.pdf")}"'
+            },
+        )
+
+    @app.post("/reviews/{idempotency_key}", response_model=DecisionResult)
     def post_review(
         idempotency_key: str, review: Review, request: Request
-    ) -> dict[str, Any]:
+    ) -> DecisionResult:
         try:
             state = resume_with_review(request.app.state.graph, idempotency_key, review)
         except ValueError as exc:
             raise HTTPException(409, str(exc)) from exc
+        request.app.state.reviews.upsert(state)
         for topic, out in outcome_events(state, None):
             request.app.state.producer.send(topic, out)
         request.app.state.producer.flush()
-        return state.model_dump(
-            mode="json",
-            include={"status", "sales_order_number", "issues", "explanation"},
+        return DecisionResult(
+            status=state.status,
+            sales_order_number=state.sales_order_number,
+            issues=state.issues,
+            explanation=state.explanation,
         )
 
     return app
