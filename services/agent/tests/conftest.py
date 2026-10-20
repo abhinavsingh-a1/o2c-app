@@ -6,11 +6,13 @@ Test modules are imported in importlib mode, so they cannot `from conftest impor
 from decimal import Decimal
 
 import pytest
+from agent.checkpoint import thread_config
 from agent.contracts import Tolerance
-from agent.graph import Deps
+from agent.graph import Deps, build_graph
 from agent.materials import MaterialMatch
 from agent.settings import REPO_ROOT
 from agent.state import AgentState
+from langgraph.checkpoint.memory import InMemorySaver
 from o2c_common.schema import PurchaseOrder
 
 PO = PurchaseOrder.model_validate_json(
@@ -132,6 +134,27 @@ def no_match(description, candidates):
     return MaterialMatch(matnr=None, reason="no match")
 
 
+def fake_explain(state: AgentState) -> str:
+    return "Needs review: " + ", ".join(issue.code for issue in state.issues)
+
+
+def change_line(
+    po: PurchaseOrder, line_no: int, keep_total: bool = False, **changes
+) -> PurchaseOrder:
+    """Copy of the PO with one line changed. Line and order totals follow unless told otherwise."""
+    lines = []
+    for line in po.lines:
+        if line.line_no == line_no:
+            line = line.model_copy(update=changes)
+            if not keep_total:
+                line = line.model_copy(
+                    update={"line_total": line.quantity * line.unit_price}
+                )
+        lines.append(line)
+    total = sum((line.line_total for line in lines), Decimal(0))
+    return po.model_copy(update={"lines": lines, "total_amount": total})
+
+
 @pytest.fixture
 def po() -> PurchaseOrder:
     return PO
@@ -144,18 +167,47 @@ def erp() -> FakeErp:
 
 @pytest.fixture
 def make_deps(erp):
-    """Factory: Deps around the `erp` fixture, with overridable matcher and anomaly score."""
+    """Factory: Deps around the `erp` fixture, with overridable matcher, anomaly score
+    and explanation."""
 
-    def make(match_material=no_match, anomaly=lambda kunnr, matnr, qty: 0.0) -> Deps:
+    def make(
+        match_material=no_match,
+        anomaly=lambda kunnr, matnr, qty: 0.0,
+        explain=fake_explain,
+    ) -> Deps:
         return Deps(
             erp=erp,
             tolerance=lambda kunnr: Tolerance(tolerance_pct=Decimal(2), evidence="x"),
             match_material=match_material,
             anomaly=anomaly,
+            explain=explain,
             auto_post_limit=Decimal(10000),
         )
 
     return make
+
+
+@pytest.fixture
+def make_graph(make_deps):
+    """Factory: graph with an InMemorySaver, so it can pause in human_review.
+    Keyword arguments go to make_deps."""
+
+    def make(**deps):
+        return build_graph(make_deps(**deps), checkpointer=InMemorySaver())
+
+    return make
+
+
+@pytest.fixture
+def config() -> dict:
+    """Thread config of the run started by make_state()."""
+    return thread_config(KEY)
+
+
+@pytest.fixture
+def with_line():
+    """change_line as a fixture: test modules cannot import from conftest."""
+    return change_line
 
 
 @pytest.fixture

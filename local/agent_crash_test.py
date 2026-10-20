@@ -6,6 +6,7 @@ from agent.anomaly import anomaly_score
 from agent.checkpoint import postgres_checkpointer, run_or_resume, thread_config
 from agent.contracts import make_store, make_tolerance_lookup
 from agent.erp import ErpClient
+from agent.explain import make_explainer
 from agent.graph import Deps, build_graph
 from agent.materials import make_material_matcher
 from agent.settings import Settings
@@ -59,6 +60,7 @@ def make_graph(erp: TestErp, saver):
             tolerance=tolerance,
             match_material=matcher,
             anomaly=anomaly_score,
+            explain=make_explainer(s),
             auto_post_limit=s.auto_post_limit,
         ),
         saver,

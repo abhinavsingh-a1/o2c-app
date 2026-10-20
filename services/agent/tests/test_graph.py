@@ -1,13 +1,14 @@
 from decimal import Decimal
 
 import pytest
-from agent.graph import build_graph, run
+from agent.graph import run
 from agent.materials import MaterialMatch, MaterialMatcher
 from agent.settings import REPO_ROOT
 from agent.state import AgentState, IssueCode
 from o2c_common.schema import PurchaseOrder
 
-# FakeErp and the po / erp / make_deps / make_state fixtures live in conftest.py.
+# FakeErp and the po / erp / make_graph / make_state / config / with_line fixtures
+# live in conftest.py.
 
 
 class FakeChain:
@@ -18,33 +19,17 @@ class FakeChain:
         return self.result
 
 
-def with_line(
-    po: PurchaseOrder, line_no: int, keep_total: bool = False, **changes
-) -> PurchaseOrder:
-    """Copy of the PO with one line changed. Line and order totals follow unless told otherwise."""
-    lines = []
-    for line in po.lines:
-        if line.line_no == line_no:
-            line = line.model_copy(update=changes)
-            if not keep_total:
-                line = line.model_copy(
-                    update={"line_total": line.quantity * line.unit_price}
-                )
-        lines.append(line)
-    total = sum((line.line_total for line in lines), Decimal(0))
-    return po.model_copy(update={"lines": lines, "total_amount": total})
-
-
 def codes(result: AgentState) -> set[IssueCode]:
     return {issue.code for issue in result.issues}
 
 
 @pytest.fixture
-def process(make_deps, make_state):
-    """Run the graph once for a PO; keyword arguments go to make_deps."""
+def process(make_graph, make_state, config):
+    """Run the graph once for a PO; keyword arguments go to make_deps.
+    Exceptions pause in human_review, which needs a checkpointer and a thread_id."""
 
     def go(po: PurchaseOrder, **deps) -> AgentState:
-        return run(build_graph(make_deps(**deps)), make_state(po))
+        return run(make_graph(**deps), make_state(po), config)
 
     return go
 
@@ -68,7 +53,7 @@ def test_clean_po_is_posted(po, erp, process):
     assert erp.cancelled == []
 
 
-def test_price_above_tolerance_needs_review(po, erp, process):
+def test_price_above_tolerance_needs_review(po, erp, process, with_line):
     result = process(
         with_line(po, 2, unit_price=Decimal("18.04"))
     )  # agreed 16.40, +10%
@@ -102,7 +87,7 @@ def test_line_without_material_number_resolved_by_erp_search(po, process):
     assert line2.material_source == "document"
 
 
-def test_invented_material_match_is_unknown_material(po, erp, process):
+def test_invented_material_match_is_unknown_material(po, erp, process, with_line):
     # Real matcher with a chain that invents a number: the matcher must reject it.
     matcher = MaterialMatcher(
         FakeChain(MaterialMatch(matnr="499999", reason="looks right")),
@@ -122,7 +107,7 @@ def test_invented_material_match_is_unknown_material(po, erp, process):
     assert erp.created == []
 
 
-def test_line_total_mismatch(po, erp, process):
+def test_line_total_mismatch(po, erp, process, with_line):
     result = process(
         with_line(
             po, 3, keep_total=True, line_total=Decimal("230.00")
@@ -135,7 +120,7 @@ def test_line_total_mismatch(po, erp, process):
     assert erp.created == []
 
 
-def test_total_above_auto_post_limit(po, erp, process):
+def test_total_above_auto_post_limit(po, erp, process, with_line):
     result = process(with_line(po, 2, quantity=Decimal(1000)))  # 1000 x 16.40 = 16,400
 
     assert codes(result) == {IssueCode.ABOVE_AUTO_POST_LIMIT}
