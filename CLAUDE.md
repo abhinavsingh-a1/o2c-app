@@ -24,6 +24,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - Work on a branch and open a PR; never push to main.
 - Write tests for every new function.
 - Record important decisions as ADRs in docs/adr/.
+- The agent never lets the LLM decide whether an order is posted; code decides from explicit rules.
+- LLM outputs that reference master data (e.g. material numbers) must be checked against real ERP data before use.
 
 ## Commands
 - make up: start local stack (Postgres, Kafka, SeaweedFS, MLflow, LiteLLM, Langfuse)
@@ -45,6 +47,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make extractor: run the extractor at http://localhost:8300/docs
 - Prompts live in prompts/*.md; {schema} is replaced with the JSON schema at startup.
 - make send PDF=<path>: send a PDF to intake (the full pipeline runs in Docker via make up)
+
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest
 
 up:
 	docker compose up -d --build
@@ -77,3 +77,6 @@ extractor:
 
 send:
 	uv run --with python-dotenv python local/send_po.py $(PDF)
+
+contracts-ingest:
+	uv run python -m agent.contracts
