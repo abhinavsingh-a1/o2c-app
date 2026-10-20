@@ -8,6 +8,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "agent",
     "classifier",
     "erp-mock",
     "extractor",
@@ -15,6 +16,23 @@ members = [
     "intake",
     "o2c",
     "o2c-common",
+]
+
+[[package]]
+name = "agent"
+version = "0.1.0"
+source = { editable = "services/agent" }
+dependencies = [
+    { name = "langgraph" },
+    { name = "o2c-common" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "langgraph", specifier = ">=1.2.15" },
+    { name = "o2c-common", editable = "libs/o2c-common" },
+    { name = "pydantic", specifier = ">=2.14.1" },
 ]
 
 [[package]]
