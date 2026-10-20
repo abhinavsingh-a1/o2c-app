@@ -10,6 +10,7 @@ from agent.graph import Deps, build_graph, run
 from agent.materials import make_material_matcher
 from agent.settings import Settings
 from agent.state import AgentState
+from langgraph.checkpoint.memory import InMemorySaver
 from o2c_common.schema import PurchaseOrder
 
 
@@ -45,9 +46,10 @@ deps = Deps(
     tolerance=make_tolerance_lookup(s, make_store(s)),
     match_material=make_material_matcher(s),
     anomaly=anomaly_score,
+    explain=lambda state: "dry run",
     auto_post_limit=s.auto_post_limit,
 )
-graph = build_graph(deps)
+graph = build_graph(deps, InMemorySaver())
 labels = json.loads(Path("poc/data/labels.json").read_text(encoding="utf-8"))
 
 correct, outcomes, issue_counts = 0, Counter(), Counter()
@@ -62,6 +64,7 @@ for gt in sorted(Path("poc/data/ground_truth").glob("*.json")):
             source_event_id="eval",
             purchase_order=po,
         ),
+        {"configurable": {"thread_id": key}},
     )
     flagged = sorted({i.line_no for i in state.issues if i.code == "PRICE_DEVIATION"})
     label = labels[gt.stem]

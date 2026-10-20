@@ -1,14 +1,12 @@
 import pytest
 from agent.checkpoint import run_or_resume, thread_config
-from agent.graph import build_graph
-from langgraph.checkpoint.memory import InMemorySaver
 
-# FakeErp and the erp / make_deps / make_state fixtures live in conftest.py.
+# FakeErp and the erp / make_graph / make_state fixtures live in conftest.py.
 
 
 @pytest.fixture
-def graph(make_deps):
-    return build_graph(make_deps(), checkpointer=InMemorySaver())
+def graph(make_graph):
+    return make_graph()  # InMemorySaver checkpointer
 
 
 def test_new_thread_runs_to_posted(graph, erp, make_state):

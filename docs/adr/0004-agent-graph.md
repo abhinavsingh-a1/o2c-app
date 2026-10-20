@@ -43,6 +43,13 @@ Rules:
 Issue codes: UNKNOWN_CUSTOMER, UNKNOWN_MATERIAL, NO_AGREED_PRICE, PRICE_DEVIATION,
 QUANTITY_ANOMALY, TOTAL_MISMATCH, ORDER_VERIFY_FAILED.
 
+Human review (implemented):
+- human_review pauses with interrupt(); the decision resumes the run via Command(resume=...).
+- approve posts as-is (refused if customer or material is unknown); edit re-runs all checks
+  on the corrected PO; reject ends with status rejected.
+- A decision for an order that is not waiting is refused.
+- The exception explanation is written by GPT; on failure the issue list is used instead.
+
 ## Consequences
 - Every possible path is visible and testable node by node.
 - Human review is a first-class step (EU AI Act: human oversight).

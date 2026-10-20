@@ -3,11 +3,12 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
 
 from agent.contracts import Tolerance
 from agent.erp import ErpClient, ErpRejected
 from agent.materials import MaterialMatch
-from agent.state import AgentState, Issue, IssueCode, LineCheck
+from agent.state import AgentState, Issue, IssueCode, LineCheck, Review
 
 CENT = Decimal("0.01")
 ANOMALY_THRESHOLD = 0.8
@@ -18,7 +19,15 @@ def _norm(text: str) -> str:
 
 
 def _money(value: Decimal) -> Decimal:
-    return value.quantize(CENT, rounding=ROUND_HALF_UP)  # commercial rounding
+    return value.quantize(CENT, rounding=ROUND_HALF_UP)
+
+
+def _can_post(state: AgentState) -> bool:
+    return (
+        state.customer_number is not None
+        and len(state.lines) == len(state.purchase_order.lines)
+        and all(check.material_number for check in state.lines)
+    )
 
 
 @dataclass
@@ -27,6 +36,7 @@ class Deps:
     tolerance: Callable[[str], Tolerance]
     match_material: Callable[[str, list[dict]], MaterialMatch]
     anomaly: Callable[[str, str, float], float]
+    explain: Callable[[AgentState], str]
     auto_post_limit: Decimal
 
 
@@ -265,9 +275,61 @@ def build_graph(deps: Deps, checkpointer=None):
         return {}
 
     def explain_exception(state: AgentState) -> dict:
-        # Step 5 replaces this with a GPT-written explanation and a human-review pause.
-        text = "\n".join(f"- {issue.message}" for issue in state.issues)
+        try:
+            text = deps.explain(state)
+        except Exception:  # noqa: BLE001 - a missing explanation must never block the order
+            text = "\n".join(f"- {issue.message}" for issue in state.issues)
         return {"explanation": text, "status": "awaiting_review"}
+
+    def human_review(state: AgentState) -> dict:
+        answer = interrupt(
+            {  # the run pauses here until a person answers
+                "idempotency_key": state.idempotency_key,
+                "explanation": state.explanation,
+                "issues": [issue.model_dump(mode="json") for issue in state.issues],
+                "purchase_order": state.purchase_order.model_dump(mode="json"),
+            }
+        )
+        review = Review.model_validate(answer)
+        if review.action == "approve" and not _can_post(state):
+            return {
+                "review": review,
+                "issues": [
+                    *state.issues,
+                    Issue(
+                        code=IssueCode.APPROVAL_NOT_POSSIBLE,
+                        message="Approve is not possible because the customer or a material is unknown. "
+                        "Please edit the order instead.",
+                    ),
+                ],
+            }
+        if review.action == "edit" and review.edited_po is None:
+            return {
+                "review": review,
+                "issues": [
+                    *state.issues,
+                    Issue(
+                        code=IssueCode.APPROVAL_NOT_POSSIBLE,
+                        message="Edit was chosen, but no corrected order was provided.",
+                    ),
+                ],
+            }
+        return {"review": review}
+
+    def apply_edit(state: AgentState) -> dict:
+        # Start over with the corrected PO: every check runs again.
+        return {
+            "purchase_order": state.review.edited_po,
+            "customer_number": None,
+            "lines": [],
+            "issues": [],
+            "decision": None,
+            "explanation": None,
+            "status": "running",
+        }
+
+    def reject_order(state: AgentState) -> dict:
+        return {"status": "rejected"}
 
     def after_decide(state: AgentState) -> str:
         return "post_order" if state.decision == "auto_post" else "explain_exception"
@@ -277,6 +339,15 @@ def build_graph(deps: Deps, checkpointer=None):
 
     def after_verify(state: AgentState) -> str:
         return END if state.status == "posted" else "cancel_order"
+
+    def after_review(state: AgentState) -> str:
+        if state.issues and state.issues[-1].code == IssueCode.APPROVAL_NOT_POSSIBLE:
+            return "explain_exception"
+        return {
+            "approve": "post_order",
+            "edit": "apply_edit",
+            "reject": "reject_order",
+        }[state.review.action]
 
     graph = StateGraph(AgentState)
     for name, node in [
@@ -289,6 +360,9 @@ def build_graph(deps: Deps, checkpointer=None):
         ("verify_order", verify_order),
         ("cancel_order", cancel_order),
         ("explain_exception", explain_exception),
+        ("human_review", human_review),
+        ("apply_edit", apply_edit),
+        ("reject_order", reject_order),
     ]:
         graph.add_node(name, node)
 
@@ -311,7 +385,19 @@ def build_graph(deps: Deps, checkpointer=None):
         "verify_order", after_verify, {END: END, "cancel_order": "cancel_order"}
     )
     graph.add_edge("cancel_order", "explain_exception")
-    graph.add_edge("explain_exception", END)
+    graph.add_edge("explain_exception", "human_review")
+    graph.add_conditional_edges(
+        "human_review",
+        after_review,
+        {
+            "post_order": "post_order",
+            "apply_edit": "apply_edit",
+            "reject_order": "reject_order",
+            "explain_exception": "explain_exception",
+        },
+    )
+    graph.add_edge("apply_edit", "resolve_customer")
+    graph.add_edge("reject_order", END)
     return graph.compile(checkpointer=checkpointer)
 
 
