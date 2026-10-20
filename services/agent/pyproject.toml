@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.143.2",
     "httpx>=0.28.1",
     "langchain-openai>=1.7.2",
     "langchain-postgres>=0.0.19",
@@ -15,9 +16,10 @@ dependencies = [
     "langgraph>=1.2.15",
     "langgraph-checkpoint-postgres>=3.2.0",
     "o2c-common",
-    "psycopg[binary]>=3.3.6",
+    "psycopg[binary,pool]>=3.3.6",
     "pydantic>=2.14.1",
     "pydantic-settings>=2.16.0",
+    "uvicorn>=0.54.0",
 ]
 
 [project.scripts]

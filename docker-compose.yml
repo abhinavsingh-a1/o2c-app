@@ -241,6 +241,28 @@ services:
       postgres:
         condition: service_healthy
 
+  agent:
+    build:
+      context: .
+      dockerfile: docker/python-service.Dockerfile
+      args:
+        PACKAGE: agent
+    command: uvicorn agent.app:create_app --factory --host 0.0.0.0 --port 8400
+    environment:
+      <<: *pipeline-env
+      ERP_BASE_URL: http://erp-mock:8100
+    ports:
+      - "8400:8400"
+    depends_on:
+      kafka:
+        condition: service_started
+      litellm:
+        condition: service_started
+      erp-mock:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
   s3data:

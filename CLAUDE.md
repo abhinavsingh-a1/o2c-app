@@ -48,7 +48,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make extractor: run the extractor at http://localhost:8300/docs
 - Prompts live in prompts/*.md; {schema} is replaced with the JSON schema at startup.
 - make send PDF=<path>: send a PDF to intake (the full pipeline runs in Docker via make up)
-
+- make agent: run the agent locally at http://localhost:8400/docs (stop the Compose agent first)
+- Review a paused order: GET/POST http://localhost:8400/reviews/{idempotency_key}
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,
