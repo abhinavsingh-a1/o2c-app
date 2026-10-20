@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake
 
 up:
 	docker compose up -d --build
@@ -65,3 +65,6 @@ lag:
 
 topics-reset:
 	uv run python -m o2c_common.topics --reset
+
+intake:
+	uv run flask --app "intake.app:create_app" run --port 8200
