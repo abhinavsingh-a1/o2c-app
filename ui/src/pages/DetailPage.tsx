@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 
 import { api } from "../api/client";
 import type { ReviewDetail } from "../api/types";
+import DecisionPanel from "../components/DecisionPanel";
 import { label, money } from "../format";
 
 export default function DetailPage() {
@@ -10,6 +11,8 @@ export default function DetailPage() {
   const [detail, setDetail] = useState<ReviewDetail | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,7 +26,7 @@ export default function DetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [key, reload]);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +46,11 @@ export default function DetailPage() {
       if (url) URL.revokeObjectURL(url);
     };
   }, [key]);
+
+  function decided(message: string) {
+    setNotice(message);
+    setReload((r) => r + 1); // load the new state of the order
+  }
 
   if (error) {
     return (
@@ -67,6 +75,7 @@ export default function DetailPage() {
         <h1>{po.po_number}</h1>
         <span className={`status status-${detail.status}`}>{label(detail.status)}</span>
       </div>
+      {notice && <p className="notice">{notice}</p>}
 
       <div className="split">
         <div className="pdf">
@@ -78,7 +87,7 @@ export default function DetailPage() {
         </div>
 
         <div className="facts">
-          {detail.explanation && (
+          {detail.awaiting_review && detail.explanation && (
             <div className="explanation">
               <h2>Why this order needs you</h2>
               <p>{detail.explanation}</p>
@@ -96,6 +105,15 @@ export default function DetailPage() {
                 ))}
               </ul>
             </>
+          )}
+
+          {detail.awaiting_review && (
+            <DecisionPanel
+              key={`${key}-${reload}`}
+              idempotencyKey={key}
+              purchaseOrder={po}
+              onDecided={decided}
+            />
           )}
 
           <h2>Order</h2>

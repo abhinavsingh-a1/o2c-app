@@ -182,3 +182,82 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+.panel {
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+.panel .panel {
+  border: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #616e7c;
+}
+
+.form-grid .wide {
+  grid-column: 1 / -1;
+}
+
+input,
+textarea {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  color: #1f2933;
+}
+
+.edit-table input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button.primary {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+button.danger {
+  border-color: #a12020;
+  color: #a12020;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notice {
+  background: #e3f6ec;
+  color: #146c43;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.total-line {
+  text-align: right;
+}
