@@ -28,3 +28,5 @@ poc = [
 
 [tool.pytest.ini_options]
 testpaths = ["libs", "services"]
+# Services each have tests/test_app.py; importlib mode allows duplicate basenames.
+addopts = ["--import-mode=importlib"]
