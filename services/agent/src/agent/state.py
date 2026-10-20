@@ -1,6 +1,6 @@
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
 from o2c_common.schema import PurchaseOrder
 from pydantic import BaseModel, Field
@@ -47,6 +47,9 @@ class AgentState(BaseModel):
     correlation_id: str
     source_event_id: str
     purchase_order: PurchaseOrder
+    source_document: dict[str, Any] = Field(
+        default_factory=dict
+    )  # s3_bucket, s3_key, filename, sender
 
     # results of the checks
     customer_number: str | None = None
