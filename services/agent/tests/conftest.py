@@ -3,6 +3,8 @@
 Test modules are imported in importlib mode, so they cannot `from conftest import ...`.
 """
 
+import io
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -10,8 +12,10 @@ from agent.checkpoint import thread_config
 from agent.contracts import Tolerance
 from agent.graph import Deps, build_graph
 from agent.materials import MaterialMatch
+from agent.reviews import ReviewSummary
 from agent.settings import REPO_ROOT
 from agent.state import AgentState
+from botocore.exceptions import ClientError
 from langgraph.checkpoint.memory import InMemorySaver
 from o2c_common.schema import PurchaseOrder
 
@@ -130,6 +134,45 @@ class FakeErp:
         return self.orders[vbeln]
 
 
+class FakeReviewStore:
+    """In-memory stand-in for agent.reviews.ReviewStore."""
+
+    def __init__(self):
+        self.rows: dict[str, ReviewSummary] = {}
+
+    def upsert(self, state: AgentState) -> None:
+        po = state.purchase_order
+        self.rows[state.idempotency_key] = ReviewSummary(
+            idempotency_key=state.idempotency_key,
+            po_number=po.po_number,
+            customer_name=po.customer_name,
+            customer_number=state.customer_number,
+            total_amount=po.total_amount,
+            currency=po.currency,
+            status=state.status,
+            issue_codes=[issue.code.value for issue in state.issues],
+            updated_at=datetime.now(UTC),
+        )
+
+    def list(self, status: str | None) -> list[ReviewSummary]:
+        rows = [r for r in self.rows.values() if status is None or r.status == status]
+        return sorted(rows, key=lambda r: r.updated_at, reverse=True)
+
+
+class FakeS3:
+    """get_object from an in-memory dict; unknown keys raise NoSuchKey like S3."""
+
+    def __init__(self):
+        self.objects: dict[tuple[str, str], bytes] = {}
+
+    def get_object(self, Bucket, Key):
+        if (Bucket, Key) not in self.objects:
+            raise ClientError(
+                {"Error": {"Code": "NoSuchKey", "Message": "not found"}}, "GetObject"
+            )
+        return {"Body": io.BytesIO(self.objects[(Bucket, Key)])}
+
+
 def no_match(description, candidates):
     return MaterialMatch(matnr=None, reason="no match")
 
@@ -163,6 +206,16 @@ def po() -> PurchaseOrder:
 @pytest.fixture
 def erp() -> FakeErp:
     return FakeErp()
+
+
+@pytest.fixture
+def review_store() -> FakeReviewStore:
+    return FakeReviewStore()
+
+
+@pytest.fixture
+def s3() -> FakeS3:
+    return FakeS3()
 
 
 @pytest.fixture

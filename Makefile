@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api
 
 up:
 	docker compose up -d --build
@@ -83,3 +83,6 @@ contracts-ingest:
 
 agent:
 	uv run uvicorn agent.app:create_app --factory --port 8400
+
+gen-api:
+	pnpm --dir ui gen:api

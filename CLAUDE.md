@@ -50,6 +50,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make send PDF=<path>: send a PDF to intake (the full pipeline runs in Docker via make up)
 - make agent: run the agent locally at http://localhost:8400/docs (stop the Compose agent first)
 - Review a paused order: GET/POST http://localhost:8400/reviews/{idempotency_key}
+- make gen-api: regenerate ui/src/api/schema.d.ts from the agent's OpenAPI (agent must be running)
+- Review API: GET /reviews?status=awaiting_review|all|posted, GET /reviews/{key}, GET /reviews/{key}/document, POST /reviews/{key}
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,
