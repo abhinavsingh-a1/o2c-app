@@ -4,19 +4,24 @@ Test modules are imported in importlib mode, so they cannot `from conftest impor
 """
 
 import io
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from agent.app import create_app, make_handler
+from agent.auth import Authenticator, hash_password
 from agent.checkpoint import thread_config
 from agent.contracts import Tolerance
 from agent.graph import Deps, build_graph
 from agent.materials import MaterialMatch
-from agent.reviews import ReviewSummary
-from agent.settings import REPO_ROOT
-from agent.state import AgentState
+from agent.reviews import AuditEntry, ReviewSummary
+from agent.settings import REPO_ROOT, Settings
+from agent.state import AgentState, Review
 from botocore.exceptions import ClientError
+from fastapi.testclient import TestClient
 from langgraph.checkpoint.memory import InMemorySaver
+from o2c_common.events import Envelope
 from o2c_common.schema import PurchaseOrder
 
 PO = PurchaseOrder.model_validate_json(
@@ -24,7 +29,10 @@ PO = PurchaseOrder.model_validate_json(
         encoding="utf-8"
     )
 )
-KEY = "k" * 64
+KEY = "k" * 64  # graph tests: thread of make_state()
+ORDER_KEY = "e" * 64  # API tests: thread of make_event()
+JWT_SECRET = "test-secret"
+USERNAME, USER_NAME, PASSWORD = "reviewer1", "Test Reviewer", "correct-horse-battery"
 
 
 class Crash(Exception):
@@ -139,6 +147,7 @@ class FakeReviewStore:
 
     def __init__(self):
         self.rows: dict[str, ReviewSummary] = {}
+        self.decisions: dict[str, list[AuditEntry]] = {}
 
     def upsert(self, state: AgentState) -> None:
         po = state.purchase_order
@@ -154,9 +163,34 @@ class FakeReviewStore:
             updated_at=datetime.now(UTC),
         )
 
-    def list(self, status: str | None) -> list[ReviewSummary]:
+    def query(self, status: str | None) -> list[ReviewSummary]:
         rows = [r for r in self.rows.values() if status is None or r.status == status]
         return sorted(rows, key=lambda r: r.updated_at, reverse=True)
+
+    def record_decision(
+        self, before: AgentState, review: Review, reviewer_name: str, after: AgentState
+    ) -> None:
+        entries = self.decisions.setdefault(before.idempotency_key, [])
+        entries.append(
+            AuditEntry(
+                id=sum(len(e) for e in self.decisions.values()) + 1,
+                action=review.action,
+                reviewer=review.reviewer,
+                reviewer_name=reviewer_name,
+                comment=review.comment,
+                result_status=after.status,
+                sales_order_number=after.sales_order_number,
+                decided_at=datetime.now(UTC),
+                po_after=review.edited_po.model_dump(mode="json")
+                if review.edited_po
+                else None,
+            )
+        )
+
+    def history(self, idempotency_key: str) -> list[AuditEntry]:
+        return sorted(
+            self.decisions.get(idempotency_key, []), key=lambda e: e.decided_at
+        )
 
 
 class FakeS3:
@@ -171,6 +205,24 @@ class FakeS3:
                 {"Error": {"Code": "NoSuchKey", "Message": "not found"}}, "GetObject"
             )
         return {"Body": io.BytesIO(self.objects[(Bucket, Key)])}
+
+
+class FakeProducer:
+    def __init__(self):
+        self.sent: list[tuple[str, Envelope]] = []
+        self.flushes = 0
+
+    def send(self, topic, event):
+        self.sent.append((topic, event))
+
+    def flush(self, timeout: float = 10.0):
+        self.flushes += 1
+
+    def topics(self) -> list[str]:
+        return [topic for topic, _ in self.sent]
+
+    def last(self, topic: str) -> Envelope:
+        return [event for t, event in self.sent if t == topic][-1]
 
 
 def no_match(description, candidates):
@@ -276,3 +328,117 @@ def make_state():
         )
 
     return make
+
+
+# --- API: app, login and orders ---
+
+
+@pytest.fixture
+def document() -> dict:
+    """Source document fields of the order created by make_event()."""
+    return {
+        "s3_bucket": "o2c-documents",
+        "s3_key": f"incoming/{ORDER_KEY}.pdf",
+        "filename": "PO-0001.pdf",
+        "sender": "buyer@example.com",
+    }
+
+
+@pytest.fixture
+def make_event(document):
+    """Factory: orders.extracted event for a PO (idempotency key ORDER_KEY by default)."""
+
+    def make(po: PurchaseOrder = PO, key: str = ORDER_KEY) -> Envelope:
+        return Envelope.new(
+            "orders.extracted",
+            "extractor",
+            key,
+            {
+                **document,
+                "doc_type": "purchase_order",
+                "purchase_order": po.model_dump(mode="json"),
+            },
+        )
+
+    return make
+
+
+@pytest.fixture
+def deviating_po(po, with_line) -> PurchaseOrder:
+    return with_line(po, 2, unit_price=Decimal("18.04"))  # agreed 16.40, +10%
+
+
+@pytest.fixture
+def producer() -> FakeProducer:
+    return FakeProducer()
+
+
+@pytest.fixture
+def users_file(tmp_path):
+    path = tmp_path / "users.json"
+    path.write_text(
+        json.dumps(
+            {USERNAME: {"name": USER_NAME, "password_hash": hash_password(PASSWORD)}}
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+@pytest.fixture
+def credentials() -> dict:
+    return {
+        "username": USERNAME,
+        "name": USER_NAME,
+        "password": PASSWORD,
+        "jwt_secret": JWT_SECRET,
+    }
+
+
+@pytest.fixture
+def app(make_deps, producer, review_store, s3, users_file):
+    settings = Settings(
+        litellm_master_key="test",
+        events_database_url="postgresql://test:test@localhost/test",
+        s3_access_key="test",
+        s3_secret_key="test",
+        auth_jwt_secret=JWT_SECRET,
+    )
+    return create_app(
+        settings=settings,
+        deps=make_deps(),
+        checkpointer=InMemorySaver(),
+        producer=producer,
+        review_store=review_store,
+        s3=s3,
+        auth=Authenticator(users_file, JWT_SECRET),
+        start_consumer=False,
+    )
+
+
+@pytest.fixture
+def client(app):
+    """Not logged in; send auth_headers on every /reviews call."""
+    with TestClient(app) as c:
+        yield c
+
+
+@pytest.fixture
+def auth_headers(client) -> dict:
+    resp = client.post("/auth/login", json={"username": USERNAME, "password": PASSWORD})
+    assert resp.status_code == 200
+    return {"Authorization": f"Bearer {resp.json()['access_token']}"}
+
+
+@pytest.fixture
+def handle(app, client, producer, review_store):
+    # The graph is built in the lifespan, so the client must be open first.
+    return make_handler(app.state.graph, producer, review_store)
+
+
+@pytest.fixture
+def waiting(handle, producer, make_event, deviating_po) -> str:
+    """Idempotency key of an order paused in human_review; the producer is reset."""
+    handle(make_event(deviating_po))
+    producer.sent.clear()
+    return ORDER_KEY

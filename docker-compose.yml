@@ -251,8 +251,12 @@ services:
     environment:
       <<: *pipeline-env
       ERP_BASE_URL: http://erp-mock:8100
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+      AUTH_USERS_FILE: /app/local/users.json
     ports:
       - "8400:8400"
+    volumes:
+      - ./local/users.json:/app/local/users.json:ro
     depends_on:
       kafka:
         condition: service_started

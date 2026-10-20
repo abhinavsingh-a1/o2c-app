@@ -21,6 +21,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews": {
         parameters: {
             query?: never;
@@ -73,14 +107,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reviews/{idempotency_key}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Audit */
+        get: operations["get_audit_reviews__idempotency_key__audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * DecisionResult
-         * @description What the API returns after a person's decision.
-         */
+        /** AuditEntry */
+        AuditEntry: {
+            /** Id */
+            id: number;
+            /** Action */
+            action: string;
+            /** Reviewer */
+            reviewer: string;
+            /** Reviewer Name */
+            reviewer_name: string;
+            /** Comment */
+            comment: string | null;
+            /** Result Status */
+            result_status: string;
+            /** Sales Order Number */
+            sales_order_number: string | null;
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            /** Po After */
+            po_after: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** DecisionResult */
         DecisionResult: {
             /** Status */
             status: string;
@@ -143,6 +217,24 @@ export interface components {
             /** Line Total */
             line_total: string;
         };
+        /** LoginRequest */
+        LoginRequest: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+        };
+        /** LoginResponse */
+        LoginResponse: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             */
+            token_type: string;
+            user: components["schemas"]["User"];
+        };
         /** PurchaseOrder */
         "PurchaseOrder-Input": {
             /** Po Number */
@@ -191,23 +283,7 @@ export interface components {
             /** Total Amount */
             total_amount: string;
         };
-        /** Review */
-        Review: {
-            /**
-             * Action
-             * @enum {string}
-             */
-            action: "approve" | "edit" | "reject";
-            /** Reviewer */
-            reviewer: string;
-            /** Comment */
-            comment?: string | null;
-            edited_po?: components["schemas"]["PurchaseOrder-Input"] | null;
-        };
-        /**
-         * ReviewDetail
-         * @description Everything the detail page shows for one order.
-         */
+        /** ReviewDetail */
         ReviewDetail: {
             /** Awaiting Review */
             awaiting_review: boolean;
@@ -228,9 +304,20 @@ export interface components {
             };
         };
         /**
-         * ReviewSummary
-         * @description One row in the review queue list.
+         * ReviewRequest
+         * @description What the UI sends. The reviewer is taken from the login, never from the request.
          */
+        ReviewRequest: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "approve" | "edit" | "reject";
+            /** Comment */
+            comment?: string | null;
+            edited_po?: components["schemas"]["PurchaseOrder-Input"] | null;
+        };
+        /** ReviewSummary */
         ReviewSummary: {
             /** Idempotency Key */
             idempotency_key: string;
@@ -253,6 +340,13 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** User */
+        User: {
+            /** Username */
+            username: string;
+            /** Name */
+            name: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -294,6 +388,59 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    login_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
                 };
             };
         };
@@ -371,7 +518,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Review"];
+                "application/json": components["schemas"]["ReviewRequest"];
             };
         };
         responses: {
@@ -413,6 +560,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_audit_reviews__idempotency_key__audit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idempotency_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEntry"][];
                 };
             };
             /** @description Validation Error */

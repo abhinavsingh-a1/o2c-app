@@ -13,17 +13,12 @@ type Props = {
 type Action = "approve" | "reject" | "edit";
 
 export default function DecisionPanel({ idempotencyKey, purchaseOrder, onDecided }: Props) {
-  const [reviewer, setReviewer] = useState("");
   const [comment, setComment] = useState("");
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(action: Action, editedPo?: PurchaseOrder) {
-    if (!reviewer.trim()) {
-      setError("Please enter your name first.");
-      return;
-    }
     if (action === "reject" && !comment.trim()) {
       setError("Please give a reason for rejecting this order.");
       return;
@@ -35,12 +30,7 @@ export default function DecisionPanel({ idempotencyKey, purchaseOrder, onDecided
     setError(null);
     const { data, error, response } = await api.POST("/reviews/{idempotency_key}", {
       params: { path: { idempotency_key: idempotencyKey } },
-      body: {
-        action,
-        reviewer: reviewer.trim(),
-        comment: comment.trim() || null,
-        edited_po: editedPo ?? null,
-      },
+      body: { action, comment: comment.trim() || null, edited_po: editedPo ?? null },
     });
     setBusy(false);
     if (response.status === 409) {
@@ -61,10 +51,6 @@ export default function DecisionPanel({ idempotencyKey, purchaseOrder, onDecided
     <div className="panel">
       <h2>Your decision</h2>
       <div className="form-grid">
-        <label>
-          Your name
-          <input value={reviewer} onChange={(e) => setReviewer(e.target.value)} placeholder="e.g. Anna Huber" />
-        </label>
         <label className="wide">
           Comment (required for reject)
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={2} />
