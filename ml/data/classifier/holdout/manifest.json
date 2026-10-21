@@ -1,0 +1,17 @@
+{
+  "seed": 5101,
+  "count": 10,
+  "hard": true,
+  "layouts": {
+    "PO-0001": "portal",
+    "PO-0002": "portal",
+    "PO-0003": "portal",
+    "PO-0004": "formular",
+    "PO-0005": "formular",
+    "PO-0006": "portal",
+    "PO-0007": "portal",
+    "PO-0008": "portal",
+    "PO-0009": "formular",
+    "PO-0010": "formular"
+  }
+}

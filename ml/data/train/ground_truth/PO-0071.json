@@ -1,0 +1,84 @@
+{
+  "po_number": "SAT-041310",
+  "po_date": "2026-04-30",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "83.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "1561.45"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "44",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "281.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "5",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "6.75"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "77.5",
+      "unit": "M",
+      "unit_price": "14.17",
+      "line_total": "1098.18"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "889.20"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "6",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "534.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "35",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "306.25"
+    }
+  ],
+  "total_amount": "5395.03"
+}

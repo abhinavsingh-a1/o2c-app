@@ -1,0 +1,75 @@
+{
+  "po_number": "WA-26-48729",
+  "po_date": "2026-09-16",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "16",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "622.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "29",
+      "unit": "M",
+      "unit_price": "1.39",
+      "line_total": "40.31"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "57",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "76.95"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "48",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "4315.20"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400101",
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "35",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "521.50"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "57",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "356.25"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "22",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "411.40"
+    }
+  ],
+  "total_amount": "6344.01"
+}

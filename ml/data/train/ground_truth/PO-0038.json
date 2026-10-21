@@ -1,0 +1,21 @@
+{
+  "po_number": "AFT/46272",
+  "po_date": "2026-06-20",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-07-29",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "1",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "18.60"
+    }
+  ],
+  "total_amount": "18.60"
+}

@@ -1,0 +1,66 @@
+{
+  "po_number": "WA-26-65622",
+  "po_date": "2026-08-09",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-08-17",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "51",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2754.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1750.50"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "32",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "524.80"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "113",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "242.95"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "11",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "68.75"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "54",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "264.60"
+    }
+  ],
+  "total_amount": "5605.60"
+}

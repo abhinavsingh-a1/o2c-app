@@ -1,0 +1,48 @@
+{
+  "po_number": "AFT/67003",
+  "po_date": "2026-10-09",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-10-25",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "83.5",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "179.53"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400101",
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "30",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "447.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "10",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "164.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "60",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "432.00"
+    }
+  ],
+  "total_amount": "1222.53"
+}

@@ -1,0 +1,84 @@
+{
+  "po_number": "NSH022291",
+  "po_date": "2026-07-19",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-07-27",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "56",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "274.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "60",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "207.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "56",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "358.40"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "19.60"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4984.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "140.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1770.30"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "24",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "32.40"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "38",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1045.00"
+    }
+  ],
+  "total_amount": "8691.10"
+}

@@ -1,0 +1,21 @@
+{
+  "po_number": "B-26/25966",
+  "po_date": "2026-09-08",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-09-20",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "83",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "153.55"
+    }
+  ],
+  "total_amount": "153.55"
+}

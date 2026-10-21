@@ -1,0 +1,102 @@
+{
+  "po_number": "B-26/71757",
+  "po_date": "2026-03-20",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-04-17",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1825.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "16",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "51.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "8.57",
+      "line_total": "471.35"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "52",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "774.80"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "21",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "390.60"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "60.5",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "130.08"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "34",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1836.00"
+    },
+    {
+      "line_no": 9,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "53",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "519.40"
+    },
+    {
+      "line_no": 10,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "29",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "181.25"
+    }
+  ],
+  "total_amount": "6897.48"
+}

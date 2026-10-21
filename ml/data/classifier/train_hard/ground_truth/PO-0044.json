@@ -1,0 +1,57 @@
+{
+  "po_number": "WA-26-4395",
+  "po_date": "2026-02-24",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-03-27",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "40",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "138.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "5",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "49.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "28",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "2517.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "44",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1408.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "32",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "204.80"
+    }
+  ],
+  "total_amount": "4317.00"
+}

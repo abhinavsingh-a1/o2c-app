@@ -1,0 +1,84 @@
+{
+  "po_number": "B-26/19053",
+  "po_date": "2026-09-21",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-10-18",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "38",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "148.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "44.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "82.33"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "37",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "181.30"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "9",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "801.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "22",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "605.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "21",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "151.20"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400119",
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "56",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "350.00"
+    }
+  ],
+  "total_amount": "2664.03"
+}

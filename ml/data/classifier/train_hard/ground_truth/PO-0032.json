@@ -1,0 +1,21 @@
+{
+  "po_number": "BP0023099",
+  "po_date": "2026-09-16",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-10-06",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "26",
+      "unit": "PAK",
+      "unit_price": "14.39",
+      "line_total": "374.14"
+    }
+  ],
+  "total_amount": "374.14"
+}

@@ -1,0 +1,84 @@
+{
+  "po_number": "BP0042884",
+  "po_date": "2026-05-07",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "9.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "119.70"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "17",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "166.60"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "39",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "124.80"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "36",
+      "unit": "BOX",
+      "unit_price": "23.85",
+      "line_total": "858.60"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "7",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "272.30"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "22",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "1977.80"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "9",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1161.00"
+    }
+  ],
+  "total_amount": "5025.80"
+}

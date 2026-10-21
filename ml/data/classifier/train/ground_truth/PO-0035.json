@@ -1,0 +1,75 @@
+{
+  "po_number": "NSH045065",
+  "po_date": "2026-02-23",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-04-05",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "30",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1167.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "14",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "385.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "185",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "342.25"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "38",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1216.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "2",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "9.80"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "53",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "169.60"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "44",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "171.60"
+    }
+  ],
+  "total_amount": "3461.25"
+}

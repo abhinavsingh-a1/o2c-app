@@ -1,0 +1,39 @@
+{
+  "po_number": "B-26/26818",
+  "po_date": "2026-02-05",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-02-13",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "108.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1367.10"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "45",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "220.50"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2106.00"
+    }
+  ],
+  "total_amount": "3693.60"
+}

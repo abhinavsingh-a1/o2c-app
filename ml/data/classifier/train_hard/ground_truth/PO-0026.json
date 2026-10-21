@@ -1,0 +1,111 @@
+{
+  "po_number": "B-26/98158",
+  "po_date": "2026-02-13",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400119",
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "60",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "375.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "47",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "338.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "16",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "140.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "11.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "144.90"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "16.5",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "35.48"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "28",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "459.20"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "18",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "495.00"
+    },
+    {
+      "line_no": 8,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "5",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "445.00"
+    },
+    {
+      "line_no": 9,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "8",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "51.20"
+    },
+    {
+      "line_no": 10,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "9.25"
+    },
+    {
+      "line_no": 11,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "702.00"
+    }
+  ],
+  "total_amount": "3195.43"
+}

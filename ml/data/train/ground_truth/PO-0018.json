@@ -1,0 +1,30 @@
+{
+  "po_number": "SAT-044891",
+  "po_date": "2026-06-02",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "27",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "36.45"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "7482.00"
+    }
+  ],
+  "total_amount": "7518.45"
+}

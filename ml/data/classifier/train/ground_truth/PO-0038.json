@@ -1,0 +1,84 @@
+{
+  "po_number": "WA-26-69246",
+  "po_date": "2026-05-27",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-06-03",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400101",
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "58",
+      "unit": "PAK",
+      "unit_price": "11.03",
+      "line_total": "639.74"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "5",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "36.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "60",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "207.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "54",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "345.60"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "57",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "76.95"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "183",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "3422.10"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4984.00"
+    },
+    {
+      "line_no": 8,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "38",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "706.80"
+    }
+  ],
+  "total_amount": "10418.19"
+}

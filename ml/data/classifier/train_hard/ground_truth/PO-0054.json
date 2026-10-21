@@ -1,0 +1,21 @@
+{
+  "po_number": "SAT-003003",
+  "po_date": "2026-04-12",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-04-22",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "29",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "253.75"
+    }
+  ],
+  "total_amount": "253.75"
+}

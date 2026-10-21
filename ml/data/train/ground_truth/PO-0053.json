@@ -1,0 +1,21 @@
+{
+  "po_number": "BP0023006",
+  "po_date": "2026-04-06",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-05-17",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "22",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "327.80"
+    }
+  ],
+  "total_amount": "327.80"
+}

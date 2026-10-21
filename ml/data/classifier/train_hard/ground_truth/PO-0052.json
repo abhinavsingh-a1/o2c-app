@@ -1,0 +1,57 @@
+{
+  "po_number": "B-26/18308",
+  "po_date": "2026-05-13",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-05-21",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "11",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "180.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "47",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "592.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "43",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "376.25"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "18",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "1618.20"
+    }
+  ],
+  "total_amount": "3484.65"
+}

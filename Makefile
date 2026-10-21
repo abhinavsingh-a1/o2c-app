@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
 
 up:
 	docker compose up -d --build
@@ -89,3 +89,51 @@ gen-api:
 
 ui-test:
 	pnpm --dir ui test
+
+# E10 datasets: POs for extraction (train, hard holdout) and documents for the classifier.
+ml-data:
+	uv run --group poc python poc/generate_pos.py --seed 2026 --count 100 --out ml/data/train
+	uv run --group poc python poc/generate_pos.py --seed 4242 --count 20 --hard --out ml/data/holdout
+	uv run --group poc python poc/generate_pos.py --seed 3101 --count 60 --out ml/data/classifier/train
+	uv run --group poc python poc/generate_other_docs.py --seed 3102 --count 60 --out ml/data/classifier/train
+	uv run --group poc python poc/generate_pos.py --seed 3201 --count 60 --hard --out ml/data/classifier/train_hard
+	uv run --group poc python poc/generate_other_docs.py --seed 3202 --count 60 --hard --out ml/data/classifier/train_hard
+	uv run --group poc python poc/generate_pos.py --seed 5101 --count 10 --hard --out ml/data/classifier/holdout
+	uv run --group poc python poc/generate_other_docs.py --seed 5102 --count 10 --hard --out ml/data/classifier/holdout
+
+# E10: Kubeflow pipeline for the quantity anomaly model (ml/pipelines/README.md)
+ml-image:
+	docker build -f docker/ml.Dockerfile -t o2c-ml:dev .
+
+ml-pipeline-compile:
+	uv run --group ml python ml/pipelines/anomaly_pipeline.py
+
+ml-pipeline-local:
+	uv run --group ml python ml/pipelines/run_local.py
+
+# Kubeflow Pipelines (standalone, pinned) on the kind cluster "o2c" (ml/pipelines/README.md)
+KFP_VERSION ?= 2.17.2
+KFP_MANIFESTS = github.com/kubeflow/pipelines/manifests/kustomize
+
+kfp-install:
+	kubectl apply -k "$(KFP_MANIFESTS)/cluster-scoped-resources?ref=$(KFP_VERSION)"
+	kubectl wait --for condition=established --timeout=120s crd/applications.app.k8s.io
+	kubectl apply -k "$(KFP_MANIFESTS)/env/platform-agnostic?ref=$(KFP_VERSION)"
+	# kind's kindnet enforces NetworkPolicies and drops allowed traffic to the artifact store
+	# with this policy (S3 timeouts in pipeline steps); local single-node cluster only.
+	kubectl delete networkpolicy seaweedfs -n kubeflow --ignore-not-found
+	kubectl wait --for=condition=Ready pods --all -n kubeflow --timeout=1800s
+	kind load docker-image o2c-ml:dev --name o2c
+
+kfp-load-image:
+	kind load docker-image o2c-ml:dev --name o2c
+
+kfp-ui:
+	kubectl port-forward -n kubeflow svc/ml-pipeline-ui 18088:80
+
+kfp-run:
+	uv run --group ml python ml/pipelines/run_kfp.py
+
+kfp-uninstall:
+	kubectl delete -k "$(KFP_MANIFESTS)/env/platform-agnostic?ref=$(KFP_VERSION)"
+	kubectl delete -k "$(KFP_MANIFESTS)/cluster-scoped-resources?ref=$(KFP_VERSION)"

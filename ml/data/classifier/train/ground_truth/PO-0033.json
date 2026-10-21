@@ -1,0 +1,48 @@
+{
+  "po_number": "PO-2026-86024",
+  "po_date": "2026-08-08",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "10",
+      "unit": "PC",
+      "unit_price": "155.29",
+      "line_total": "1552.90"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "3",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "14.70"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "53",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "2061.70"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "13",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "213.20"
+    }
+  ],
+  "total_amount": "3842.50"
+}

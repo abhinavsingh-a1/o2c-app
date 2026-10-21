@@ -1,0 +1,30 @@
+{
+  "po_number": "B-26/69286",
+  "po_date": "2026-01-21",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-02-05",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "26",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "832.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400119",
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "12",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "75.00"
+    }
+  ],
+  "total_amount": "907.00"
+}

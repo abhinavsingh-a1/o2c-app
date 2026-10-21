@@ -1,0 +1,39 @@
+{
+  "po_number": "PO-2026-52269",
+  "po_date": "2026-10-07",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-11-12",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "84",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "1570.80"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "46",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1472.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400119",
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "30",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "187.50"
+    }
+  ],
+  "total_amount": "3230.30"
+}

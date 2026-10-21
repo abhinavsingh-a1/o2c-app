@@ -1,0 +1,75 @@
+{
+  "po_number": "WA-26-56832",
+  "po_date": "2026-07-14",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-08-17",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3471.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "57",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "410.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "48",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1536.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "49",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "240.10"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "46",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "62.10"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "5805.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "12",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "648.00"
+    }
+  ],
+  "total_amount": "12172.60"
+}

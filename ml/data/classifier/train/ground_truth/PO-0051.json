@@ -1,0 +1,84 @@
+{
+  "po_number": "NSH095452",
+  "po_date": "2026-10-06",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-11-17",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "33",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "237.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "52.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "97.13"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "9",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "56.25"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "11",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "42.90"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "20.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "258.30"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "21",
+      "unit": "PC",
+      "unit_price": "114.75",
+      "line_total": "2409.75"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "38",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1778.40"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "27",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "2427.30"
+    }
+  ],
+  "total_amount": "7307.63"
+}

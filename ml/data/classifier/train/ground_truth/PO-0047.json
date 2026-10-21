@@ -1,0 +1,30 @@
+{
+  "po_number": "4500035584",
+  "po_date": "2026-10-01",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-10-31",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "11",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1419.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "26",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "162.50"
+    }
+  ],
+  "total_amount": "1581.50"
+}

@@ -1,0 +1,66 @@
+{
+  "po_number": "SAT-065128",
+  "po_date": "2026-03-30",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "9",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "167.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "26",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "166.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "178.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "55",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1512.50"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "147.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "10.5",
+      "unit": "KG",
+      "unit_price": "1.52",
+      "line_total": "15.96"
+    }
+  ],
+  "total_amount": "2187.26"
+}

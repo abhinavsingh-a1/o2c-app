@@ -1,0 +1,66 @@
+{
+  "po_number": "BP0097931",
+  "po_date": "2026-04-06",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-05-17",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "179",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "2255.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "42",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3738.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "144.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "267.33"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "20",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "640.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "24",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "153.60"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "28.5",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "61.28"
+    }
+  ],
+  "total_amount": "7115.61"
+}

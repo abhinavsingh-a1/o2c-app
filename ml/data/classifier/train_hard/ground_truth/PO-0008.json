@@ -1,0 +1,48 @@
+{
+  "po_number": "BP0038703",
+  "po_date": "2026-02-23",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "88",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1108.80"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "29",
+      "unit": "PC",
+      "unit_price": "66.54",
+      "line_total": "1929.66"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "38",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "706.80"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "2106.00"
+    }
+  ],
+  "total_amount": "5851.26"
+}

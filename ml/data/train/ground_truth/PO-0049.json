@@ -1,0 +1,48 @@
+{
+  "po_number": "AFT/57821",
+  "po_date": "2026-10-12",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-11-22",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "15",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "279.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "30",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "192.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "3",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "162.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "180.00"
+    }
+  ],
+  "total_amount": "813.00"
+}

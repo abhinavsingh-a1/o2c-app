@@ -1,0 +1,48 @@
+{
+  "po_number": "SAT-063119",
+  "po_date": "2026-02-08",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-03-15",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "13",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "357.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "22",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "1958.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "54",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1728.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "122",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1537.20"
+    }
+  ],
+  "total_amount": "5580.70"
+}

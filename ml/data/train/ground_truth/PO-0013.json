@@ -1,0 +1,75 @@
+{
+  "po_number": "AFT/00644",
+  "po_date": "2026-04-10",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-05-14",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "30",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "96.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "12",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "16.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "128",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "236.80"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "34",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "244.80"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "75",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "161.25"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "2574.00"
+    }
+  ],
+  "total_amount": "3674.05"
+}

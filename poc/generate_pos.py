@@ -8,11 +8,22 @@ Writes into poc/data/:
 
 Run with: uv run --group poc python poc/generate_pos.py
 No network or LLM calls; the output is identical on every run.
+
+Options create the ML datasets (ml/data) with the same customers, materials and rules:
+  --seed N    random seed (default 42)
+  --count N   number of purchase orders (default 50); count // 5 get a price deviation
+  --out DIR   output directory (default poc/data). Other directories get manifest.json
+              (seed and layout per PO) instead of a copy of master_data.json.
+  --hard      only the two layouts never used in poc/data or ml/data/train, about half
+              of the POs with 8-14 lines over two pages (table header repeated), terms
+              and conditions, a bill-to address and a bank-details / "page x of y" footer.
+Without options the script reproduces poc/data byte for byte.
 """
 
+import argparse
 import json
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
@@ -22,7 +33,15 @@ from reportlab import rl_config
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.pdfgen import canvas
+from reportlab.platypus import (
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 from schema import LineItem, PurchaseOrder
 
 # Without this, reportlab embeds the current timestamp and a random document ID.
@@ -132,12 +151,27 @@ MONTHS_EN = [
     "Nov",
     "Dec",
 ]
+MONTHS_DE = [
+    "Jänner",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember",
+]
 
 
 @dataclass(frozen=True)
 class Layout:
     name: str
-    date_fmt: str  # "dmy" (15.10.2026), "iso" (2026-10-15) or "text" (15 Oct 2026)
+    # "dmy" (15.10.2026), "iso" (2026-10-15), "text" (15 Oct 2026), "long_de" (15. Oktober 2026)
+    date_fmt: str
     num_fmt: str  # "en" (1,234.56) or "de" (1.234,56)
     shows_customer_number: bool
 
@@ -150,6 +184,13 @@ LAYOUTS = {
     "german": Layout("german", "dmy", "de", True),
     "landscape": Layout("landscape", "text", "de", False),
 }
+
+# --hard only: layouts that appear in no training data.
+HARD_LAYOUTS = {
+    "portal": Layout("portal", "iso", "en", True),
+    "formular": Layout("formular", "long_de", "de", False),
+}
+LONG_ORDER_LINES = 8  # --hard orders with at least this many lines span two pages
 
 # Each customer always sends the same template, like real customers do.
 CUSTOMER_PROFILES = {
@@ -170,6 +211,7 @@ class Order:
     po: PurchaseOrder
     layout: Layout
     cost_center: str
+    extras: dict = field(default_factory=dict)  # --hard only: noise for the new layouts
 
 
 # --- formatting -------------------------------------------------------------
@@ -180,6 +222,8 @@ def fmt_date(d: date, style: str) -> str:
         return d.strftime("%d.%m.%Y")
     if style == "iso":
         return d.isoformat()
+    if style == "long_de":
+        return f"{d.day}. {MONTHS_DE[d.month - 1]} {d.year}"
     return f"{d.day:02d} {MONTHS_EN[d.month - 1]} {d.year}"
 
 
@@ -232,23 +276,57 @@ def deviating_price(rng: random.Random, list_price: Decimal) -> Decimal:
             return price
 
 
-def build_orders(rng: random.Random) -> tuple[list[Order], dict]:
-    deviating = set(rng.sample(range(1, NUM_POS + 1), NUM_DEVIATIONS))
+def noise_extras(rng: random.Random, customer: dict) -> dict:
+    """Numbers that look relevant but are not part of the ground truth."""
+    country = "DE" if customer["address"].endswith("Germany") else "AT"
+    digits = 18 if country == "DE" else 16  # IBAN length 22 (DE) or 20 (AT)
+    account = "".join(str(rng.randint(0, 9)) for _ in range(digits))
+    iban = f"{country}{rng.randint(10, 99)}{account}"
+    return {
+        "iban": " ".join(iban[i : i + 4] for i in range(0, len(iban), 4)),
+        "bic": rng.choice(["RZOOAT2L", "BKAUATWW", "GIBAATWW", "COBADEFF", "BYLADEM1"]),
+        "vat_id": f"{'ATU' if country == 'AT' else 'DE'}{rng.randint(10000000, 99999999)}",
+        "register": f"FN {rng.randint(100000, 599999)}{rng.choice('abdghkmpstvw')}",
+        "requisition": f"REQ-{rng.randint(100000, 999999)}",
+        "supplier_no": f"7{rng.randint(1000000, 9999999)}",
+        "po_box": str(rng.randint(10, 999)),
+        "extension": str(rng.randint(100, 899)),
+        "dock": str(rng.randint(1, 12)),
+    }
+
+
+def build_orders(
+    rng: random.Random,
+    count: int = NUM_POS,
+    num_deviations: int = NUM_DEVIATIONS,
+    hard: bool = False,
+) -> tuple[list[Order], dict]:
+    deviating = set(rng.sample(range(1, count + 1), num_deviations))
+    # --hard: exactly half of the orders are long enough to span two pages.
+    long_orders = set(rng.sample(range(1, count + 1), count // 2)) if hard else set()
     orders: list[Order] = []
     labels: dict = {}
 
-    for i in range(1, NUM_POS + 1):
+    for i in range(1, count + 1):
         po_id = f"PO-{i:04d}"
         customer = rng.choice(CUSTOMERS)
         layout_name, po_pattern = CUSTOMER_PROFILES[customer["customer_number"]]
         layout = LAYOUTS[layout_name]
+        if hard:
+            layout = HARD_LAYOUTS[rng.choice(sorted(HARD_LAYOUTS))]
 
         po_date = date(2026, 1, 5) + timedelta(days=rng.randint(0, 280))
         delivery_date = (
             po_date + timedelta(days=rng.randint(7, 42)) if rng.random() < 0.7 else None
         )
 
-        materials = rng.sample(MATERIALS, rng.randint(1, 8))
+        if not hard:
+            num_lines = rng.randint(1, 8)
+        elif i in long_orders:
+            num_lines = rng.randint(LONG_ORDER_LINES, 14)
+        else:
+            num_lines = rng.randint(1, LONG_ORDER_LINES - 1)
+        materials = rng.sample(MATERIALS, num_lines)
         deviant_line = rng.randint(1, len(materials)) if i in deviating else None
 
         lines = []
@@ -284,7 +362,10 @@ def build_orders(rng: random.Random) -> tuple[list[Order], dict]:
             lines=lines,
             total_amount=sum((line.line_total for line in lines), Decimal("0.00")),
         )
-        orders.append(Order(po_id, po, layout, f"KST-{rng.randint(1000, 9999)}"))
+        order = Order(po_id, po, layout, f"KST-{rng.randint(1000, 9999)}")
+        if hard:
+            order.extras = noise_extras(rng, customer)
+        orders.append(order)
         labels[po_id] = {
             "price_deviation": deviant_line is not None,
             "line_no": deviant_line,
@@ -311,19 +392,61 @@ def multiline(address: str) -> str:
     return address.replace(", ", "\n")
 
 
-def build_pdf(path: Path, story: list, pagesize=A4, margin: float = 50) -> None:
+def footer_canvas(lines: list[str], page_label: str) -> type[canvas.Canvas]:
+    """Canvas that prints footer lines and e.g. "Page 1 of 2" on every page.
+
+    The total page count is only known at the end, so pages are buffered until save().
+    """
+
+    class FooterCanvas(canvas.Canvas):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._saved_pages: list[dict] = []
+
+        def showPage(self):
+            self._saved_pages.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            total = len(self._saved_pages)
+            for state in self._saved_pages:
+                self.__dict__.update(state)
+                self.setFont("Helvetica", 6.5)
+                for n, text in enumerate(reversed(lines)):
+                    self.drawString(40, 20 + 8 * n, text)
+                self.drawRightString(
+                    self._pagesize[0] - 40,
+                    20 + 8 * len(lines),
+                    page_label.format(page=self._pageNumber, total=total),
+                )
+                super().showPage()
+            super().save()
+
+    return FooterCanvas
+
+
+def build_pdf(
+    path: Path,
+    story: list,
+    pagesize=A4,
+    margin: float = 50,
+    canvasmaker: type[canvas.Canvas] | None = None,
+) -> None:
     doc = SimpleDocTemplate(
         str(path),
         pagesize=pagesize,
         leftMargin=margin,
         rightMargin=margin,
         topMargin=margin,
-        bottomMargin=margin,
+        bottomMargin=margin + (20 if canvasmaker else 0),  # room for the footer
         title=path.stem,
         author="",
         creator="",
     )
-    doc.build(story)
+    if canvasmaker:
+        doc.build(story, canvasmaker=canvasmaker)
+    else:
+        doc.build(story)
 
 
 def items_table(
@@ -761,6 +884,407 @@ def layout_landscape(order: Order, path: Path) -> None:
     build_pdf(path, story, pagesize=landscape(A4), margin=50)
 
 
+# --- --hard layouts ---------------------------------------------------------
+
+HEAD_CELL = ParagraphStyle(
+    "head_cell", parent=CELL, textColor=colors.white, fontName="Helvetica-Bold"
+)
+
+TERMS_EN = [
+    (
+        "1. This order is subject exclusively to the buyer's general terms of purchase; "
+        "the supplier's terms of sale do not apply, even if they are not expressly rejected."
+    ),
+    (
+        "2. The order number and the line number must be quoted on every delivery note and "
+        "invoice. Invoices without a valid order number are returned unpaid."
+    ),
+    (
+        "3. Payment within 14 days with 2 % discount or within 60 days net. Orders below "
+        "EUR 100.00 net may be charged a handling fee of EUR 15.00."
+    ),
+    (
+        "4. Deliveries are accepted Monday to Friday from 7:00 to 14:00. Partial deliveries "
+        "require prior written approval."
+    ),
+    "5. Place of jurisdiction is the registered office of the buyer.",
+]
+
+TERMS_DE = [
+    (
+        "1. Es gelten ausschließlich unsere Allgemeinen Einkaufsbedingungen; abweichende "
+        "Bedingungen des Lieferanten gelten nur bei schriftlicher Anerkennung."
+    ),
+    (
+        "2. Bestellnummer und Positionsnummer sind auf allen Lieferscheinen und Rechnungen "
+        "anzugeben. Rechnungen ohne Bestellnummer werden unbearbeitet retourniert."
+    ),
+    (
+        "3. Zahlung innerhalb von 14 Tagen mit 3 % Skonto oder innerhalb von 60 Tagen netto. "
+        "Mindermengenzuschläge für Aufträge unter EUR 150,00 werden nicht akzeptiert."
+    ),
+    "4. Warenannahme Montag bis Donnerstag 7:00 bis 15:00 Uhr, Freitag 7:00 bis 11:30 Uhr.",
+    (
+        "5. Gerichtsstand ist der Sitz des Bestellers. Es gilt österreichisches Recht unter "
+        "Ausschluss des UN-Kaufrechts."
+    ),
+]
+
+
+def address_parts(address: str) -> tuple[str, str, str]:
+    """'Brunner Straße 88, 1230 Wien, Austria' -> ('Brunner Straße 88', '1230 Wien', 'Austria')."""
+    street, city, country = address.split(", ")
+    return street, city, country
+
+
+def split_lines(po: PurchaseOrder) -> list[list[LineItem]]:
+    """Long --hard orders are printed on two pages, the table header on both."""
+    if len(po.lines) < LONG_ORDER_LINES:
+        return [po.lines]
+    half = (len(po.lines) + 1) // 2
+    return [po.lines[:half], po.lines[half:]]
+
+
+def head_row(headers: list[str]) -> list[Paragraph]:
+    return [p(h, HEAD_CELL) for h in headers]
+
+
+def layout_portal(order: Order, path: Path) -> None:
+    """--hard: e-procurement export with bill-to address, need-by column and a legal footer."""
+    po, lay, x = order.po, order.layout, order.extras
+    nf = lay.num_fmt
+    _, city, country = address_parts(po.ship_to_address)
+    delivery = fmt_date(po.delivery_date, lay.date_fmt) if po.delivery_date else "-"
+    head = Table(
+        [
+            [
+                p("PURCHASE ORDER", TITLE),
+                p(
+                    f"Generated by the buyer's e-procurement portal\n"
+                    f"Revision 0 · {x['requisition']}",
+                    ParagraphStyle("portal_right", parent=SMALL, alignment=2),
+                ),
+            ]
+        ],
+        colWidths=[300, 215],
+        style=[("VALIGN", (0, 0), (-1, -1), "TOP")],
+    )
+    grey = colors.HexColor("#f0f0f0")
+    meta = Table(
+        [
+            [
+                p("Order number", SMALL),
+                p(po.po_number),
+                p("Order date", SMALL),
+                p(fmt_date(po.po_date, lay.date_fmt)),
+            ],
+            [
+                p("Buyer", SMALL),
+                p(po.customer_name),
+                p("Requisition", SMALL),
+                p(x["requisition"]),
+            ],
+            [
+                p("Account no. at supplier", SMALL),
+                p(po.customer_number or ""),
+                p("Need-by date", SMALL),
+                p(delivery),
+            ],
+            [
+                p("Supplier", SMALL),
+                p(SUPPLIER_NAME),
+                p("Currency", SMALL),
+                p(po.currency),
+            ],
+        ],
+        colWidths=[95, 165, 85, 170],
+        style=[
+            ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("BACKGROUND", (0, 0), (0, -1), grey),
+            ("BACKGROUND", (2, 0), (2, -1), grey),
+        ],
+    )
+    addresses = Table(
+        [
+            [p("BILL TO", SMALL), p("SHIP TO", SMALL)],
+            [
+                p(
+                    f"{po.customer_name}\nAccounts Payable\nP.O. Box {x['po_box']}\n{city}\n{country}"
+                ),
+                p(
+                    f"{po.customer_name}\nAttn: Goods receiving, dock {x['dock']}\n"
+                    f"{multiline(po.ship_to_address)}"
+                ),
+            ],
+        ],
+        colWidths=[257, 258],
+        style=[
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.grey),
+        ],
+    )
+    headers = head_row(
+        [
+            "Ln",
+            "Supplier part",
+            "Description",
+            "Need by",
+            "Qty",
+            "UOM",
+            "Unit price",
+            "Ext. price",
+        ]
+    )
+
+    def items(lines: list[LineItem]) -> Table:
+        rows = [headers]
+        for line in lines:
+            rows.append(
+                [
+                    str(line.line_no),
+                    line.material_number or "",
+                    p(line.description, CELL),
+                    delivery if po.delivery_date else "",
+                    fmt_quantity(line.quantity, nf),
+                    line.unit,
+                    fmt_number(line.unit_price, nf),
+                    fmt_number(line.line_total, nf),
+                ]
+            )
+        return Table(
+            rows,
+            colWidths=[24, 58, 170, 58, 42, 34, 59, 70],
+            repeatRows=1,
+            style=[
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#3d3d6b")),
+                ("ALIGN", (4, 1), (4, -1), "RIGHT"),
+                ("ALIGN", (6, 1), (7, -1), "RIGHT"),
+                ("LINEBELOW", (0, 1), (-1, -1), 0.3, colors.lightgrey),
+            ],
+        )
+
+    pages = split_lines(po)
+    story = [
+        head,
+        Spacer(1, 8),
+        meta,
+        Spacer(1, 10),
+        addresses,
+        Spacer(1, 12),
+        items(pages[0]),
+    ]
+    for part in pages[1:]:
+        story += [
+            PageBreak(),
+            p(f"Purchase order {po.po_number} (continued)", SMALL),
+            Spacer(1, 6),
+            items(part),
+        ]
+    story += [
+        Table(
+            [["Order total (net, EUR)", fmt_number(po.total_amount, nf)]],
+            colWidths=[445, 70],
+            style=[
+                ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+                ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+                ("LINEABOVE", (0, 0), (-1, 0), 0.8, colors.black),
+            ],
+        ),
+        p(
+            "Freight and packaging included unless stated otherwise. VAT is invoiced separately.",
+            SMALL,
+        ),
+        Spacer(1, 14),
+        p("Terms and conditions", HEADING),
+        *[p(term, SMALL) for term in TERMS_EN],
+    ]
+    footer = [
+        f"{po.customer_name} · {po.ship_to_address}",
+        f"Bank: IBAN {x['iban']} · BIC {x['bic']} · VAT ID {x['vat_id']}",
+    ]
+    build_pdf(
+        path,
+        story,
+        margin=40,
+        canvasmaker=footer_canvas(footer, "Page {page} of {total}"),
+    )
+
+
+def layout_formular(order: Order, path: Path) -> None:
+    """--hard: German order form; quantity before description, carry-forward subtotals."""
+    po, lay, x = order.po, order.layout, order.extras
+    nf = lay.num_fmt
+    _, city, country = address_parts(po.ship_to_address)
+    delivery = (
+        fmt_date(po.delivery_date, lay.date_fmt)
+        if po.delivery_date
+        else "nach Vereinbarung"
+    )
+    fields = Table(
+        [
+            [
+                p("Bestell-Nr.", SMALL),
+                p(po.po_number),
+                p("Bestelldatum", SMALL),
+                p(fmt_date(po.po_date, lay.date_fmt)),
+            ],
+            [
+                p("Ihre Lieferantennummer bei uns", SMALL),
+                p(x["supplier_no"]),
+                p("Liefertermin", SMALL),
+                p(delivery),
+            ],
+            [
+                p("Sachbearbeitung", SMALL),
+                p(f"Einkauf, Durchwahl -{x['extension']}"),
+                p("Kostenstelle", SMALL),
+                p(order.cost_center),
+            ],
+        ],
+        colWidths=[110, 145, 90, 160],
+        style=[
+            ("BOX", (0, 0), (-1, -1), 0.8, colors.black),
+            ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.grey),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ],
+    )
+    addresses = Table(
+        [
+            [
+                p("Lieferant", SMALL),
+                p("Rechnungsanschrift", SMALL),
+                p("Lieferanschrift", SMALL),
+            ],
+            [
+                p(f"{SUPPLIER_NAME}\n{multiline(SUPPLIER_ADDRESS)}"),
+                p(
+                    f"{po.customer_name}\nBuchhaltung\nPostfach {x['po_box']}\n{city}\n{country}"
+                ),
+                p(
+                    f"{po.customer_name}\nWareneingang Tor {x['dock']}\n"
+                    f"{multiline(po.ship_to_address)}"
+                ),
+            ],
+        ],
+        colWidths=[168, 168, 169],
+        style=[
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.grey),
+        ],
+    )
+    headers = head_row(
+        [
+            "Pos.",
+            "Menge",
+            "ME",
+            "Artikel / Bezeichnung",
+            "Ihre Art.-Nr.",
+            "Preis/ME",
+            "Gesamt",
+        ]
+    )
+
+    def items(
+        lines: list[LineItem], carried: Decimal | None, carry_out: Decimal | None
+    ) -> Table:
+        rows = [headers]
+        if carried is not None:
+            rows.append(
+                ["", "", "", p("Übertrag", CELL), "", "", fmt_number(carried, nf)]
+            )
+        for line in lines:
+            rows.append(
+                [
+                    str(line.line_no),
+                    fmt_quantity(line.quantity, nf),
+                    line.unit,
+                    p(line.description, CELL),
+                    line.material_number or "",
+                    fmt_number(line.unit_price, nf),
+                    fmt_number(line.line_total, nf),
+                ]
+            )
+        if carry_out is not None:
+            rows.append(
+                [
+                    "",
+                    "",
+                    "",
+                    p("Zwischensumme, Übertrag auf Seite 2", CELL),
+                    "",
+                    "",
+                    fmt_number(carry_out, nf),
+                ]
+            )
+        return Table(
+            rows,
+            colWidths=[30, 48, 32, 199, 62, 58, 76],
+            repeatRows=1,
+            style=[
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4a4a4a")),
+                ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+                ("ALIGN", (1, 1), (1, -1), "RIGHT"),
+                ("ALIGN", (5, 1), (6, -1), "RIGHT"),
+            ],
+        )
+
+    story = [
+        p(po.customer_name, HEADING),
+        p(f"{po.ship_to_address} · Einkauf", SMALL),
+        Spacer(1, 8),
+        p("BESTELLSCHEIN", TITLE),
+        fields,
+        Spacer(1, 10),
+        addresses,
+        Spacer(1, 10),
+        p(
+            "Wir bestellen zu unseren unten angeführten Allgemeinen Einkaufsbedingungen:"
+        ),
+        Spacer(1, 6),
+    ]
+    pages, carried = split_lines(po), None
+    for n, part in enumerate(pages):
+        subtotal = (carried or Decimal(0)) + sum(line.line_total for line in part)
+        last = n == len(pages) - 1
+        if n:
+            story += [
+                PageBreak(),
+                p(f"Bestellschein {po.po_number}, Fortsetzung", SMALL),
+                Spacer(1, 6),
+            ]
+        story.append(items(part, carried, None if last else subtotal))
+        carried = subtotal
+    story += [
+        Table(
+            [["Gesamtbetrag netto EUR", fmt_number(po.total_amount, nf)]],
+            colWidths=[429, 76],
+            style=[
+                ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+                ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+            ],
+        ),
+        p("Die Umsatzsteuer ist gesondert auszuweisen.", SMALL),
+        Spacer(1, 14),
+        p("Allgemeine Einkaufsbedingungen (Auszug)", HEADING),
+        *[p(term, SMALL) for term in TERMS_DE],
+    ]
+    footer = [
+        f"{po.customer_name} · Sitz {city} · {x['register']} · UID {x['vat_id']}",
+        f"Bankverbindung: IBAN {x['iban']} · BIC {x['bic']}",
+    ]
+    build_pdf(
+        path,
+        story,
+        margin=45,
+        canvasmaker=footer_canvas(footer, "Seite {page} von {total}"),
+    )
+
+
 RENDERERS = {
     "table": layout_table,
     "letter": layout_letter,
@@ -768,6 +1292,8 @@ RENDERERS = {
     "compact": layout_compact,
     "german": layout_german,
     "landscape": layout_landscape,
+    "portal": layout_portal,
+    "formular": layout_formular,
 }
 
 
@@ -780,24 +1306,58 @@ def write_json(path: Path, data: dict) -> None:
     )
 
 
-def generate(out_dir: Path = DATA_DIR) -> None:
-    rng = random.Random(SEED)
+def generate(
+    out_dir: Path = DATA_DIR,
+    seed: int = SEED,
+    count: int = NUM_POS,
+    hard: bool = False,
+    as_dataset: bool = False,
+) -> None:
+    """Write PDFs, ground truth and labels. `as_dataset` (an ML dataset outside poc/data)
+    writes manifest.json instead of a copy of master_data.json."""
+    rng = random.Random(seed)
     pos_dir = out_dir / "pos"
     gt_dir = out_dir / "ground_truth"
     pos_dir.mkdir(parents=True, exist_ok=True)
     gt_dir.mkdir(parents=True, exist_ok=True)
 
-    write_json(out_dir / "master_data.json", master_data())
+    if not as_dataset:
+        write_json(out_dir / "master_data.json", master_data())
 
-    orders, labels = build_orders(rng)
+    orders, labels = build_orders(rng, count, count // 5, hard)
     for order in orders:
         RENDERERS[order.layout.name](order, pos_dir / f"{order.po_id}.pdf")
         (gt_dir / f"{order.po_id}.json").write_text(
             order.po.model_dump_json(indent=2) + "\n", encoding="utf-8"
         )
     write_json(out_dir / "labels.json", labels)
+    if as_dataset:
+        write_json(
+            out_dir / "manifest.json",
+            {
+                "seed": seed,
+                "count": count,
+                "hard": hard,
+                "layouts": {order.po_id: order.layout.name for order in orders},
+            },
+        )
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Generate synthetic purchase orders.")
+    parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--count", type=int, default=NUM_POS)
+    parser.add_argument("--out", type=Path, default=DATA_DIR)
+    parser.add_argument(
+        "--hard", action="store_true", help="new layouts, two pages, noise"
+    )
+    args = parser.parse_args(argv)
+    out = args.out.resolve()
+    generate(
+        out, args.seed, args.count, args.hard, as_dataset=out != DATA_DIR.resolve()
+    )
+    print(f"Wrote {args.count} purchase orders to {out}")
 
 
 if __name__ == "__main__":
-    generate()
-    print(f"Wrote {NUM_POS} purchase orders to {DATA_DIR}")
+    main()

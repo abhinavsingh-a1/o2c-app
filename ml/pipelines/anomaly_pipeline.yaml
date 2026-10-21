@@ -1,0 +1,294 @@
+# PIPELINE DEFINITION
+# Name: o2c-quantity-anomaly
+# Description: Train, evaluate and (maybe) promote the quantity anomaly model.
+# Inputs:
+#    erp_database_url: str
+#    mlflow_tracking_uri: str [Default: 'http://host.docker.internal:5000']
+# Outputs:
+#    Output: str
+components:
+  comp-evaluate:
+    executorLabel: exec-evaluate
+    inputDefinitions:
+      artifacts:
+        history:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        evaluation:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+        metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+  comp-load-history:
+    executorLabel: exec-load-history
+    inputDefinitions:
+      parameters:
+        erp_database_url:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        history:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-register-and-promote:
+    executorLabel: exec-register-and-promote
+    inputDefinitions:
+      artifacts:
+        evaluation:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+        history:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+      parameters:
+        mlflow_tracking_uri:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: STRING
+  comp-train:
+    executorLabel: exec-train
+    inputDefinitions:
+      artifacts:
+        history:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-evaluate:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - evaluate
+        command:
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef evaluate(\n    history: Input[Dataset],\n    model: Input[Model],\n\
+          \    evaluation: Output[Artifact],\n    metrics: Output[Metrics],\n):\n\
+          \    \"\"\"Precision, recall, F1 on the history outliers; false alarms on\
+          \ poc/data and holdout.\"\"\"\n    import json\n    from pathlib import\
+          \ Path\n\n    import train_anomaly\n\n    result = train_anomaly.evaluate(\n\
+          \        train_anomaly.load_model(model.path), train_anomaly.read_history(history.path)\n\
+          \    )\n    Path(evaluation.path).write_text(json.dumps(result, indent=2),\
+          \ encoding=\"utf-8\")\n    m, far = result[\"history\"], result[\"false_alarms\"\
+          ]\n    for name in (\"precision\", \"recall\", \"f1\"):\n        metrics.log_metric(name,\
+          \ float(m[name]))\n    for name, value in train_anomaly.far_metrics(far).items():\n\
+          \        metrics.log_metric(name, value)\n    train_anomaly.print_report(result)\n\
+          \n"
+        image: o2c-ml:dev
+    exec-load-history:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - load_history
+        command:
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef load_history(erp_database_url: str, history: Output[Dataset]):\n\
+          \    \"\"\"Completed ERP orders with the labelled outliers (history_outliers.json).\"\
+          \"\"\n    import train_anomaly\n\n    df = train_anomaly.load_labelled_history(erp_database_url)\n\
+          \    train_anomaly.write_history(df, history.path)\n    history.metadata[\"\
+          lines\"] = len(df)\n    history.metadata[\"outliers\"] = int(df[\"is_outlier\"\
+          ].sum())\n    print(f\"{len(df)} history lines, {int(df['is_outlier'].sum())}\
+          \ labelled outliers\")\n\n"
+        image: o2c-ml:dev
+    exec-register-and-promote:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - register_and_promote
+        command:
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef register_and_promote(\n    mlflow_tracking_uri: str,\n    history:\
+          \ Input[Dataset],\n    model: Input[Model],\n    evaluation: Input[Artifact],\n\
+          ) -> str:\n    \"\"\"New MLflow version of o2c-quantity-anomaly; @champion\
+          \ moves only if the PO-level\n    false-alarm rate is lower than the champion's\
+          \ and recall >= 80%.\"\"\"\n    import json\n    from pathlib import Path\n\
+          \n    import train_anomaly\n\n    result = train_anomaly.register_and_promote(\n\
+          \        train_anomaly.load_model(model.path),\n        json.loads(Path(evaluation.path).read_text(encoding=\"\
+          utf-8\")),\n        train_anomaly.read_history(history.path),\n        mlflow_tracking_uri,\n\
+          \        tags={\"trained_by\": \"kubeflow-pipeline\"},\n    )\n    return\
+          \ json.dumps(result)\n\n"
+        image: o2c-ml:dev
+    exec-train:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - train
+        command:
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef train(history: Input[Dataset], model: Output[Model]):\n    \"\
+          \"\"IsolationForest + per customer-material statistics + 0.8 calibration.\"\
+          \"\"\n    import train_anomaly\n\n    fitted, metrics = train_anomaly.fit(train_anomaly.read_history(history.path))\n\
+          \    train_anomaly.save_model(fitted, model.path)\n    model.metadata[\"\
+          raw_cutoff\"] = metrics[\"raw_cutoff\"]\n    print(\n        f\"trained\
+          \ on {metrics['lines']} lines, raw cut-off {metrics['raw_cutoff']:.4f}\"\
+          \n    )\n\n"
+        image: o2c-ml:dev
+pipelineInfo:
+  description: Train, evaluate and (maybe) promote the quantity anomaly model.
+  name: o2c-quantity-anomaly
+root:
+  dag:
+    outputs:
+      parameters:
+        Output:
+          valueFromParameter:
+            outputParameterKey: Output
+            producerSubtask: register-and-promote
+    tasks:
+      evaluate:
+        cachingOptions: {}
+        componentRef:
+          name: comp-evaluate
+        dependentTasks:
+        - load-history
+        - train
+        inputs:
+          artifacts:
+            history:
+              taskOutputArtifact:
+                outputArtifactKey: history
+                producerTask: load-history
+            model:
+              taskOutputArtifact:
+                outputArtifactKey: model
+                producerTask: train
+        taskInfo:
+          name: evaluate
+      load-history:
+        cachingOptions: {}
+        componentRef:
+          name: comp-load-history
+        inputs:
+          parameters:
+            erp_database_url:
+              componentInputParameter: erp_database_url
+        taskInfo:
+          name: load-history
+      register-and-promote:
+        cachingOptions: {}
+        componentRef:
+          name: comp-register-and-promote
+        dependentTasks:
+        - evaluate
+        - load-history
+        - train
+        inputs:
+          artifacts:
+            evaluation:
+              taskOutputArtifact:
+                outputArtifactKey: evaluation
+                producerTask: evaluate
+            history:
+              taskOutputArtifact:
+                outputArtifactKey: history
+                producerTask: load-history
+            model:
+              taskOutputArtifact:
+                outputArtifactKey: model
+                producerTask: train
+          parameters:
+            mlflow_tracking_uri:
+              componentInputParameter: mlflow_tracking_uri
+        taskInfo:
+          name: register-and-promote
+      train:
+        cachingOptions: {}
+        componentRef:
+          name: comp-train
+        dependentTasks:
+        - load-history
+        inputs:
+          artifacts:
+            history:
+              taskOutputArtifact:
+                outputArtifactKey: history
+                producerTask: load-history
+        taskInfo:
+          name: train
+  inputDefinitions:
+    parameters:
+      erp_database_url:
+        parameterType: STRING
+      mlflow_tracking_uri:
+        defaultValue: http://host.docker.internal:5000
+        isOptional: true
+        parameterType: STRING
+  outputDefinitions:
+    parameters:
+      Output:
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.13.0

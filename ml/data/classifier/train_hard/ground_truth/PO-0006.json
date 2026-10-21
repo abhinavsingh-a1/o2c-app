@@ -1,0 +1,48 @@
+{
+  "po_number": "BP0042989",
+  "po_date": "2026-07-22",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-09-02",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "20",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "175.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "93.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "187.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "346.88"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "128",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1612.80"
+    }
+  ],
+  "total_amount": "2228.28"
+}

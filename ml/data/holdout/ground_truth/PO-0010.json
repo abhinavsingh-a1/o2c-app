@@ -1,0 +1,39 @@
+{
+  "po_number": "SAT-068349",
+  "po_date": "2026-01-07",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": "1000106",
+  "currency": "EUR",
+  "delivery_date": "2026-01-26",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "9",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "134.10"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "75.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "31",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "852.50"
+    }
+  ],
+  "total_amount": "1062.20"
+}

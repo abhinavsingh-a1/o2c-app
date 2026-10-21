@@ -1,0 +1,84 @@
+{
+  "po_number": "4500096424",
+  "po_date": "2026-01-10",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "47",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "63.45"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "71",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "894.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "393.75"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "77.80"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400119",
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "59",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "368.75"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "9",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "288.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "26",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "2337.40"
+    },
+    {
+      "line_no": 8,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "45",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "837.00"
+    }
+  ],
+  "total_amount": "5260.75"
+}

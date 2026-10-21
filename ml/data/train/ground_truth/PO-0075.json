@@ -1,0 +1,57 @@
+{
+  "po_number": "AFT/41593",
+  "po_date": "2026-06-11",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "972.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "3024.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "35",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "171.50"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "37",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "118.40"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    }
+  ],
+  "total_amount": "4631.40"
+}

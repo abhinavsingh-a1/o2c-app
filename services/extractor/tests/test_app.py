@@ -1,9 +1,18 @@
 import io
 import json
+from typing import ClassVar
 
+import extractor.app
 import pytest
 from botocore.exceptions import ClientError
-from extractor.app import REPO_ROOT, Settings, create_app, load_prompt, make_handler
+from extractor.app import (
+    REPO_ROOT,
+    Settings,
+    create_app,
+    load_prompt,
+    make_extractor,
+    make_handler,
+)
 from fastapi.testclient import TestClient
 from o2c_common.events import Envelope
 from o2c_common.kafka import PermanentError
@@ -187,3 +196,60 @@ def test_load_prompt_inserts_json_schema():
     assert "{schema}" not in prompt
     assert json.dumps(PurchaseOrder.model_json_schema()) in prompt
     assert prompt.startswith("You extract purchase orders")
+
+
+# --- extractor ---
+
+
+class FakeChatOpenAI:
+    """Records the ChatOpenAI arguments; the structured-output chain returns a fixed PO."""
+
+    instances: ClassVar[list["FakeChatOpenAI"]] = []
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        self.messages = None
+        FakeChatOpenAI.instances.append(self)
+
+    def with_structured_output(self, schema, method):
+        assert (schema, method) == (PurchaseOrder, "json_mode")
+        return self
+
+    def invoke(self, messages):
+        self.messages = messages
+        return FakeExtract().po
+
+
+@pytest.fixture
+def fake_llm(monkeypatch):
+    FakeChatOpenAI.instances = []
+    monkeypatch.setattr(extractor.app, "ChatOpenAI", FakeChatOpenAI)
+    return FakeChatOpenAI
+
+
+def llm_settings() -> Settings:
+    return Settings(
+        s3_access_key="test",
+        s3_secret_key="test",
+        litellm_master_key="test-key",
+        events_database_url="postgresql://test:test@localhost/test",
+    )
+
+
+def test_make_extractor_uses_o2c_extract_by_default(fake_llm):
+    po = make_extractor(llm_settings())("PO text", "session-1")
+
+    [llm] = fake_llm.instances
+    assert llm.kwargs["model"] == "o2c-extract"
+    assert llm.kwargs["api_key"] == "test-key"
+    assert llm.kwargs["extra_body"]["metadata"]["session_id"] == "session-1"
+    assert llm.messages == [("system", load_prompt(PROMPTS_DIR)), ("human", "PO text")]
+    assert po == FakeExtract().po
+
+
+def test_make_extractor_uses_the_given_model(fake_llm):
+    make_extractor(llm_settings(), model="o2c-extract-candidate")(
+        "PO text", "session-1"
+    )
+
+    assert fake_llm.instances[0].kwargs["model"] == "o2c-extract-candidate"

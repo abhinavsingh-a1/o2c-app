@@ -1,0 +1,21 @@
+{
+  "po_number": "NSH093850",
+  "po_date": "2026-06-23",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-07-11",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "23",
+      "unit": "PC",
+      "unit_price": "8.57",
+      "line_total": "197.11"
+    }
+  ],
+  "total_amount": "197.11"
+}

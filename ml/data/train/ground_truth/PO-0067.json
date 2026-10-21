@@ -1,0 +1,75 @@
+{
+  "po_number": "SAT-056329",
+  "po_date": "2026-08-18",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-08-28",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "46",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "62.10"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "121",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1524.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "27",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1263.60"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "117.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "2197.25"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "10",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "540.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "78.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "145.23"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    }
+  ],
+  "total_amount": "5801.78"
+}

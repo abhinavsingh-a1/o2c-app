@@ -6,6 +6,16 @@ requires-python = ">=3.12"
 [tool.uv.workspace]
 members = ["libs/*", "services/*"]
 
+# torch from the CPU-only index on Linux (the ML image, CI): no multi-GB CUDA libraries.
+# Windows and macOS wheels on PyPI are CPU builds already.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
@@ -25,8 +35,18 @@ poc = [
     "python-dotenv>=1.2.4",
     "reportlab>=5.0.1",
 ]
+# E10 model training and evaluation (filled in Part B)
+ml = [
+    "docker>=7.2.0",
+    "kfp>=2.13.0",
+    "mlflow-skinny==2.17.2",
+    "pandas>=2.2,<3",
+    "scikit-learn>=1.9.1",
+    "torch>=2.14.1",
+    "transformers>=4.45,<4.47",
+]
 
 [tool.pytest.ini_options]
-testpaths = ["libs", "services"]
+testpaths = ["libs", "services", "ml"]
 # Services each have tests/test_app.py; importlib mode allows duplicate basenames.
 addopts = ["--import-mode=importlib"]

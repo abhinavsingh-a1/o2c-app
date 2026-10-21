@@ -1,0 +1,39 @@
+{
+  "po_number": "BP0070038",
+  "po_date": "2026-09-03",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-09-22",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "59",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "424.80"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "9",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "167.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "19",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "60.80"
+    }
+  ],
+  "total_amount": "653.00"
+}

@@ -1,0 +1,75 @@
+{
+  "po_number": "B-26/40256",
+  "po_date": "2026-04-21",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-05-17",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "20",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "640.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "40",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1872.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "20",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "144.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "28",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "2492.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "9",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "247.50"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "101",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "186.85"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "44",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "431.20"
+    }
+  ],
+  "total_amount": "6013.55"
+}

@@ -1,0 +1,66 @@
+{
+  "po_number": "4500010986",
+  "po_date": "2026-07-28",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "245.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "3",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "269.70"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "59.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "749.70"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "40",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "54.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "739.10"
+    }
+  ],
+  "total_amount": "2775.10"
+}

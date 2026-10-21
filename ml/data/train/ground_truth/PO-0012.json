@@ -1,0 +1,21 @@
+{
+  "po_number": "WA-26-67745",
+  "po_date": "2026-09-09",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "170",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "2142.00"
+    }
+  ],
+  "total_amount": "2142.00"
+}

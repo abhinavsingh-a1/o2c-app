@@ -1,0 +1,21 @@
+{
+  "po_number": "SAT-083293",
+  "po_date": "2026-09-20",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "3",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "19.20"
+    }
+  ],
+  "total_amount": "19.20"
+}

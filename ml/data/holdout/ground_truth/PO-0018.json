@@ -1,0 +1,30 @@
+{
+  "po_number": "4500040899",
+  "po_date": "2026-04-06",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-05-13",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "27.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "514.25"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "59",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "188.80"
+    }
+  ],
+  "total_amount": "703.05"
+}

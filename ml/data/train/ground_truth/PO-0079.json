@@ -1,0 +1,21 @@
+{
+  "po_number": "PO-2026-7173",
+  "po_date": "2026-07-13",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-08-24",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "36",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "3236.40"
+    }
+  ],
+  "total_amount": "3236.40"
+}

@@ -1,0 +1,48 @@
+{
+  "po_number": "SAT-056265",
+  "po_date": "2026-06-06",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "52",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1664.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "162",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "3029.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "54",
+      "unit": "PC",
+      "unit_price": "37.94",
+      "line_total": "2048.76"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "1",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "9.80"
+    }
+  ],
+  "total_amount": "6751.96"
+}

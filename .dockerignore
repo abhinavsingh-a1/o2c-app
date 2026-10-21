@@ -4,3 +4,7 @@
 **/node_modules
 ui/dist
 local
+# ML outputs (classifier model ~0.5 GB, eval results, local pipeline runs)
+ml/results
+ml/pipelines/local_outputs
+**/__pycache__

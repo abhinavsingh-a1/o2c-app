@@ -1,0 +1,75 @@
+{
+  "po_number": "BP0082704",
+  "po_date": "2026-02-05",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "67",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "1252.90"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "60",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "5394.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "24",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "117.60"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "39",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "243.75"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "50",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "630.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "44",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1408.00"
+    }
+  ],
+  "total_amount": "9391.25"
+}

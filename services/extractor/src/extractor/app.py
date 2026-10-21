@@ -41,12 +41,13 @@ def load_prompt(prompts_dir: Path) -> str:
     return template.replace("{schema}", json.dumps(PurchaseOrder.model_json_schema()))
 
 
-def make_extractor(settings: Settings) -> Extract:
+def make_extractor(settings: Settings, model: str = "o2c-extract") -> Extract:
+    """`model` is a LiteLLM alias; evaluations pass another alias to compare models."""
     system_prompt = load_prompt(settings.prompts_dir)
 
     def extract(text: str, session_id: str) -> PurchaseOrder:
         llm = ChatOpenAI(
-            model="o2c-extract",
+            model=model,
             base_url=settings.litellm_base_url,
             api_key=settings.litellm_master_key,
             temperature=0,

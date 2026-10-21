@@ -1,0 +1,120 @@
+{
+  "po_number": "4500072252",
+  "po_date": "2026-03-07",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-04-15",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "82",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "176.30"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "18.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "233.10"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "40",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "138.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "193.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "3618.45"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "60",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1920.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "42",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "411.60"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "29",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "253.75"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "124",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "229.40"
+    },
+    {
+      "line_no": 9,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "1",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "1.35"
+    },
+    {
+      "line_no": 10,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "28",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "2492.00"
+    },
+    {
+      "line_no": 11,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "43",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "705.20"
+    },
+    {
+      "line_no": 12,
+      "material_number": null,
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "21",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "312.90"
+    }
+  ],
+  "total_amount": "10492.05"
+}
