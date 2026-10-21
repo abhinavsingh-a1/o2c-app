@@ -253,3 +253,13 @@ def test_make_extractor_uses_the_given_model(fake_llm):
     )
 
     assert fake_llm.instances[0].kwargs["model"] == "o2c-extract-candidate"
+
+
+def test_make_extractor_passes_the_http_client(fake_llm):
+    client = object()
+    make_extractor(llm_settings())("PO text", "session-1")
+    make_extractor(llm_settings(), http_client=client)("PO text", "session-1")
+
+    first, second = fake_llm.instances
+    assert first.kwargs["http_client"] is None  # ChatOpenAI's own client
+    assert second.kwargs["http_client"] is client

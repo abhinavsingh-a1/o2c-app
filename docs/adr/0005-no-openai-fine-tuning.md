@@ -112,4 +112,5 @@ token usage as priced by LiteLLM.
 **Decision.** If DistilBERT is not within 2 points of GPT on the holdout, production keeps
 the GPT classifier. v1 (47.5% vs 97.5%) failed the bar. v3 (100.0% vs 97.5%) meets it and
 is a candidate to replace the GPT classifier at about 8x lower latency and no per-document
-cost. The classifier service still uses GPT; switching is a separate change.
+cost. E11 uses it in front of GPT (hybrid classifier, ADR-009); the extraction model
+migration is ADR-008.

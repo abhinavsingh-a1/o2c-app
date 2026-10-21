@@ -96,6 +96,9 @@ def test_purchase_order_emits_classified_child_event(received, s3, producer):
         **received.payload,
         "doc_type": "purchase_order",
         "reason": "Customer orders goods from Alpentech.",
+        "classified_by": "gpt",  # no DistilBERT model given
+        "confidence": None,
+        "routing_reason": "model_unavailable",
     }
     assert event.idempotency_key == received.idempotency_key
     assert event.correlation_id == received.correlation_id

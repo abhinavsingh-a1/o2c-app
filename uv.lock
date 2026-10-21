@@ -600,17 +600,25 @@ version = "0.1.0"
 source = { editable = "services/classifier" }
 dependencies = [
     { name = "boto3" },
+    { name = "mlflow-skinny" },
     { name = "o2c-common" },
     { name = "openai" },
     { name = "pydantic-settings" },
+    { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
+    { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'linux'" },
+    { name = "transformers" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.115" },
+    { name = "mlflow-skinny", specifier = "==2.17.2" },
     { name = "o2c-common", editable = "libs/o2c-common" },
     { name = "openai", specifier = ">=3.31.0" },
     { name = "pydantic-settings", specifier = ">=2.16.0" },
+    { name = "torch", marker = "sys_platform != 'linux'", specifier = ">=2.14.1" },
+    { name = "torch", marker = "sys_platform == 'linux'", specifier = ">=2.14.1", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "transformers", specifier = ">=4.45,<4.47" },
 ]
 
 [[package]]
@@ -864,6 +872,7 @@ source = { editable = "services/extractor" }
 dependencies = [
     { name = "boto3" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "langchain-openai" },
     { name = "o2c-common" },
     { name = "pydantic-settings" },
@@ -875,6 +884,7 @@ dependencies = [
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.115" },
     { name = "fastapi", specifier = ">=0.143.2" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain-openai", specifier = ">=1.7.2" },
     { name = "o2c-common", editable = "libs/o2c-common" },
     { name = "pydantic-settings", specifier = ">=2.16.0" },

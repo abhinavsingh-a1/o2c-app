@@ -14,7 +14,14 @@ from openai import OpenAI
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from classifier.hybrid import DistilBert, classify_hybrid, load_distilbert
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
+# Chosen on the classifier validation split (ml/choose_threshold.py, ADR-009): all non-PO
+# predictions there are correct, so it is 0.0 + the 0.005 margin. Below 0.25 (the lowest
+# possible top softmax score of 4 classes) it does not bind yet; it does once a model
+# makes a non-PO mistake on validation.
+DEFAULT_NON_PO_THRESHOLD = 0.005
 
 
 class Classification(BaseModel):
@@ -33,6 +40,8 @@ class Settings(BaseSettings):
     events_database_url: str
     prompts_dir: Path = REPO_ROOT / "prompts"
     health_port: int = 8301
+    mlflow_tracking_uri: str = "http://localhost:5000"
+    classifier_non_po_threshold: float = DEFAULT_NON_PO_THRESHOLD
 
 
 def load_prompt(prompts_dir: Path) -> str:
@@ -62,7 +71,16 @@ def classify(
     return Classification.model_validate_json(response.choices[0].message.content)
 
 
-def make_handler(s3, llm: OpenAI, producer: EventProducer, system_prompt: str):
+def make_handler(
+    s3,
+    llm: OpenAI,
+    producer: EventProducer,
+    system_prompt: str,
+    local: DistilBert | None = None,
+    non_po_threshold: float = DEFAULT_NON_PO_THRESHOLD,
+):
+    """`local` is the DistilBERT model; None sends every document to GPT."""
+
     def handle(event: Envelope) -> None:
         p = event.payload
         try:
@@ -71,13 +89,25 @@ def make_handler(s3, llm: OpenAI, producer: EventProducer, system_prompt: str):
             if exc.response["Error"]["Code"] in ("NoSuchKey", "404"):
                 raise PermanentError(f"document missing: {p['s3_key']}") from exc
             raise
-        result = classify(llm, system_prompt, pdf_text(pdf), event)
+
+        def gpt(text: str) -> tuple[str, str]:
+            result = classify(llm, system_prompt, text, event)
+            return result.doc_type, result.reason
+
+        result = classify_hybrid(pdf_text(pdf), local, non_po_threshold, gpt)
         producer.send(
             "docs.classified",
             event.child(
                 "docs.classified",
                 "classifier",
-                {**p, "doc_type": result.doc_type, "reason": result.reason},
+                {
+                    **p,
+                    "doc_type": result.doc_type,
+                    "reason": result.reason,
+                    "classified_by": result.classified_by,
+                    "confidence": result.confidence,
+                    "routing_reason": result.routing_reason,
+                },
             ),
         )
 
@@ -120,7 +150,14 @@ def main() -> None:
         bootstrap=settings.kafka_bootstrap,
         group_id="classifier",
         topics=["docs.received"],
-        handler=make_handler(s3, llm, producer, load_prompt(settings.prompts_dir)),
+        handler=make_handler(
+            s3,
+            llm,
+            producer,
+            load_prompt(settings.prompts_dir),
+            local=load_distilbert(settings.mlflow_tracking_uri),
+            non_po_threshold=settings.classifier_non_po_threshold,
+        ),
         producer=producer,
         store=PostgresStore(settings.events_database_url),
     ).run()

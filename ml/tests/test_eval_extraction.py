@@ -4,8 +4,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import eval_extraction
+import httpx
 import pytest
 from eval_extraction import (
+    ResponseRecorder,
     evaluate,
     format_row,
     main,
@@ -143,7 +145,7 @@ def test_make_settings_needs_only_litellm(monkeypatch):
 def test_main_writes_results(dataset, tmp_path, monkeypatch, capsys):
     calls = []
 
-    def fake_make_extractor(settings, model):
+    def fake_make_extractor(settings, model, http_client=None):
         calls.append(model)
         return FakeExtract(dataset)
 
@@ -168,7 +170,7 @@ def test_main_defaults_to_o2c_extract(dataset, tmp_path, monkeypatch):
     monkeypatch.setattr(
         eval_extraction,
         "make_extractor",
-        lambda s, model: calls.append(model) or FakeExtract(dataset),
+        lambda s, model, **kw: calls.append(model) or FakeExtract(dataset),
     )
     monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
     monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
@@ -191,7 +193,7 @@ def test_evaluate_with_limit_takes_the_first_documents(dataset):
 
 def test_main_with_limit_names_the_results_file(dataset, tmp_path, monkeypatch):
     monkeypatch.setattr(
-        eval_extraction, "make_extractor", lambda s, model: FakeExtract(dataset)
+        eval_extraction, "make_extractor", lambda s, model, **kw: FakeExtract(dataset)
     )
     monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
     monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
@@ -202,3 +204,132 @@ def test_main_with_limit_names_the_results_file(dataset, tmp_path, monkeypatch):
     saved = json.loads(out.read_text(encoding="utf-8"))
     assert saved["limit"] == 1
     assert saved["summary"]["documents"] == 1
+
+
+def litellm_response(cost: str | None, fallbacks: str | None = None) -> httpx.Response:
+    headers = {}
+    if cost is not None:
+        headers["x-litellm-response-cost"] = cost
+    if fallbacks is not None:
+        headers["x-litellm-attempted-fallbacks"] = fallbacks
+    return httpx.Response(200, headers=headers)
+
+
+def test_response_recorder_sums_cost_and_counts_fallbacks():
+    recorder = ResponseRecorder()
+    recorder(litellm_response("0.0012"))
+    recorder(litellm_response("0.0003", fallbacks="1"))
+    recorder(litellm_response(None, fallbacks="0"))
+
+    assert recorder.take() == {"cost_usd": 0.0015, "fallbacks": 1}
+    assert recorder.take() == {"cost_usd": None, "fallbacks": 0}  # reset
+
+
+def test_response_recorder_client_calls_the_hook():
+    recorder = ResponseRecorder()
+    transport = httpx.MockTransport(lambda request: litellm_response("0.002"))
+    client = recorder.client()
+    client._transport = transport  # the hook is what matters, not the network
+
+    client.post("http://litellm/v1/chat/completions")
+
+    assert recorder.take() == {"cost_usd": 0.002, "fallbacks": 0}
+
+
+class CostlyExtract(FakeExtract):
+    """FakeExtract whose calls show up in the recorder like LiteLLM responses."""
+
+    def __init__(self, dataset: Path, recorder: ResponseRecorder):
+        super().__init__(dataset)
+        self.recorder = recorder
+
+    def __call__(self, text: str, session_id: str) -> PurchaseOrder:
+        self.recorder(
+            litellm_response("0.001", fallbacks="1" if "0002" in session_id else None)
+        )
+        return super().__call__(text, session_id)
+
+
+def test_evaluate_records_latency_cost_and_fallbacks(dataset):
+    recorder = ResponseRecorder()
+    recorder(litellm_response("9.9"))  # before the first document: not counted
+
+    rows = evaluate(dataset, CostlyExtract(dataset, recorder), recorder=recorder)
+
+    assert [row["cost_usd"] for row in rows] == [0.001, 0.001, 0.001]
+    assert [row["fallbacks"] for row in rows] == [0, 1, 0]
+    assert all(row["latency_s"] >= 0 for row in rows)
+
+
+def test_evaluate_without_recorder_has_no_cost(dataset):
+    rows = evaluate(dataset, FakeExtract(dataset))
+
+    assert {row["cost_usd"] for row in rows} == {None}
+    assert {row["fallbacks"] for row in rows} == {0}
+
+
+def test_summarize_latency_cost_and_fallbacks():
+    rows = [
+        {
+            "correct": 1,
+            "total": 1,
+            "errors": [],
+            "latency_s": 1.0,
+            "cost_usd": 0.002,
+            "fallbacks": 0,
+        },
+        {
+            "correct": 1,
+            "total": 1,
+            "errors": [],
+            "latency_s": 2.0,
+            "cost_usd": 0.004,
+            "fallbacks": 1,
+        },
+        {
+            "correct": 0,
+            "total": 1,
+            "errors": ["x"],
+            "latency_s": 3.0,
+            "cost_usd": None,
+            "fallbacks": 0,
+        },
+    ]
+
+    summary = summarize(rows)
+
+    assert summary["avg_latency_s"] == 2.0
+    assert summary["cost_per_po_usd"] == 0.003  # documents without a cost are left out
+    assert summary["fallbacks"] == 1
+    assert summarize([])["avg_latency_s"] is None
+    assert summarize([])["cost_per_po_usd"] is None
+
+
+def test_format_row_shows_latency():
+    row = {
+        "document": "PO-0001",
+        "correct": 20,
+        "total": 20,
+        "errors": [],
+        "latency_s": 2.345,
+    }
+    assert format_row(row) == "PO-0001   20/20   2.3s  perfect"
+
+
+def test_main_gives_the_extractor_a_recording_client(dataset, tmp_path, monkeypatch):
+    clients = []
+    monkeypatch.setattr(
+        eval_extraction,
+        "make_extractor",
+        lambda s, model, http_client=None: (
+            clients.append(http_client) or FakeExtract(dataset)
+        ),
+    )
+    monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
+    monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
+
+    out = main([str(dataset)])
+
+    assert isinstance(clients[0], httpx.Client)
+    summary = json.loads(out.read_text(encoding="utf-8"))["summary"]
+    assert {"avg_latency_s", "cost_per_po_usd", "fallbacks"} <= set(summary)

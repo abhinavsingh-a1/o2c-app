@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Annotated
 
 import boto3
+import httpx
 from botocore.exceptions import ClientError
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from langchain_openai import ChatOpenAI
@@ -41,8 +42,13 @@ def load_prompt(prompts_dir: Path) -> str:
     return template.replace("{schema}", json.dumps(PurchaseOrder.model_json_schema()))
 
 
-def make_extractor(settings: Settings, model: str = "o2c-extract") -> Extract:
-    """`model` is a LiteLLM alias; evaluations pass another alias to compare models."""
+def make_extractor(
+    settings: Settings,
+    model: str = "o2c-extract",
+    http_client: httpx.Client | None = None,
+) -> Extract:
+    """`model` is a LiteLLM alias; evaluations pass another alias to compare models,
+    and an `http_client` to read LiteLLM's response headers (cost)."""
     system_prompt = load_prompt(settings.prompts_dir)
 
     def extract(text: str, session_id: str) -> PurchaseOrder:
@@ -51,6 +57,7 @@ def make_extractor(settings: Settings, model: str = "o2c-extract") -> Extract:
             base_url=settings.litellm_base_url,
             api_key=settings.litellm_master_key,
             temperature=0,
+            http_client=http_client,
             extra_body={
                 "metadata": {
                     "trace_name": "extract",

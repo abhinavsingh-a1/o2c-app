@@ -210,7 +210,9 @@ services:
       args:
         PACKAGE: classifier
     command: python -m classifier.app
-    environment: *pipeline-env
+    environment:
+      <<: *pipeline-env
+      MLFLOW_TRACKING_URI: http://mlflow:5000 # DistilBERT classifier; GPT only if unavailable
     depends_on:
       kafka:
         condition: service_started
