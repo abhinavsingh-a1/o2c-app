@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from agent import anomaly
 from agent.app import create_app, make_handler
 from agent.auth import Authenticator, hash_password
 from agent.checkpoint import thread_config
@@ -49,7 +50,9 @@ class FakeErp:
 
     def __init__(self):
         self.customers = {
-            "1000107": {"kunnr": "1000107", "name1": "Salzach Kunststofftechnik GmbH"}
+            "1000107": {"kunnr": "1000107", "name1": "Salzach Kunststofftechnik GmbH"},
+            # A second real customer, so a look-alike number can point to someone else.
+            "1000101": {"kunnr": "1000101", "name1": "Steirische Metallbau GmbH"},
         }
         self.materials = {
             "400101": {
@@ -249,6 +252,21 @@ def change_line(
         lines.append(line)
     total = sum((line.line_total for line in lines), Decimal(0))
     return po.model_copy(update={"lines": lines, "total_amount": total})
+
+
+@pytest.fixture(autouse=True)
+def no_mlflow_server(monkeypatch, tmp_path):
+    """Tests never load models from a running MLflow server: the anomaly model is
+    unavailable unless a test provides one, and MLflow writes only to a temporary store."""
+
+    def unavailable():
+        raise ConnectionError("no MLflow server in tests")
+
+    monkeypatch.setattr(anomaly, "_load", unavailable)
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", (tmp_path / "mlruns").as_uri())
+    anomaly.reset()
+    yield
+    anomaly.reset()
 
 
 @pytest.fixture

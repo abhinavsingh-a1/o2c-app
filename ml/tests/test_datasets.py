@@ -23,9 +23,15 @@ PO_DATASETS = {
     "train": (100, 20),
     "holdout": (20, 4),
     "classifier/train": (60, 12),
+    "classifier/train_hard": (60, 12),
     "classifier/holdout": (10, 2),
 }
-CLASSIFIER_DATASETS = {"classifier/train": 60, "classifier/holdout": 10}
+CLASSIFIER_DATASETS = {
+    "classifier/train": 60,
+    "classifier/train_hard": 60,
+    "classifier/holdout": 10,
+}
+HOLDOUTS = ["holdout", "classifier/holdout"]
 DOC_TYPES = {"purchase_order", "invoice", "remittance", "other"}
 
 
@@ -162,13 +168,39 @@ def test_train_uses_the_six_poc_layouts():
     assert layouts == {layout for layout, _ in CUSTOMER_PROFILES.values()}
 
 
-@pytest.mark.parametrize("dataset", ["holdout", "classifier/holdout"])
+@pytest.mark.parametrize("dataset", HOLDOUTS)
 def test_holdout_uses_only_the_new_layouts(dataset):
     layouts = set(json_file(dataset, "manifest.json")["layouts"].values())
     assert layouts == set(HARD_LAYOUTS)
     assert not layouts & {layout for layout, _ in CUSTOMER_PROFILES.values()}
+    # Extraction is trained/tuned without the new layouts; the classifier's
+    # train_hard set uses them on purpose (E10 Part C), with its own seeds.
     for other in ("train", "classifier/train"):
         assert not layouts & set(json_file(other, "manifest.json")["layouts"].values())
+
+
+def test_classifier_train_hard_has_the_holdout_variety():
+    layouts = set(
+        json_file("classifier/train_hard", "manifest.json")["layouts"].values()
+    )
+    assert layouts == set(HARD_LAYOUTS)
+    texts = [
+        "\n".join(page_texts(ML_DATA / "classifier/train_hard" / row["file"]))
+        for row in classifier_labels("classifier/train_hard")
+    ]
+    assert sum("IBAN" in text for text in texts) == len(texts)  # bank-details footer
+    assert any("Zahlungserinnerung" in t or "Payment Reminder" in t for t in texts)
+    assert any("Auftragsbestätigung" in t or "Order Confirmation" in t for t in texts)
+
+
+def test_no_training_document_is_a_copy_of_a_holdout_document():
+    def pdfs(dataset: str) -> dict[bytes, str]:
+        return {p.read_bytes(): str(p) for p in (ML_DATA / dataset).rglob("*.pdf")}
+
+    holdout = {**pdfs("holdout"), **pdfs("classifier/holdout")}
+    for dataset in ("train", "classifier/train", "classifier/train_hard"):
+        copies = [name for data, name in pdfs(dataset).items() if data in holdout]
+        assert copies == [], dataset
 
 
 def test_holdout_long_orders_span_two_pages_with_repeated_header():
@@ -243,3 +275,14 @@ def test_datasets_use_different_seeds():
     seeds = [json_file(dataset, "manifest.json")["seed"] for dataset in PO_DATASETS]
     assert len(set(seeds)) == len(seeds)
     assert 42 not in seeds  # poc/data
+
+
+def test_training_seeds_never_reuse_holdout_seeds():
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    seeds: dict[str, set[str]] = {"train": set(), "holdout": set()}
+    for line in makefile.splitlines():
+        if "--seed" in line and "--out ml/data/" in line:
+            seed = line.split("--seed")[1].split()[0]
+            seeds["holdout" if "holdout" in line else "train"].add(seed)
+    assert seeds["holdout"] == {"4242", "5101", "5102"}
+    assert not seeds["train"] & seeds["holdout"]

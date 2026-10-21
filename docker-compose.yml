@@ -251,6 +251,7 @@ services:
     environment:
       <<: *pipeline-env
       ERP_BASE_URL: http://erp-mock:8100
+      MLFLOW_TRACKING_URI: http://mlflow:5000 # quantity anomaly model; scores 0.0 if unavailable
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
       AUTH_USERS_FILE: /app/local/users.json
     ports:

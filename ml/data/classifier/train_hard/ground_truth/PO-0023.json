@@ -1,0 +1,21 @@
+{
+  "po_number": "4500077121",
+  "po_date": "2026-06-05",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-07-10",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "93.60"
+    }
+  ],
+  "total_amount": "93.60"
+}

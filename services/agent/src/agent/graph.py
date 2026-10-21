@@ -45,7 +45,10 @@ def build_graph(deps: Deps, checkpointer=None):
 
     def resolve_customer(state: AgentState) -> dict:
         po = state.purchase_order
-        if po.customer_number and erp.get_customer(po.customer_number):
+        # Trust a printed number only if it belongs to the named customer: documents
+        # also carry look-alikes (e.g. our supplier number at the customer).
+        customer = erp.get_customer(po.customer_number) if po.customer_number else None
+        if customer and _norm(customer["name1"]) == _norm(po.customer_name):
             return {"customer_number": po.customer_number}
         matches = [
             c

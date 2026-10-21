@@ -96,5 +96,7 @@ ml-data:
 	uv run --group poc python poc/generate_pos.py --seed 4242 --count 20 --hard --out ml/data/holdout
 	uv run --group poc python poc/generate_pos.py --seed 3101 --count 60 --out ml/data/classifier/train
 	uv run --group poc python poc/generate_other_docs.py --seed 3102 --count 60 --out ml/data/classifier/train
+	uv run --group poc python poc/generate_pos.py --seed 3201 --count 60 --hard --out ml/data/classifier/train_hard
+	uv run --group poc python poc/generate_other_docs.py --seed 3202 --count 60 --hard --out ml/data/classifier/train_hard
 	uv run --group poc python poc/generate_pos.py --seed 5101 --count 10 --hard --out ml/data/classifier/holdout
 	uv run --group poc python poc/generate_other_docs.py --seed 5102 --count 10 --hard --out ml/data/classifier/holdout

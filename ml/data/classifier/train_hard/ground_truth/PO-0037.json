@@ -1,0 +1,84 @@
+{
+  "po_number": "PO-2026-43495",
+  "po_date": "2026-08-24",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-09-17",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "4",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "65.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "32",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1024.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4005.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "42",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1155.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "152.10"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "33.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "422.10"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "16",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "102.40"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "10",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "13.50"
+    }
+  ],
+  "total_amount": "6939.70"
+}

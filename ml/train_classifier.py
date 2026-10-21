@@ -2,7 +2,8 @@
 
 Usage: uv run --group ml python ml/train_classifier.py [--no-mlflow]
 
-- Data: ml/data/classifier/train/labels.csv, stratified 80/20 train/validation split
+- Data: labels.csv of ml/data/classifier/train and train_hard (the --hard variety, own
+  seeds, never the holdout's), stratified 80/20 train/validation split
   with a fixed seed. Input text: the first 1500 characters of o2c_common.pdf.pdf_text.
 - Training: plain PyTorch loop (no Trainer), max_length 256, batch 16, AdamW lr 5e-5,
   3 epochs; loss and validation accuracy are printed per epoch.
@@ -42,7 +43,10 @@ from torch.utils.data import DataLoader, TensorDataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 ML_DIR = Path(__file__).resolve().parent
-TRAIN_DIR = ML_DIR / "data" / "classifier" / "train"
+TRAIN_DIRS = [
+    ML_DIR / "data" / "classifier" / "train",
+    ML_DIR / "data" / "classifier" / "train_hard",  # added in E10 Part C
+]
 HOLDOUT_DIR = ML_DIR / "data" / "classifier" / "holdout"
 RESULTS_DIR = ML_DIR / "results"
 MODEL_DIR = RESULTS_DIR / "doc-classifier-model"
@@ -76,6 +80,17 @@ def load_documents(dataset: Path) -> tuple[list[str], list[str], list[int]]:
     files = [file for file, _ in rows]
     texts = [prepare_text((dataset / file).read_bytes()) for file in files]
     return files, texts, label_ids([doc_type for _, doc_type in rows])
+
+
+def load_training(datasets: list[Path]) -> tuple[list[str], list[str], list[int]]:
+    """load_documents for several datasets; files are prefixed with their dataset name."""
+    files, texts, labels = [], [], []
+    for dataset in datasets:
+        f, t, lab = load_documents(dataset)
+        files += [f"{dataset.name}/{name}" for name in f]
+        texts += t
+        labels += lab
+    return files, texts, labels
 
 
 def stratified_split(labels: list[int], seed: int) -> tuple[list[int], list[int]]:
@@ -184,7 +199,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     seed_everything(PARAMS["seed"])
-    _, texts, labels = load_documents(TRAIN_DIR)
+    _, texts, labels = load_training(TRAIN_DIRS)
     train_idx, val_idx = stratified_split(labels, PARAMS["seed"])
     print(
         f"{len(train_idx)} training and {len(val_idx)} validation documents, labels {LABELS}"
@@ -222,6 +237,7 @@ def main(argv: list[str] | None = None) -> None:
             mlflow.log_params(
                 {
                     **PARAMS,
+                    "train_datasets": ",".join(d.name for d in TRAIN_DIRS),
                     "train_documents": len(train_idx),
                     "validation_documents": len(val_idx),
                 }

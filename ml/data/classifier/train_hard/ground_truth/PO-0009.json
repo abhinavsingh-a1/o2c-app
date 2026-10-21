@@ -1,0 +1,120 @@
+{
+  "po_number": "WA-26-46550",
+  "po_date": "2026-05-26",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-06-15",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "53",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "71.55"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "11",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "204.60"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "11",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "70.40"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "403.20"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "157.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1984.50"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "5",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "82.00"
+    },
+    {
+      "line_no": 8,
+      "material_number": null,
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "23",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "225.40"
+    },
+    {
+      "line_no": 9,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "4",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "25.00"
+    },
+    {
+      "line_no": 10,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "13",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1677.00"
+    },
+    {
+      "line_no": 11,
+      "material_number": null,
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "226.20"
+    },
+    {
+      "line_no": 12,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "7",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "22.40"
+    }
+  ],
+  "total_amount": "5709.85"
+}

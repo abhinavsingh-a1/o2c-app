@@ -1,0 +1,57 @@
+{
+  "po_number": "NSH064388",
+  "po_date": "2026-09-14",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-10-17",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "17",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "2193.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "16",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "62.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "12",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "58.80"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "162.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "3038.75"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "13",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "163.80"
+    }
+  ],
+  "total_amount": "5516.75"
+}

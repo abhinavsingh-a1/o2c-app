@@ -1,0 +1,93 @@
+{
+  "po_number": "NSH094473",
+  "po_date": "2026-09-25",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-10-15",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "52",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1664.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "47",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1828.30"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "28",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "417.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "52.65"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "11",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "53.90"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "2574.00"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "170.5",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "366.58"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "36",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "352.80"
+    },
+    {
+      "line_no": 9,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "59.5",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "1112.65"
+    }
+  ],
+  "total_amount": "8422.08"
+}

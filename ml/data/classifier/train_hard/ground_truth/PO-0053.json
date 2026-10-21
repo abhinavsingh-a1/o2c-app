@@ -1,0 +1,48 @@
+{
+  "po_number": "BP0099753",
+  "po_date": "2026-07-24",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-08-02",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "1.42",
+      "line_total": "35.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "34",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1322.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "50",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4450.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "27",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "3483.00"
+    }
+  ],
+  "total_amount": "9291.10"
+}

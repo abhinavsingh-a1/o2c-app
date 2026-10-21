@@ -48,3 +48,17 @@ def test_model_requirements_pin_the_runtime_without_torchvision():
     assert names == ["torch", "transformers", "tokenizers", "mlflow-skinny"]
     assert all("+" not in r for r in requirements)
     assert "mlflow-skinny==2.17.2" in requirements
+
+
+def test_training_uses_train_and_train_hard_but_never_a_holdout():
+    names = [d.name for d in train_classifier.TRAIN_DIRS]
+    assert names == ["train", "train_hard"]
+    assert train_classifier.HOLDOUT_DIR not in train_classifier.TRAIN_DIRS
+
+
+def test_load_training_prefixes_files_with_the_dataset():
+    files, texts, labels = train_classifier.load_training(
+        [train_classifier.HOLDOUT_DIR]
+    )
+    assert files[0] == "holdout/pos/PO-0001.pdf"
+    assert len(files) == len(texts) == len(labels) == 40

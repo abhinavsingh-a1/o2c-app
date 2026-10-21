@@ -1,0 +1,30 @@
+{
+  "po_number": "WA-26-77668",
+  "po_date": "2026-08-31",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3471.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "1",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "32.00"
+    }
+  ],
+  "total_amount": "3503.00"
+}

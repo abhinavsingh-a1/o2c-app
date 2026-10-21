@@ -1,0 +1,57 @@
+{
+  "po_number": "PO-2026-31296",
+  "po_date": "2026-02-26",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-03-25",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "17",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "54.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "568.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "31",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "992.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "83",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "1552.10"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "23",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1242.00"
+    }
+  ],
+  "total_amount": "4408.90"
+}

@@ -1,0 +1,30 @@
+{
+  "po_number": "SAT-009330",
+  "po_date": "2026-07-12",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": "1000106",
+  "currency": "EUR",
+  "delivery_date": "2026-08-17",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "42",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2268.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "40",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "138.00"
+    }
+  ],
+  "total_amount": "2406.00"
+}

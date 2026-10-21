@@ -185,5 +185,6 @@ def test_material_matcher_prompt_lists_every_candidate():
 # --- anomaly ---
 
 
-def test_anomaly_score_is_zero():
+def test_anomaly_score_is_zero_without_a_model():
+    # conftest makes the MLflow model unavailable; the agent must still get a score.
     assert anomaly_score("1000107", "400103", 13.0) == 0.0

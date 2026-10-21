@@ -77,6 +77,50 @@ def test_unknown_customer(po, erp, process):
     assert erp.created == []
 
 
+def test_customer_number_and_name_match(po, erp, process):
+    result = process(po)  # PO-0001: 1000107, Salzach Kunststofftechnik GmbH
+
+    assert result.customer_number == "1000107"
+    assert IssueCode.UNKNOWN_CUSTOMER not in codes(result)
+    assert erp.created[0]["kunnr"] == "1000107"
+
+
+def test_look_alike_number_of_another_customer_resolves_by_name(po, erp, process):
+    # 1000101 exists, but belongs to Steirische Metallbau, not to the named customer.
+    result = process(
+        po.model_copy(
+            update={
+                "customer_number": "1000101",
+                "customer_name": "Salzach Kunststofftechnik GmbH",
+            }
+        )
+    )
+
+    assert result.customer_number == "1000107"
+    assert result.status == "posted"
+    assert erp.created[0]["kunnr"] == "1000107"
+
+
+def test_unknown_number_resolves_by_name(po, erp, process):
+    # e.g. our supplier number at the customer, printed on the PO
+    result = process(po.model_copy(update={"customer_number": "72449015"}))
+
+    assert result.customer_number == "1000107"
+    assert result.status == "posted"
+
+
+def test_look_alike_number_with_unknown_name_is_not_trusted(po, erp, process):
+    result = process(
+        po.model_copy(
+            update={"customer_number": "1000101", "customer_name": "Unbekannt AG"}
+        )
+    )
+
+    assert IssueCode.UNKNOWN_CUSTOMER in codes(result)
+    assert result.customer_number is None
+    assert erp.created == []
+
+
 def test_line_without_material_number_resolved_by_erp_search(po, process):
     result = process(po)
 

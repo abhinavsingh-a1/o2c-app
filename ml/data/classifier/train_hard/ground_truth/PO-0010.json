@@ -1,0 +1,39 @@
+{
+  "po_number": "AFT/58726",
+  "po_date": "2026-09-19",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": "1000103",
+  "currency": "EUR",
+  "delivery_date": "2026-10-31",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "39",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "639.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "48",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "470.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    }
+  ],
+  "total_amount": "1827.60"
+}

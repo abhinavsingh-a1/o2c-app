@@ -35,11 +35,14 @@ dependencies = [
     { name = "langchain-text-splitters" },
     { name = "langgraph" },
     { name = "langgraph-checkpoint-postgres" },
+    { name = "mlflow-skinny" },
     { name = "o2c-common" },
+    { name = "pandas" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
+    { name = "scikit-learn" },
     { name = "uvicorn" },
 ]
 
@@ -53,11 +56,14 @@ requires-dist = [
     { name = "langchain-text-splitters", specifier = ">=1.1.3" },
     { name = "langgraph", specifier = ">=1.2.15" },
     { name = "langgraph-checkpoint-postgres", specifier = ">=3.2.0" },
+    { name = "mlflow-skinny", specifier = "==2.17.2" },
     { name = "o2c-common", editable = "libs/o2c-common" },
+    { name = "pandas", specifier = ">=2.2,<3" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.3.6" },
     { name = "pydantic", specifier = ">=2.14.1" },
     { name = "pydantic-settings", specifier = ">=2.16.0" },
     { name = "pyjwt", specifier = ">=2.15.1" },
+    { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 

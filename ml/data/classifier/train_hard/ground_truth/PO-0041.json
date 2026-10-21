@@ -1,0 +1,30 @@
+{
+  "po_number": "WA-26-51107",
+  "po_date": "2026-06-27",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-07-29",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "30",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "147.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "16",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "115.20"
+    }
+  ],
+  "total_amount": "262.20"
+}

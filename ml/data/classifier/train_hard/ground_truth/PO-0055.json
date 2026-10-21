@@ -1,0 +1,21 @@
+{
+  "po_number": "AFT/19810",
+  "po_date": "2026-05-25",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": "1000103",
+  "currency": "EUR",
+  "delivery_date": "2026-06-29",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "43",
+      "unit": "PC",
+      "unit_price": "2.88",
+      "line_total": "123.84"
+    }
+  ],
+  "total_amount": "123.84"
+}
