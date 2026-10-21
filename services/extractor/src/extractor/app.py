@@ -42,32 +42,42 @@ def load_prompt(prompts_dir: Path) -> str:
     return template.replace("{schema}", json.dumps(PurchaseOrder.model_json_schema()))
 
 
+def wrap_document(text: str) -> str:
+    """The PDF text as the user message: inside <document> tags, so the prompt can tell
+    the model that everything in them is data, never instructions."""
+    return f"<document>\n{text}\n</document>"
+
+
 def make_extractor(
     settings: Settings,
     model: str = "o2c-extract",
     http_client: httpx.Client | None = None,
 ) -> Extract:
     """`model` is a LiteLLM alias; evaluations pass another alias to compare models,
-    and an `http_client` to read LiteLLM's response headers (cost)."""
+    and an `http_client` to read LiteLLM's response headers (cost). `trace_id` lets an
+    evaluation choose the Langfuse trace id of a call (to link it to a dataset item)."""
     system_prompt = load_prompt(settings.prompts_dir)
 
-    def extract(text: str, session_id: str) -> PurchaseOrder:
+    def extract(
+        text: str, session_id: str, trace_id: str | None = None
+    ) -> PurchaseOrder:
+        metadata = {
+            "trace_name": "extract",
+            "session_id": session_id,
+            "tags": ["extractor"],
+        }
+        if trace_id:
+            metadata["trace_id"] = trace_id
         llm = ChatOpenAI(
             model=model,
             base_url=settings.litellm_base_url,
             api_key=settings.litellm_master_key,
             temperature=0,
             http_client=http_client,
-            extra_body={
-                "metadata": {
-                    "trace_name": "extract",
-                    "session_id": session_id,
-                    "tags": ["extractor"],
-                }
-            },
+            extra_body={"metadata": metadata},
         )
         chain = llm.with_structured_output(PurchaseOrder, method="json_mode")
-        return chain.invoke([("system", system_prompt), ("human", text)])
+        return chain.invoke([("system", system_prompt), ("human", wrap_document(text))])
 
     return extract
 

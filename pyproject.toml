@@ -39,6 +39,7 @@ poc = [
 ml = [
     "docker>=7.2.0",
     "kfp>=2.13.0",
+    "langfuse>=2.60.10",
     "mlflow-skinny==2.17.2",
     "pandas>=2.2,<3",
     "scikit-learn>=1.9.1",

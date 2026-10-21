@@ -2,6 +2,7 @@
 
 Usage: uv run python ml/eval_extraction.py <dataset dir> [model alias] [--limit N]
   e.g. uv run python ml/eval_extraction.py ml/data/holdout
+       uv run --group ml python ml/eval_extraction.py poc/data --langfuse
        uv run python ml/eval_extraction.py ml/data/holdout o2c-extract-candidate
        uv run python ml/eval_extraction.py ml/data/train --limit 20
 
@@ -13,6 +14,12 @@ header, and how many calls LiteLLM answered from a fallback model), and writes
 ml/results/<dataset>-<model>.json (<dataset>-first<N>-<model>.json with --limit N, which
 evaluates only the first N POs).
 
+--langfuse (poc/data = dataset "golden", ml/data/holdout = "holdout", uploaded by
+ml/langfuse_datasets.py): each extraction gets its own Langfuse trace id, the trace is
+linked to its dataset item as dataset run "<model>-<git short sha>", and the field
+accuracy (and perfect 1/0) are attached to the trace as scores, so runs can be compared
+in the Langfuse UI.
+
 All LLM calls go through LiteLLM: LITELLM_BASE_URL and LITELLM_MASTER_KEY come from
 the environment or .env (run from the repository root). The model is a LiteLLM alias.
 """
@@ -20,6 +27,7 @@ the environment or .env (run from the repository root). The model is a LiteLLM a
 import argparse
 import json
 import time
+import uuid
 from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
@@ -64,12 +72,67 @@ class ResponseRecorder:
         return httpx.Client(event_hooks={"response": [self]})
 
 
+class LangfuseRun:
+    """A Langfuse dataset run: one trace id per PO, then link and score each result."""
+
+    def __init__(self, client, dataset_name: str, run_name: str, nonce: str = ""):
+        self.client = client
+        self.dataset_name = dataset_name
+        self.run_name = run_name
+        self.nonce = nonce or uuid.uuid4().hex  # a re-run gets new traces
+        self.items = {item.id: item for item in client.get_dataset(dataset_name).items}
+
+    def trace_id(self, po_id: str) -> str:
+        from langfuse_common import trace_id
+
+        return trace_id(self.run_name, self.nonce, po_id)
+
+    def record(self, po_id: str, row: dict) -> None:
+        from langfuse_datasets import item_id
+
+        trace = self.trace_id(po_id)
+        self.items[item_id(self.dataset_name, po_id)].link(
+            None,
+            self.run_name,
+            trace_id=trace,
+            run_metadata={"dataset": self.dataset_name},
+        )
+        accuracy = row["correct"] / row["total"] if row["total"] else 0.0
+        errors = ", ".join(row["errors"]) or None
+        self.client.score(
+            trace_id=trace,
+            name="field_accuracy",
+            value=round(accuracy, 4),
+            comment=errors,
+        )
+        self.client.score(
+            trace_id=trace, name="perfect", value=0.0 if row["errors"] else 1.0
+        )
+
+
+def langfuse_dataset_name(dataset: Path) -> str:
+    """The Langfuse dataset of a dataset directory; SystemExit for any other directory."""
+    from langfuse_datasets import DATASETS
+
+    for name, directory in DATASETS.items():
+        if dataset.resolve() == directory.resolve():
+            return name
+    raise SystemExit(
+        f"--langfuse needs one of {', '.join(str(d) for d in DATASETS.values())}"
+    )
+
+
+def run_name(model: str, sha: str) -> str:
+    return f"{model}-{sha}"
+
+
 def evaluate(
     dataset: Path,
     extract: Extract,
     progress: Callable[[dict], None] | None = None,
     limit: int | None = None,
     recorder: ResponseRecorder | None = None,
+    langfuse_run: LangfuseRun | None = None,
 ) -> list[dict]:
     """Extract and score every PO (or the first `limit`), with latency per PO and, given
     the recorder of the extractor's HTTP client, cost and fallbacks per PO.
@@ -84,8 +147,14 @@ def evaluate(
         if recorder:
             recorder.take()  # drop anything recorded outside this document
         start = time.perf_counter()
+        session = f"eval-{dataset.name}-{pdf.stem}"
         try:
-            result = extract(text, f"eval-{dataset.name}-{pdf.stem}")
+            if langfuse_run:
+                result = extract(
+                    text, session, trace_id=langfuse_run.trace_id(pdf.stem)
+                )
+            else:
+                result = extract(text, session)
         except Exception as exc:  # noqa: BLE001 - one bad document must not stop the run
             exception = f"{type(exc).__name__}: {exc}"
         latency = round(time.perf_counter() - start, 3)
@@ -99,6 +168,8 @@ def evaluate(
             "result": result.model_dump(mode="json") if result else None,
         }
         rows.append(row)
+        if langfuse_run:
+            langfuse_run.record(pdf.stem, row)
         if progress:
             progress(row)
     return rows
@@ -150,8 +221,21 @@ def main(argv: list[str] | None = None) -> Path:
     parser.add_argument("dataset", type=Path)
     parser.add_argument("model", nargs="?", default=DEFAULT_MODEL)
     parser.add_argument("--limit", type=int, help="evaluate only the first N POs")
+    parser.add_argument(
+        "--langfuse", action="store_true", help="record a Langfuse dataset run"
+    )
     args = parser.parse_args(argv)
     dataset, model, limit = args.dataset, args.model, args.limit
+
+    langfuse_run = None
+    if args.langfuse:
+        from langfuse_common import git_short_sha, make_langfuse
+
+        name = run_name(model, git_short_sha())
+        langfuse_run = LangfuseRun(
+            make_langfuse(), langfuse_dataset_name(dataset), name
+        )
+        print(f"Langfuse dataset run {name} on {langfuse_run.dataset_name}")
 
     recorder = ResponseRecorder()
     rows = evaluate(
@@ -160,7 +244,10 @@ def main(argv: list[str] | None = None) -> Path:
         progress=lambda row: print(format_row(row), flush=True),
         limit=limit,
         recorder=recorder,
+        langfuse_run=langfuse_run,
     )
+    if langfuse_run:
+        langfuse_run.client.flush()
     summary = summarize(rows)
     print(json.dumps(summary, indent=2))
 

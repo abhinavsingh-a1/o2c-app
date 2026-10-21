@@ -333,3 +333,100 @@ def test_main_gives_the_extractor_a_recording_client(dataset, tmp_path, monkeypa
     assert isinstance(clients[0], httpx.Client)
     summary = json.loads(out.read_text(encoding="utf-8"))["summary"]
     assert {"avg_latency_s", "cost_per_po_usd", "fallbacks"} <= set(summary)
+
+
+# --- Langfuse dataset runs ---
+
+
+class FakeItem:
+    def __init__(self, item_id: str):
+        self.id = item_id
+        self.links: list[dict] = []
+
+    def link(self, trace_or_observation, run_name, **kwargs):
+        self.links.append(
+            {"trace": trace_or_observation, "run_name": run_name, **kwargs}
+        )
+
+
+class FakeLangfuseClient:
+    def __init__(self, items: list[FakeItem]):
+        self.items = items
+        self.scores: list[dict] = []
+
+    def get_dataset(self, name):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(items=self.items)
+
+    def score(self, **kwargs):
+        self.scores.append(kwargs)
+
+
+class TraceExtract(FakeExtract):
+    """FakeExtract that records the trace ids it was given."""
+
+    def __init__(self, dataset: Path):
+        super().__init__(dataset)
+        self.trace_ids: list[str] = []
+
+    def __call__(self, text, session_id, trace_id=None):
+        self.trace_ids.append(trace_id)
+        return super().__call__(text, session_id)
+
+
+def test_langfuse_run_links_and_scores_every_document(dataset):
+    items = [FakeItem(f"golden-{po_id}") for po_id in PO_IDS]
+    client = FakeLangfuseClient(items)
+    run = eval_extraction.LangfuseRun(
+        client, "golden", "o2c-extract-abc1234", nonce="n"
+    )
+    extract = TraceExtract(dataset)
+
+    rows = evaluate(dataset, extract, langfuse_run=run)
+
+    assert extract.trace_ids == [run.trace_id(po_id) for po_id in PO_IDS]
+    assert len(set(extract.trace_ids)) == 3
+    for item, trace in zip(items, extract.trace_ids, strict=True):
+        assert item.links == [
+            {
+                "trace": None,
+                "run_name": "o2c-extract-abc1234",
+                "trace_id": trace,
+                "run_metadata": {"dataset": "golden"},
+            }
+        ]
+    accuracy = {
+        s["trace_id"]: s["value"]
+        for s in client.scores
+        if s["name"] == "field_accuracy"
+    }
+    perfect = {
+        s["trace_id"]: s["value"] for s in client.scores if s["name"] == "perfect"
+    }
+    first, second, third = extract.trace_ids
+    assert accuracy[first] == 1.0 and perfect[first] == 1.0
+    expected = round(rows[1]["correct"] / rows[1]["total"], 4)
+    assert accuracy[second] == expected and perfect[second] == 0.0
+    assert accuracy[third] == 0.0  # failed extraction
+
+
+def test_langfuse_trace_ids_differ_between_runs():
+    client = FakeLangfuseClient([])
+    first = eval_extraction.LangfuseRun(client, "golden", "run")
+    second = eval_extraction.LangfuseRun(client, "golden", "run")
+
+    assert first.trace_id("PO-0001") != second.trace_id("PO-0001")
+
+
+def test_langfuse_dataset_name():
+    from langfuse_datasets import DATASETS
+
+    assert eval_extraction.langfuse_dataset_name(DATASETS["golden"]) == "golden"
+    assert eval_extraction.langfuse_dataset_name(DATASETS["holdout"]) == "holdout"
+    with pytest.raises(SystemExit):
+        eval_extraction.langfuse_dataset_name(Path("ml/data/train"))
+
+
+def test_run_name():
+    assert eval_extraction.run_name("o2c-extract", "abc1234") == "o2c-extract-abc1234"
