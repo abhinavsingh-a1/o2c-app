@@ -55,6 +55,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make gen-api: regenerate ui/src/api/schema.d.ts from the agent's OpenAPI (agent must be running)
 - Review API: GET /reviews?status=awaiting_review|all|posted, GET /reviews/{key}, GET /reviews/{key}/document, POST /reviews/{key}
 - uv run python -m agent.auth add-user <username> "<Full Name>": create a reviewer in local/users.json (git-ignored)
+- make ui-test: run the UI tests (Vitest)
+- The full system including the UI runs with make up; UI at http://localhost:5180
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

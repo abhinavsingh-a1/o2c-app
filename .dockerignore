@@ -2,5 +2,5 @@
 .git
 .venv
 **/node_modules
-ui
+ui/dist
 local
