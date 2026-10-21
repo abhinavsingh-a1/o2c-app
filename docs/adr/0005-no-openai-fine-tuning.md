@@ -38,3 +38,41 @@ available it would be a dead end within months.
   layouts never seen in training, two-page orders, noise text) is what protects us
   from regressions when the model behind `o2c-extract` changes.
 - The gpt-4.1-mini shutdown on 14 Jan 2027 is a hard deadline for E11.
+
+## Findings
+
+### customer_number on the hard holdout (E10 Part B)
+Model: `o2c-extract` (gpt-4.1-mini), layout-mode text, `ml/eval_extraction.py`.
+
+- **Symptom.** `ml/data/holdout` scored 9/20 perfect POs, field accuracy 99.01%. All
+  11 errors were `customer_number`, all in the "formular" layout.
+- **Cause (not the generator).** "formular" never prints the customer's number at
+  Alpentech, so the ground truth is null in all 11 POs, consistently. The form does print
+  Alpentech's supplier number at the customer ("Ihre Lieferantennummer bei uns", 8 digits),
+  and the model returned that look-alike every time.
+- **Fix.** One general rule in `prompts/extract.md`: customer_number is the number under
+  which Alpentech knows the customer; never the supplier/vendor number the customer gave
+  Alpentech, a PO, requisition, cost-centre, tax or bank number; null if not printed.
+- **No regression first** (before -> after the rule):
+
+  | Dataset | Perfect POs | Field accuracy |
+  |---|---|---|
+  | poc/data (50) | 50 -> 50 | 100% -> 100% |
+  | ml/data/train, first 20 | 19 -> 20 | 99.84% -> 100% |
+
+  The single train error before the rule was a line description, unrelated to the rule;
+  its disappearance is treated as run-to-run noise, not as an improvement.
+- **Holdout, measured once after the rule:** 9/20 perfect, 99.01%. Unchanged in total,
+  but the errors moved:
+
+  | Layout | customer_number errors before | after |
+  |---|---|---|
+  | formular (11 POs, number not printed) | 11 | 2 (still the supplier number) |
+  | portal (9 POs, printed as "Account no. at supplier") | 0 | 9 (now null) |
+
+  The model now reads "supplier" in the portal label as the excluded supplier number.
+- **Conclusion.** The rule trades one look-alike confusion for another: labels that say
+  where a number lives ("at supplier", "bei uns") rather than whose number it is are the
+  hard case. The holdout has now been used to judge this rule, so the wording is not tuned
+  further against it. Further prompt work needs its own hard-layout validation set (new
+  seed, separate from the holdout); the holdout stays the final gate for E11.

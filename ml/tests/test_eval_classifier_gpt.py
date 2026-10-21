@@ -1,15 +1,15 @@
 import json
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import eval_classifier_gpt
 import pytest
 from classifier.app import Classification
 from eval_classifier_gpt import (
     DOC_TYPES,
-    confusion_matrix,
+    UsageRecorder,
     evaluate,
-    format_matrix,
     main,
     make_classify_text,
     read_labels,
@@ -17,6 +17,7 @@ from eval_classifier_gpt import (
 )
 
 POC_DATA = Path(__file__).resolve().parents[2] / "poc" / "data"
+USAGE = {"prompt_tokens": 900, "completion_tokens": 40, "cost_usd": 0.000424}
 
 
 @pytest.fixture
@@ -43,19 +44,18 @@ class FakeClassifyText:
         self.labels = dict(read_labels(dataset))
         self.calls: list[tuple[str, str]] = []
 
-    def __call__(self, text: str, file: str) -> Classification:
+    def __call__(self, text: str, file: str) -> tuple[Classification, dict]:
         self.calls.append((text, file))
         expected = self.labels[file]
         if expected == "other":
             raise TimeoutError("LiteLLM timeout")
         doc_type = "purchase_order" if expected == "remittance" else expected
-        return Classification(doc_type=doc_type, reason=f"looks like {doc_type}")
+        return Classification(doc_type=doc_type, reason=f"looks like {doc_type}"), USAGE
 
 
-def test_read_labels(dataset):
-    labels = read_labels(dataset)
-    assert [doc_type for _, doc_type in labels] == DOC_TYPES
-    assert labels[0][0].startswith("pos/PO-")
+def test_doc_types_match_the_classifier_service():
+    literal = Classification.model_fields["doc_type"].annotation
+    assert DOC_TYPES == list(literal.__args__)
 
 
 def test_evaluate_classifies_every_document(dataset):
@@ -71,43 +71,73 @@ def test_evaluate_classifies_every_document(dataset):
     ]
     assert rows[0]["reason"] == "looks like purchase_order"
     assert rows[3]["reason"] == "TimeoutError: LiteLLM timeout"
+    assert rows[0]["usage"] == USAGE and rows[3]["usage"] == {}
+    assert all(r["ms"] >= 0 for r in rows)
     text, file = classify_text.calls[0]
     assert file == rows[0]["file"]
     assert "PURCHASE ORDER" in text.upper() or "BESTELLUNG" in text.upper()
 
 
-def test_confusion_matrix_and_summary(dataset):
-    rows = evaluate(dataset, FakeClassifyText(dataset))
+def test_summary_has_accuracy_time_and_cost(dataset):
+    summary = summarize(evaluate(dataset, FakeClassifyText(dataset)))
 
-    summary = summarize(rows)
-
-    assert summary["documents"] == 4
     assert summary["accuracy"] == 0.5
-    matrix = summary["confusion_matrix"]
-    assert list(matrix) == DOC_TYPES
-    assert list(matrix["other"]) == [*DOC_TYPES, "error"]
-    assert matrix["remittance"]["purchase_order"] == 1
-    assert matrix["other"]["error"] == 1
-    assert matrix["invoice"]["invoice"] == 1
-    assert [m["expected"] for m in summary["mistakes"]] == ["remittance", "other"]
+    assert summary["confusion_matrix"]["other"]["error"] == 1
+    assert summary["ms_per_document"] >= 0
+    assert summary["usage"] == {
+        "prompt_tokens": 2700,
+        "completion_tokens": 120,
+        "cost_usd": round(3 * 0.000424, 6),
+        "cost_per_1000_documents_usd": 0.424,
+    }
 
 
-def test_confusion_matrix_has_no_error_column_without_failures():
-    rows = [{"expected": t, "predicted": t} for t in DOC_TYPES]
-    matrix = confusion_matrix(rows)
-    assert all(list(counts) == DOC_TYPES for counts in matrix.values())
-    assert summarize(rows)["accuracy"] == 1.0
-    assert summarize([])["accuracy"] == 0.0
+def fake_raw_response(cost: str | None):
+    usage = SimpleNamespace(prompt_tokens=900, completion_tokens=40)
+    response = SimpleNamespace(usage=usage, choices=[])
+    headers = {"x-litellm-response-cost": cost} if cost is not None else {}
+    return SimpleNamespace(parse=lambda: response, headers=headers), response
 
 
-def test_format_matrix():
-    rows = [{"expected": "invoice", "predicted": "invoice"}]
+def test_usage_recorder_keeps_tokens_and_litellm_cost():
+    raw, response = fake_raw_response("0.000424")
+    sent = []
 
-    lines = format_matrix(confusion_matrix(rows)).splitlines()
+    def create(**kwargs):
+        sent.append(kwargs)
+        return raw
 
-    assert lines[0].split() == ["expected", "\\", "predicted", *DOC_TYPES]
-    assert lines[2].split() == ["invoice", "0", "1", "0", "0"]
-    assert len(lines) == 1 + len(DOC_TYPES)
+    client = SimpleNamespace(
+        chat=SimpleNamespace(
+            completions=SimpleNamespace(
+                with_raw_response=SimpleNamespace(create=create)
+            )
+        )
+    )
+    recorder = UsageRecorder(client)
+
+    assert (
+        recorder.chat.completions.create(model="o2c-extract", messages=[]) is response
+    )
+    assert sent == [{"model": "o2c-extract", "messages": []}]
+    assert recorder.last == USAGE
+
+
+def test_usage_recorder_without_cost_header():
+    raw, _ = fake_raw_response(None)
+    client = SimpleNamespace(
+        chat=SimpleNamespace(
+            completions=SimpleNamespace(
+                with_raw_response=SimpleNamespace(create=lambda **_: raw)
+            )
+        )
+    )
+    recorder = UsageRecorder(client)
+
+    recorder.chat.completions.create(model="o2c-extract", messages=[])
+
+    assert recorder.last["cost_usd"] is None
+    assert recorder.last["prompt_tokens"] == 900
 
 
 def test_make_classify_text_calls_classify_through_litellm(monkeypatch):
@@ -119,6 +149,7 @@ def test_make_classify_text_calls_classify_through_litellm(monkeypatch):
 
     def fake_classify(llm, system_prompt, text, event):
         calls.append((llm, system_prompt, text, event))
+        llm.last = USAGE  # as if UsageRecorder had seen the call
         return Classification(doc_type="invoice", reason="bill")
 
     monkeypatch.setenv("LITELLM_MASTER_KEY", "test-key")
@@ -126,11 +157,13 @@ def test_make_classify_text_calls_classify_through_litellm(monkeypatch):
     monkeypatch.setattr(eval_classifier_gpt, "OpenAI", FakeOpenAI)
     monkeypatch.setattr(eval_classifier_gpt, "classify", fake_classify)
 
-    result = make_classify_text()("invoice text", "other/DOC-0001.pdf")
+    result, usage = make_classify_text()("invoice text", "other/DOC-0001.pdf")
 
     assert result.doc_type == "invoice"
+    assert usage == USAGE
     assert created == [("http://litellm:4000", "test-key")]
-    _, system_prompt, text, event = calls[0]
+    llm, system_prompt, text, event = calls[0]
+    assert isinstance(llm, UsageRecorder)
     assert "{schema}" not in system_prompt and "purchase_order" in system_prompt
     assert text == "invoice text"
     assert event.payload == {"file": "other/DOC-0001.pdf"}
@@ -149,9 +182,11 @@ def test_main_prints_and_writes_results(dataset, tmp_path, monkeypatch, capsys):
 
     assert out == tmp_path / "results" / "classifier-gpt-mini.json"
     saved = json.loads(out.read_text(encoding="utf-8"))
+    assert saved["classifier"] == "gpt"
     assert saved["accuracy"] == 0.5
     assert len(saved["documents"]) == 4
     assert len(saved["mistakes"]) == 2
+    assert saved["usage"]["cost_per_1000_documents_usd"] == 0.424
     printed = capsys.readouterr().out
     assert "accuracy: 50.0% (4 documents)" in printed
     assert "expected \\ predicted" in printed

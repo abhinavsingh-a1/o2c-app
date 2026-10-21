@@ -5,36 +5,42 @@ Usage: uv run python ml/eval_classifier_gpt.py <dataset dir>
 
 Runs classifier.app.classify with the prompt from load_prompt on every PDF listed in
 <dataset>/labels.csv (columns file,doc_type), prints the accuracy, a confusion matrix
-and the mistakes, and writes ml/results/classifier-gpt-<dataset>.json.
+and the mistakes, and writes ml/results/classifier-gpt-<dataset>.json, including
+ms per document and token usage / cost per call (LiteLLM's x-litellm-response-cost).
 
 All LLM calls go through LiteLLM: LITELLM_BASE_URL and LITELLM_MASTER_KEY come from
 the environment or .env (run from the repository root).
 """
 
-import csv
 import hashlib
-import json
 import sys
+import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import get_args
+from types import SimpleNamespace
 
 from classifier.app import Classification, Settings, classify, load_prompt
+from classifier_common import (
+    ERROR,
+    LABELS,
+    confusion_matrix,
+    format_matrix,
+    print_summary,
+    read_labels,
+    summarize,
+    write_results,
+)
 from o2c_common.events import Envelope
 from o2c_common.pdf import pdf_text
 from openai import OpenAI
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
-DOC_TYPES = list(get_args(Classification.model_fields["doc_type"].annotation))
-ERROR = "error"  # predicted label when the classifier call failed
+DOC_TYPES = LABELS
 
-# (pdf text, file name) -> Classification
-ClassifyText = Callable[[str, str], Classification]
+# (pdf text, file name) -> (classification, usage of the LLM call)
+ClassifyText = Callable[[str, str], tuple[Classification, dict]]
 
-
-def read_labels(dataset: Path) -> list[tuple[str, str]]:
-    with (dataset / "labels.csv").open(encoding="utf-8", newline="") as f:
-        return [(row["file"], row["doc_type"]) for row in csv.DictReader(f)]
+__all__ = ["confusion_matrix", "format_matrix", "read_labels", "summarize"]
 
 
 def evaluate(
@@ -44,9 +50,11 @@ def evaluate(
 ) -> list[dict]:
     rows = []
     for file, expected in read_labels(dataset):
-        predicted, reason = ERROR, None
+        text = pdf_text((dataset / file).read_bytes())
+        predicted, reason, usage = ERROR, None, {}
+        start = time.perf_counter()
         try:
-            result = classify_text(pdf_text((dataset / file).read_bytes()), file)
+            result, usage = classify_text(text, file)
             predicted, reason = result.doc_type, result.reason
         except Exception as exc:  # noqa: BLE001 - one bad document must not stop the run
             reason = f"{type(exc).__name__}: {exc}"
@@ -55,6 +63,8 @@ def evaluate(
             "expected": expected,
             "predicted": predicted,
             "reason": reason,
+            "ms": round((time.perf_counter() - start) * 1000, 1),
+            "usage": usage,
         }
         rows.append(row)
         if progress:
@@ -62,39 +72,25 @@ def evaluate(
     return rows
 
 
-def confusion_matrix(rows: list[dict]) -> dict[str, dict[str, int]]:
-    """matrix[expected][predicted] = count; an "error" column only if a call failed."""
-    columns = DOC_TYPES + (
-        [ERROR] if any(r["predicted"] == ERROR for r in rows) else []
-    )
-    matrix = {expected: dict.fromkeys(columns, 0) for expected in DOC_TYPES}
-    for row in rows:
-        matrix[row["expected"]][row["predicted"]] += 1
-    return matrix
+class UsageRecorder:
+    """OpenAI client for classify() that also keeps the token usage and LiteLLM's cost
+    of the last chat.completions.create call."""
 
+    def __init__(self, client: OpenAI):
+        self._client = client
+        self.last: dict = {}
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
 
-def summarize(rows: list[dict]) -> dict:
-    mistakes = [row for row in rows if row["predicted"] != row["expected"]]
-    return {
-        "documents": len(rows),
-        "accuracy": round(1 - len(mistakes) / len(rows), 4) if rows else 0.0,
-        "confusion_matrix": confusion_matrix(rows),
-        "mistakes": mistakes,
-    }
-
-
-def format_matrix(matrix: dict[str, dict[str, int]]) -> str:
-    columns = list(next(iter(matrix.values())))
-    width = max(len(c) for c in [*columns, "expected \\ predicted"]) + 2
-    lines = [
-        "expected \\ predicted".ljust(width) + "".join(c.rjust(width) for c in columns)
-    ]
-    for expected, counts in matrix.items():
-        lines.append(
-            expected.ljust(width)
-            + "".join(str(counts[c]).rjust(width) for c in columns)
-        )
-    return "\n".join(lines)
+    def _create(self, **kwargs):
+        raw = self._client.chat.completions.with_raw_response.create(**kwargs)
+        response = raw.parse()
+        cost = raw.headers.get("x-litellm-response-cost")
+        self.last = {
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "cost_usd": float(cost) if cost is not None else None,
+        }
+        return response
 
 
 def make_classify_text() -> ClassifyText:
@@ -102,16 +98,17 @@ def make_classify_text() -> ClassifyText:
     settings = Settings(
         s3_access_key="unused", s3_secret_key="unused", events_database_url="unused"
     )
-    llm = OpenAI(
-        base_url=settings.litellm_base_url, api_key=settings.litellm_master_key
+    llm = UsageRecorder(
+        OpenAI(base_url=settings.litellm_base_url, api_key=settings.litellm_master_key)
     )
     system_prompt = load_prompt(settings.prompts_dir)
 
-    def classify_text(text: str, file: str) -> Classification:
+    def classify_text(text: str, file: str) -> tuple[Classification, dict]:
         # classify() takes the session id for Langfuse from the event.
         key = hashlib.sha256(f"eval-classifier/{file}".encode()).hexdigest()
         event = Envelope.new("docs.received", "eval", key, {"file": file})
-        return classify(llm, system_prompt, text, event)
+        result = classify(llm, system_prompt, text, event)
+        return result, dict(llm.last)
 
     return classify_text
 
@@ -130,24 +127,14 @@ def main(argv: list[str] | None = None) -> Path:
         ),
     )
     summary = summarize(rows)
-    print(f"\naccuracy: {summary['accuracy']:.1%} ({summary['documents']} documents)\n")
-    print(format_matrix(summary["confusion_matrix"]))
-    print(f"\nmistakes ({len(summary['mistakes'])}):")
-    for m in summary["mistakes"]:
-        print(
-            f"  {m['file']}: expected {m['expected']}, got {m['predicted']} - {m['reason']}"
-        )
-
-    out = RESULTS_DIR / f"classifier-gpt-{dataset.name}.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(
-            {"dataset": str(dataset), **summary, "documents": rows},
-            indent=2,
-            ensure_ascii=False,
-        )
-        + "\n",
-        encoding="utf-8",
+    print_summary(summary)
+    out = write_results(
+        RESULTS_DIR / f"classifier-gpt-{dataset.name}.json",
+        dataset,
+        summary,
+        rows,
+        classifier="gpt",
+        model="o2c-extract",
     )
     print(f"wrote {out}")
     return out

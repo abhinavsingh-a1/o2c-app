@@ -1,20 +1,22 @@
 """Evaluate PO extraction on a dataset.
 
-Usage: uv run python ml/eval_extraction.py <dataset dir> [model alias]
+Usage: uv run python ml/eval_extraction.py <dataset dir> [model alias] [--limit N]
   e.g. uv run python ml/eval_extraction.py ml/data/holdout
        uv run python ml/eval_extraction.py ml/data/holdout o2c-extract-candidate
+       uv run python ml/eval_extraction.py ml/data/train --limit 20
 
 Runs extractor.app.make_extractor on every PDF in <dataset>/pos (text via
 o2c_common.pdf.pdf_text), scores each result against <dataset>/ground_truth with
 o2c_common.scoring.score, prints per-document scores and a JSON summary, and writes
-ml/results/<dataset>-<model>.json.
+ml/results/<dataset>-<model>.json (<dataset>-first<N>-<model>.json with --limit N, which
+evaluates only the first N POs).
 
 All LLM calls go through LiteLLM: LITELLM_BASE_URL and LITELLM_MASTER_KEY come from
 the environment or .env (run from the repository root). The model is a LiteLLM alias.
 """
 
+import argparse
 import json
-import sys
 from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
@@ -29,11 +31,15 @@ DEFAULT_MODEL = "o2c-extract"
 
 
 def evaluate(
-    dataset: Path, extract: Extract, progress: Callable[[dict], None] | None = None
+    dataset: Path,
+    extract: Extract,
+    progress: Callable[[dict], None] | None = None,
+    limit: int | None = None,
 ) -> list[dict]:
-    """Extract and score every PO. A failed extraction scores as "invalid output"."""
+    """Extract and score every PO (or the first `limit`).
+    A failed extraction scores as "invalid output"."""
     rows = []
-    for pdf in sorted((dataset / "pos").glob("*.pdf")):
+    for pdf in sorted((dataset / "pos").glob("*.pdf"))[:limit]:
         truth = PurchaseOrder.model_validate_json(
             (dataset / "ground_truth" / f"{pdf.stem}.json").read_text(encoding="utf-8")
         )
@@ -73,10 +79,9 @@ def format_row(row: dict) -> str:
     return f"{row['document']}  {row['correct']:>3}/{row['total']:<3}  {problems}"
 
 
-def results_path(dataset: Path, model: str) -> Path:
-    return (
-        RESULTS_DIR / f"{dataset.name}-{model.replace('/', '_').replace(':', '_')}.json"
-    )
+def results_path(dataset: Path, model: str, limit: int | None = None) -> Path:
+    name = dataset.name if limit is None else f"{dataset.name}-first{limit}"
+    return RESULTS_DIR / f"{name}-{model.replace('/', '_').replace(':', '_')}.json"
 
 
 def make_settings() -> Settings:
@@ -87,27 +92,32 @@ def make_settings() -> Settings:
 
 
 def main(argv: list[str] | None = None) -> Path:
-    args = sys.argv[1:] if argv is None else argv
-    if not 1 <= len(args) <= 2:
-        sys.exit(__doc__)
-    dataset = Path(args[0])
-    model = args[1] if len(args) == 2 else DEFAULT_MODEL
+    parser = argparse.ArgumentParser(
+        description="Evaluate PO extraction.", usage=__doc__.split("\n\n")[1]
+    )
+    parser.add_argument("dataset", type=Path)
+    parser.add_argument("model", nargs="?", default=DEFAULT_MODEL)
+    parser.add_argument("--limit", type=int, help="evaluate only the first N POs")
+    args = parser.parse_args(argv)
+    dataset, model, limit = args.dataset, args.model, args.limit
 
     rows = evaluate(
         dataset,
         make_extractor(make_settings(), model),
         progress=lambda row: print(format_row(row), flush=True),
+        limit=limit,
     )
     summary = summarize(rows)
     print(json.dumps(summary, indent=2))
 
-    out = results_path(dataset, model)
+    out = results_path(dataset, model, limit)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         json.dumps(
             {
                 "dataset": str(dataset),
                 "model": model,
+                "limit": limit,
                 "summary": summary,
                 "documents": rows,
             },

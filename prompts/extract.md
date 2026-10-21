@@ -7,6 +7,11 @@ Context:
 
 Field rules:
 - customer_name: the buyer's legal company name only.
+- customer_number: the number under which Alpentech knows this customer (Alpentech's
+  customer account number, e.g. "Customer No." or "Kunden-Nr."). It is never the number
+  the customer gave Alpentech as its supplier or vendor (supplier number,
+  Lieferanten-Nr.), and never a PO, requisition, cost-centre, tax or bank number.
+  If the customer's number at Alpentech is not printed, use null.
 - ship_to_address: one line in the form "Street Number, PostalCode City, Country".
   Do not include company names, departments (e.g. "Wareneingang") or attention lines.
 - material_number: our 6-digit article number (e.g. 400103), or null.

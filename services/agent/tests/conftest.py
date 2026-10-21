@@ -5,6 +5,7 @@ Test modules are imported in importlib mode, so they cannot `from conftest impor
 
 import io
 import json
+import secrets
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -31,7 +32,7 @@ PO = PurchaseOrder.model_validate_json(
 )
 KEY = "k" * 64  # graph tests: thread of make_state()
 ORDER_KEY = "e" * 64  # API tests: thread of make_event()
-JWT_SECRET = "test-secret"
+JWT_SECRET = secrets.token_hex(32)  # random per test run; never a real secret
 USERNAME, USER_NAME, PASSWORD = "reviewer1", "Test Reviewer", "correct-horse-battery"
 
 

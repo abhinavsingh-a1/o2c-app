@@ -177,6 +177,28 @@ def test_main_defaults_to_o2c_extract(dataset, tmp_path, monkeypatch):
     assert calls == ["o2c-extract"]
 
 
-def test_main_without_arguments_shows_usage():
-    with pytest.raises(SystemExit, match="Usage"):
+def test_main_without_arguments_shows_usage(capsys):
+    with pytest.raises(SystemExit):
         main([])
+    assert "eval_extraction.py <dataset dir>" in capsys.readouterr().err
+
+
+def test_evaluate_with_limit_takes_the_first_documents(dataset):
+    rows = evaluate(dataset, FakeExtract(dataset), limit=2)
+
+    assert [row["document"] for row in rows] == PO_IDS[:2]
+
+
+def test_main_with_limit_names_the_results_file(dataset, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        eval_extraction, "make_extractor", lambda s, model: FakeExtract(dataset)
+    )
+    monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
+    monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
+
+    out = main([str(dataset), "--limit", "1"])
+
+    assert out.name == "mini-first1-o2c-extract.json"
+    saved = json.loads(out.read_text(encoding="utf-8"))
+    assert saved["limit"] == 1
+    assert saved["summary"]["documents"] == 1
