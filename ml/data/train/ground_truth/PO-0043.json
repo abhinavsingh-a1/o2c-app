@@ -1,0 +1,30 @@
+{
+  "po_number": "BP0075364",
+  "po_date": "2026-01-24",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-02-02",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "37",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "362.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "52",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4628.00"
+    }
+  ],
+  "total_amount": "4990.60"
+}

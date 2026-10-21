@@ -1,0 +1,21 @@
+{
+  "po_number": "SAT-021488",
+  "po_date": "2026-10-07",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-11-16",
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "85.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "158.18"
+    }
+  ],
+  "total_amount": "158.18"
+}

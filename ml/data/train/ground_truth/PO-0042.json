@@ -1,0 +1,30 @@
+{
+  "po_number": "SAT-012886",
+  "po_date": "2026-05-15",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "35",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3115.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "34",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "244.80"
+    }
+  ],
+  "total_amount": "3359.80"
+}

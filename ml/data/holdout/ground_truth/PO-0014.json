@@ -1,0 +1,120 @@
+{
+  "po_number": "NSH068630",
+  "po_date": "2026-08-28",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "200",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "690.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "39",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "729.30"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "51",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "1632.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "539.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "26",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "426.40"
+    },
+    {
+      "line_no": 6,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "31",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "576.60"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "16",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "1438.40"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "57.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "724.50"
+    },
+    {
+      "line_no": 9,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "27",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "132.30"
+    },
+    {
+      "line_no": 10,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "2",
+      "unit": "PAK",
+      "unit_price": "5.22",
+      "line_total": "10.44"
+    },
+    {
+      "line_no": 11,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "33",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "44.55"
+    },
+    {
+      "line_no": 12,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "7",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "22.40"
+    }
+  ],
+  "total_amount": "6965.89"
+}

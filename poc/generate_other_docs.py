@@ -13,8 +13,21 @@ references and item tables, remittances quote the customer's PO numbers.
 Needs master_data.json and ground_truth/ from generate_pos.py.
 Run with: uv run --group poc python poc/generate_other_docs.py
 No network or LLM calls; the output is identical on every run.
+
+Options create the classifier datasets (ml/data/classifier):
+  --seed N    random seed (default 4711)
+  --count N   documents per type: N invoices, N remittances and N others (default 10)
+  --out DIR   output directory (default poc/data). It must already contain pos/ and
+              ground_truth/ from generate_pos.py with the same --out. Other directories
+              also get labels.csv (file,doc_type) covering the POs and these documents.
+  --hard      more confusing kinds (payment reminders, payment notices without a table,
+              requests for quotation, PO cancellations) and a bank-details / page footer.
+Customers and materials always come from poc/data/master_data.json.
+Without options the script reproduces poc/data byte for byte.
 """
 
+import argparse
+import csv
 import json
 import random
 from datetime import date, timedelta
@@ -26,7 +39,6 @@ from generate_pos import (
     CENT,
     DATA_DIR,
     HEADING,
-    NUM_POS,
     SMALL,
     SUPPLIER_ADDRESS,
     SUPPLIER_NAME,
@@ -35,6 +47,7 @@ from generate_pos import (
     fmt_date,
     fmt_number,
     fmt_quantity,
+    footer_canvas,
     multiline,
     p,
     write_json,
@@ -44,6 +57,7 @@ from reportlab.platypus import Spacer, Table, TableStyle
 from schema import PurchaseOrder
 
 SEED = 4711
+COUNT = 10  # documents per type in poc/data
 VAT = Decimal("0.20")
 
 # Companies that sell to Alpentech and send it invoices.
@@ -205,6 +219,27 @@ def totals_table(rows: list[tuple[str, str]]) -> Table:
     return table
 
 
+def noise_footer(
+    rng: random.Random, hard: bool, company: str, address: str, lang: str
+) -> dict:
+    """--hard: build_pdf options for a bank-details and "page x of y" footer."""
+    if not hard:
+        return {}
+    country = "DE" if address.endswith("Germany") else "AT"
+    digits = "".join(
+        str(rng.randint(0, 9)) for _ in range(18 if country == "DE" else 16)
+    )
+    iban = f"{country}{rng.randint(10, 99)}{digits}"
+    iban = " ".join(iban[i : i + 4] for i in range(0, len(iban), 4))
+    bank = "Bankverbindung" if lang == "de" else "Bank details"
+    label = "Seite {page} von {total}" if lang == "de" else "Page {page} of {total}"
+    lines = [
+        f"{company} · {address}",
+        f"{bank}: IBAN {iban} · BIC {rng.choice(['RZOOAT2L', 'BKAUATWW', 'COBADEFF'])}",
+    ]
+    return {"canvasmaker": footer_canvas(lines, label)}
+
+
 def load_orders(data_dir: Path) -> list[PurchaseOrder]:
     return [
         PurchaseOrder.model_validate_json(path.read_text(encoding="utf-8"))
@@ -215,7 +250,9 @@ def load_orders(data_dir: Path) -> list[PurchaseOrder]:
 # --- document types ---------------------------------------------------------
 
 
-def render_invoice(rng: random.Random, lang: str, path: Path, **_) -> None:
+def render_invoice(
+    rng: random.Random, lang: str, path: Path, hard: bool = False, **_
+) -> None:
     """A vendor invoices Alpentech; it quotes Alpentech's own PO number."""
     t, (df, nf) = TEXT[lang], FORMATS[lang]
     vendor, vendor_address = rng.choice(VENDORS)
@@ -263,11 +300,16 @@ def render_invoice(rng: random.Random, lang: str, path: Path, **_) -> None:
         Spacer(1, 16),
         p(t["terms"], SMALL),
     ]
-    build_pdf(path, story)
+    build_pdf(path, story, **noise_footer(rng, hard, vendor, vendor_address, lang))
 
 
 def render_remittance(
-    rng: random.Random, lang: str, path: Path, orders: list[PurchaseOrder], **_
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    orders: list[PurchaseOrder],
+    hard: bool = False,
+    **_,
 ) -> None:
     """A customer tells Alpentech which invoices it paid, quoting its PO numbers."""
     t, (df, nf) = TEXT[lang], FORMATS[lang]
@@ -308,11 +350,20 @@ def render_remittance(
         Spacer(1, 16),
         p(f"{t['regards']}\n{order.customer_name}"),
     ]
-    build_pdf(path, story)
+    build_pdf(
+        path,
+        story,
+        **noise_footer(rng, hard, order.customer_name, order.ship_to_address, lang),
+    )
 
 
 def render_confirmation(
-    rng: random.Random, lang: str, path: Path, orders: list[PurchaseOrder], **_
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    orders: list[PurchaseOrder],
+    hard: bool = False,
+    **_,
 ) -> None:
     """Alpentech confirms a real PO: same PO number, same lines, same total."""
     t, (df, nf) = TEXT[lang], FORMATS[lang]
@@ -357,11 +408,18 @@ def render_confirmation(
         Spacer(1, 16),
         p(f"{t['regards']}\n{SUPPLIER_NAME}"),
     ]
-    build_pdf(path, story)
+    build_pdf(
+        path, story, **noise_footer(rng, hard, SUPPLIER_NAME, SUPPLIER_ADDRESS, lang)
+    )
 
 
 def render_delivery_note(
-    rng: random.Random, lang: str, path: Path, orders: list[PurchaseOrder], **_
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    orders: list[PurchaseOrder],
+    hard: bool = False,
+    **_,
 ) -> None:
     """Alpentech ships a real PO: PO number and quantities, but no prices."""
     t, (df, nf) = TEXT[lang], FORMATS[lang]
@@ -397,11 +455,18 @@ def render_delivery_note(
         Spacer(1, 12),
         p(t["packages"].format(n=rng.randint(1, 6), kg=rng.randint(5, 400))),
     ]
-    build_pdf(path, story)
+    build_pdf(
+        path, story, **noise_footer(rng, hard, SUPPLIER_NAME, SUPPLIER_ADDRESS, lang)
+    )
 
 
 def render_newsletter(
-    rng: random.Random, lang: str, path: Path, materials: list[dict], **_
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    materials: list[dict],
+    hard: bool = False,
+    **_,
 ) -> None:
     """Alpentech promotion with article numbers and prices, inviting orders."""
     nf = FORMATS[lang][1]
@@ -440,44 +505,355 @@ def render_newsletter(
         Spacer(1, 20),
         p("Abmelden / Unsubscribe: newsletter@alpentech.example", SMALL),
     ]
-    build_pdf(path, story)
+    build_pdf(
+        path, story, **noise_footer(rng, hard, SUPPLIER_NAME, SUPPLIER_ADDRESS, lang)
+    )
 
 
-# kind -> (renderer, doc type, count)
+# --- --hard document kinds --------------------------------------------------
+
+
+def render_payment_reminder(
+    rng: random.Random, lang: str, path: Path, hard: bool = False, **_
+) -> None:
+    """--hard: a vendor reminds Alpentech of unpaid invoices. It asks for payment,
+    so it counts as an invoice, but it has no item table."""
+    df, nf = FORMATS[lang]
+    vendor, vendor_address = rng.choice(VENDORS)
+    reminder_date = random_date(rng)
+    if lang == "de":
+        title, cols = (
+            "Zahlungserinnerung",
+            ["Rechnung", "Datum", "Ihre Bestellung", "Fällig am", "Offen"],
+        )
+        intro = "bei der Durchsicht unserer Konten haben wir festgestellt, dass folgende Rechnungen noch offen sind:"
+        outro = "Bitte überweisen Sie den offenen Betrag von EUR {total} bis {due}. Sollten Sie bereits bezahlt haben, betrachten Sie dieses Schreiben als gegenstandslos."
+    else:
+        title, cols = (
+            "Payment Reminder",
+            ["Invoice", "Date", "Your order", "Due date", "Open"],
+        )
+        intro = "our records show that the following invoices are still unpaid:"
+        outro = "Please transfer the open amount of EUR {total} by {due}. If you have already paid, please disregard this letter."
+    rows, total = [cols], Decimal(0)
+    for _ in range(rng.randint(1, 3)):
+        invoice_date = reminder_date - timedelta(days=rng.randint(40, 90))
+        amount = money(Decimal(str(rng.uniform(80, 4000))))
+        total += amount
+        rows.append(
+            [
+                f"RE-2026-{rng.randint(1000, 9999)}",
+                fmt_date(invoice_date, df),
+                f"EK-{rng.randint(10000, 99999)}",
+                fmt_date(invoice_date + timedelta(days=30), df),
+                fmt_number(amount, nf),
+            ]
+        )
+    due = fmt_date(reminder_date + timedelta(days=10), df)
+    story = letterhead(vendor, vendor_address, SUPPLIER_NAME, SUPPLIER_ADDRESS)
+    story += [
+        p(title, TITLE),
+        meta_table([(TEXT[lang]["date"], fmt_date(reminder_date, df))]),
+        Spacer(1, 10),
+        p(TEXT[lang]["greeting"]),
+        p(intro),
+        Spacer(1, 8),
+        table(rows, [95, 85, 95, 85, 95], numbers_from=4),
+        Spacer(1, 10),
+        p(outro.format(total=fmt_number(total, nf), due=due)),
+        Spacer(1, 12),
+        p(f"{TEXT[lang]['regards']}\n{vendor}"),
+    ]
+    build_pdf(path, story, **noise_footer(rng, hard, vendor, vendor_address, lang))
+
+
+def render_payment_notice(
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    orders: list[PurchaseOrder],
+    hard: bool = False,
+    **_,
+) -> None:
+    """--hard: a customer announces a payment in a short letter without a table,
+    quoting its PO numbers and an item, like a purchase order would."""
+    df, nf = FORMATS[lang]
+    order = rng.choice(orders)
+    customer_orders = [o for o in orders if o.customer_name == order.customer_name]
+    paid = rng.sample(customer_orders, min(len(customer_orders), rng.randint(1, 3)))
+    total = sum((money(o.total_amount * (1 + VAT)) for o in paid), Decimal(0))
+    payment_date = max(o.po_date for o in paid) + timedelta(days=rng.randint(30, 60))
+    invoices = ", ".join(f"AR-2026-{rng.randint(10000, 99999)}" for _ in paid)
+    po_numbers = ", ".join(o.po_number for o in paid)
+    item = order.lines[0].description
+    if lang == "de":
+        title = "Zahlungsankündigung"
+        body = (
+            f"am {fmt_date(payment_date, df)} haben wir EUR {fmt_number(total, nf)} auf Ihr Konto "
+            f"überwiesen. Die Zahlung begleicht Ihre Rechnungen {invoices} zu unseren Bestellungen "
+            f"{po_numbers} (unter anderem {item}). Bei Rückfragen wenden Sie sich bitte an unsere "
+            f"Kreditorenbuchhaltung."
+        )
+    else:
+        title = "Payment Notification"
+        body = (
+            f"on {fmt_date(payment_date, df)} we transferred EUR {fmt_number(total, nf)} to your "
+            f"account. The payment settles your invoices {invoices} for our purchase orders "
+            f"{po_numbers} (including {item}). For questions please contact our accounts payable "
+            f"department."
+        )
+    story = letterhead(
+        order.customer_name, order.ship_to_address, SUPPLIER_NAME, SUPPLIER_ADDRESS
+    )
+    story += [
+        p(title, HEADING),
+        Spacer(1, 8),
+        p(TEXT[lang]["greeting"]),
+        p(body),
+        Spacer(1, 16),
+        p(f"{TEXT[lang]['regards']}\n{order.customer_name}"),
+    ]
+    build_pdf(
+        path,
+        story,
+        **noise_footer(rng, hard, order.customer_name, order.ship_to_address, lang),
+    )
+
+
+def render_rfq(
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    orders: list[PurchaseOrder],
+    materials: list[dict],
+    hard: bool = False,
+    **_,
+) -> None:
+    """--hard: a customer asks for a quotation. It lists articles and quantities
+    like a purchase order, but it orders nothing (other)."""
+    df, nf = FORMATS[lang]
+    order = rng.choice(orders)
+    request_date = random_date(rng)
+    if lang == "de":
+        title, number = "Anfrage", "Anfrage-Nr."
+        cols = ["Pos.", "Artikelnr.", "Bezeichnung", "Menge", "ME"]
+        intro = "bitte senden Sie uns Ihr Angebot für folgende Artikel:"
+        outro = "Wir bitten um Ihr Angebot bis {date}. Dies ist keine Bestellung."
+    else:
+        title, number = "Request for Quotation", "RFQ No."
+        cols = ["Item", "Material", "Description", "Qty", "Unit"]
+        intro = "please send us your quotation for the following items:"
+        outro = "Please send your quotation by {date}. This is not a purchase order."
+    rows = [cols]
+    for n, m in enumerate(rng.sample(materials, rng.randint(2, 6)), start=1):
+        rows.append(
+            [
+                str(n),
+                m["material_number"],
+                p(m["description"], CELL),
+                fmt_quantity(Decimal(rng.randint(5, 200)), nf),
+                m["unit"],
+            ]
+        )
+    story = letterhead(
+        order.customer_name, order.ship_to_address, SUPPLIER_NAME, SUPPLIER_ADDRESS
+    )
+    story += [
+        p(title, TITLE),
+        meta_table(
+            [
+                (number, f"ANF-{rng.randint(10000, 99999)}"),
+                (TEXT[lang]["date"], fmt_date(request_date, df)),
+            ]
+        ),
+        Spacer(1, 10),
+        p(TEXT[lang]["greeting"]),
+        p(intro),
+        Spacer(1, 8),
+        table(rows, [30, 60, 290, 60, 40], numbers_from=3),
+        Spacer(1, 10),
+        p(outro.format(date=fmt_date(request_date + timedelta(days=14), df))),
+        Spacer(1, 12),
+        p(f"{TEXT[lang]['regards']}\n{order.customer_name}"),
+    ]
+    build_pdf(
+        path,
+        story,
+        **noise_footer(rng, hard, order.customer_name, order.ship_to_address, lang),
+    )
+
+
+def render_cancellation(
+    rng: random.Random,
+    lang: str,
+    path: Path,
+    orders: list[PurchaseOrder],
+    hard: bool = False,
+    **_,
+) -> None:
+    """--hard: a customer cancels a real PO, repeating its number, lines and prices (other)."""
+    t, (df, nf) = TEXT[lang], FORMATS[lang]
+    order = rng.choice(orders)
+    if lang == "de":
+        title = f"Stornierung unserer Bestellung {order.po_number}"
+        intro = (
+            f"hiermit stornieren wir unsere Bestellung {order.po_number} vom "
+            f"{fmt_date(order.po_date, df)} vollständig. Betroffen sind folgende Positionen:"
+        )
+        outro = "Bitte bestätigen Sie die Stornierung schriftlich. Bereits gelieferte Ware senden wir zurück."
+    else:
+        title = f"Cancellation of purchase order {order.po_number}"
+        intro = (
+            f"we hereby cancel our purchase order {order.po_number} dated "
+            f"{fmt_date(order.po_date, df)} in full. The following lines are affected:"
+        )
+        outro = "Please confirm the cancellation in writing. Goods already delivered will be returned."
+    rows = [t["items"]]
+    for line in order.lines:
+        rows.append(
+            [
+                str(line.line_no),
+                p(line.description, CELL),
+                fmt_quantity(line.quantity, nf),
+                line.unit,
+                fmt_number(line.unit_price, nf),
+                fmt_number(line.line_total, nf),
+            ]
+        )
+    story = letterhead(
+        order.customer_name, order.ship_to_address, SUPPLIER_NAME, SUPPLIER_ADDRESS
+    )
+    story += [
+        p(title, HEADING),
+        meta_table(
+            [
+                (
+                    t["date"],
+                    fmt_date(order.po_date + timedelta(days=rng.randint(2, 9)), df),
+                )
+            ]
+        ),
+        Spacer(1, 10),
+        p(t["greeting"]),
+        p(intro),
+        Spacer(1, 8),
+        table(rows, [30, 225, 45, 35, 70, 90], numbers_from=2),
+        totals_table([[t["net"], f"EUR {fmt_number(order.total_amount, nf)}"]]),
+        Spacer(1, 10),
+        p(outro),
+        Spacer(1, 12),
+        p(f"{t['regards']}\n{order.customer_name}"),
+    ]
+    build_pdf(
+        path,
+        story,
+        **noise_footer(rng, hard, order.customer_name, order.ship_to_address, lang),
+    )
+
+
+# kind -> (renderer, doc type)
 KINDS = {
-    "invoice": (render_invoice, "invoice", 10),
-    "remittance": (render_remittance, "remittance", 10),
-    "confirmation": (render_confirmation, "other", 4),
-    "delivery_note": (render_delivery_note, "other", 3),
-    "newsletter": (render_newsletter, "other", 3),
+    "invoice": (render_invoice, "invoice"),
+    "remittance": (render_remittance, "remittance"),
+    "confirmation": (render_confirmation, "other"),
+    "delivery_note": (render_delivery_note, "other"),
+    "newsletter": (render_newsletter, "other"),
+    "payment_reminder": (render_payment_reminder, "invoice"),
+    "payment_notice": (render_payment_notice, "remittance"),
+    "rfq": (render_rfq, "other"),
+    "cancellation": (render_cancellation, "other"),
 }
 
 
-def generate(out_dir: Path = DATA_DIR, data_dir: Path = DATA_DIR) -> None:
-    rng = random.Random(SEED)
-    master = json.loads((data_dir / "master_data.json").read_text(encoding="utf-8"))
+def kind_counts(count: int = COUNT, hard: bool = False) -> dict[str, int]:
+    """How many documents of each kind: `count` invoices, remittances and others.
+    count=10 without --hard gives the poc/data mix (others: 4 + 3 + 3)."""
+    if not hard:
+        third = count // 3
+        return {
+            "invoice": count,
+            "remittance": count,
+            "confirmation": count - 2 * third,
+            "delivery_note": third,
+            "newsletter": third,
+        }
+    half = count // 2
+    others = ["confirmation", "delivery_note", "newsletter", "rfq", "cancellation"]
+    per_other = {
+        kind: count // len(others) + (1 if i < count % len(others) else 0)
+        for i, kind in enumerate(others)
+    }
+    return {
+        "invoice": count - half,
+        "payment_reminder": half,
+        "remittance": count - half,
+        "payment_notice": half,
+        **per_other,
+    }
+
+
+def generate(
+    out_dir: Path = DATA_DIR,
+    data_dir: Path = DATA_DIR,
+    seed: int = SEED,
+    count: int = COUNT,
+    hard: bool = False,
+    as_dataset: bool = False,
+) -> None:
+    """Write other/*.pdf and doc_types.json. POs come from data_dir (pos/, ground_truth/).
+    `as_dataset` (a classifier dataset outside poc/data) also writes labels.csv."""
+    rng = random.Random(seed)
+    master = json.loads((DATA_DIR / "master_data.json").read_text(encoding="utf-8"))
     orders = load_orders(data_dir)
     other_dir = out_dir / "other"
     other_dir.mkdir(parents=True, exist_ok=True)
 
     # Shuffle so a document's type can't be guessed from its file number.
-    kinds = [kind for kind, (_, _, count) in KINDS.items() for _ in range(count)]
+    kinds = [kind for kind, n in kind_counts(count, hard).items() for _ in range(n)]
     rng.shuffle(kinds)
 
-    doc_types = {f"PO-{i:04d}.pdf": "purchase_order" for i in range(1, NUM_POS + 1)}
+    doc_types = {
+        path.name: "purchase_order"
+        for path in sorted((data_dir / "pos").glob("PO-*.pdf"))
+    }
     for i, kind in enumerate(kinds, start=1):
-        render, doc_type, _ = KINDS[kind]
+        render, doc_type = KINDS[kind]
         name = f"DOC-{i:04d}.pdf"
         lang = rng.choice(["de", "en"])
         render(
-            rng, lang, other_dir / name, orders=orders, materials=master["materials"]
+            rng,
+            lang,
+            other_dir / name,
+            orders=orders,
+            materials=master["materials"],
+            hard=hard,
         )
         doc_types[name] = doc_type
     write_json(out_dir / "doc_types.json", doc_types)
+    if as_dataset:
+        with (out_dir / "labels.csv").open("w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, lineterminator="\n")
+            writer.writerow(["file", "doc_type"])
+            for name, doc_type in doc_types.items():
+                folder = "pos" if doc_type == "purchase_order" else "other"
+                writer.writerow([f"{folder}/{name}", doc_type])
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Generate non-PO documents.")
+    parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--count", type=int, default=COUNT, help="documents per type")
+    parser.add_argument("--out", type=Path, default=DATA_DIR)
+    parser.add_argument(
+        "--hard", action="store_true", help="confusing kinds and footers"
+    )
+    args = parser.parse_args(argv)
+    out = args.out.resolve()
+    generate(
+        out, out, args.seed, args.count, args.hard, as_dataset=out != DATA_DIR.resolve()
+    )
+    print(f"Wrote {3 * args.count} documents to {out / 'other'}")
 
 
 if __name__ == "__main__":
-    generate()
-    print(
-        f"Wrote {sum(c for _, _, c in KINDS.values())} documents to {DATA_DIR / 'other'}"
-    )
+    main()

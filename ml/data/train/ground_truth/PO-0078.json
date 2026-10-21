@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH023510",
+  "po_date": "2026-05-27",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-07-06",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "9",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "1161.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "18",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "972.00"
+    }
+  ],
+  "total_amount": "2133.00"
+}

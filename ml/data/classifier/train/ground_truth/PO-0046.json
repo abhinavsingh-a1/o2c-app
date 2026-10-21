@@ -1,0 +1,48 @@
+{
+  "po_number": "4500080562",
+  "po_date": "2026-06-07",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-07-05",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "810.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "1348.50"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "2574.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    }
+  ],
+  "total_amount": "5077.50"
+}

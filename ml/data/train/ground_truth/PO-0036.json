@@ -1,0 +1,48 @@
+{
+  "po_number": "B-26/4526",
+  "po_date": "2026-10-04",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-11-14",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "44",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "554.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "9",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "147.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "52",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2808.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "4",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "128.00"
+    }
+  ],
+  "total_amount": "3638.00"
+}

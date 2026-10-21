@@ -1,0 +1,57 @@
+{
+  "po_number": "AFT/74401",
+  "po_date": "2026-01-24",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-02-13",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "200",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "690.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "50",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4450.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "26",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "832.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "27",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1458.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "25",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "687.50"
+    }
+  ],
+  "total_amount": "8117.50"
+}

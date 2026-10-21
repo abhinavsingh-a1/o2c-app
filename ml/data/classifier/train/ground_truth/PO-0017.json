@@ -1,0 +1,57 @@
+{
+  "po_number": "B-26/31107",
+  "po_date": "2026-04-22",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-05-03",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "60",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "384.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "55",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "693.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "9",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "78.75"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "130",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "240.50"
+    }
+  ],
+  "total_amount": "1741.25"
+}

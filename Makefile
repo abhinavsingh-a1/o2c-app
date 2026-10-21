@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data
 
 up:
 	docker compose up -d --build
@@ -89,3 +89,12 @@ gen-api:
 
 ui-test:
 	pnpm --dir ui test
+
+# E10 datasets: POs for extraction (train, hard holdout) and documents for the classifier.
+ml-data:
+	uv run --group poc python poc/generate_pos.py --seed 2026 --count 100 --out ml/data/train
+	uv run --group poc python poc/generate_pos.py --seed 4242 --count 20 --hard --out ml/data/holdout
+	uv run --group poc python poc/generate_pos.py --seed 3101 --count 60 --out ml/data/classifier/train
+	uv run --group poc python poc/generate_other_docs.py --seed 3102 --count 60 --out ml/data/classifier/train
+	uv run --group poc python poc/generate_pos.py --seed 5101 --count 10 --hard --out ml/data/classifier/holdout
+	uv run --group poc python poc/generate_other_docs.py --seed 5102 --count 10 --hard --out ml/data/classifier/holdout

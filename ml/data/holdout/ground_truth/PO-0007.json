@@ -1,0 +1,75 @@
+{
+  "po_number": "4500021899",
+  "po_date": "2026-04-27",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-05-26",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "20",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "936.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "130",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "2431.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "21",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "816.90"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "42",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1155.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "30",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "2670.00"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "166.25"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "26",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "327.60"
+    }
+  ],
+  "total_amount": "8502.75"
+}

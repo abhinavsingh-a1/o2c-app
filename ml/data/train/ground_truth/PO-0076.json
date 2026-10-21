@@ -1,0 +1,57 @@
+{
+  "po_number": "SAT-006064",
+  "po_date": "2026-02-19",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "84",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "155.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "30",
+      "unit": "PAK",
+      "unit_price": "4.03",
+      "line_total": "120.90"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "4895.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "57",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1567.50"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "45",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "4045.50"
+    }
+  ],
+  "total_amount": "10784.30"
+}

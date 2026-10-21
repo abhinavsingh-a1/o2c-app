@@ -1,0 +1,48 @@
+{
+  "po_number": "PO-2026-9028",
+  "po_date": "2026-09-27",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": "2026-10-10",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "11",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "107.80"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "36",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "453.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "29",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "92.80"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "15",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "810.00"
+    }
+  ],
+  "total_amount": "1464.20"
+}

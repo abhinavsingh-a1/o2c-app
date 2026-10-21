@@ -1,0 +1,57 @@
+{
+  "po_number": "PO-2026-28538",
+  "po_date": "2026-04-01",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "22",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "605.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400121",
+      "description": "Edelstahlrohr 1.4301 25x2 mm",
+      "quantity": "14",
+      "unit": "M",
+      "unit_price": "18.70",
+      "line_total": "261.80"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "36",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "259.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "35",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "112.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400114",
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "7",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "272.30"
+    }
+  ],
+  "total_amount": "1510.30"
+}

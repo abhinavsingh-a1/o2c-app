@@ -1,0 +1,48 @@
+{
+  "po_number": "PO-2026-83735",
+  "po_date": "2026-03-15",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-03-25",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "151.5",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "280.28"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "25.65"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "43",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "799.80"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "35",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "4515.00"
+    }
+  ],
+  "total_amount": "5620.73"
+}

@@ -1,0 +1,39 @@
+{
+  "po_number": "AFT/58559",
+  "po_date": "2026-04-17",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": "1000103",
+  "currency": "EUR",
+  "delivery_date": "2026-05-10",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "20",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "98.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400122",
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "66",
+      "unit": "KG",
+      "unit_price": "2.40",
+      "line_total": "158.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "44",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "1711.60"
+    }
+  ],
+  "total_amount": "1968.00"
+}

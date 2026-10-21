@@ -1,0 +1,30 @@
+{
+  "po_number": "B-26/22553",
+  "po_date": "2026-10-01",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-11-09",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "10",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "320.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "36",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "230.40"
+    }
+  ],
+  "total_amount": "550.40"
+}

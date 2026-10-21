@@ -1,0 +1,30 @@
+{
+  "po_number": "B-26/37628",
+  "po_date": "2026-05-02",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": "2026-05-13",
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "3",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "9.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "54",
+      "unit": "ROL",
+      "unit_price": "7.44",
+      "line_total": "401.76"
+    }
+  ],
+  "total_amount": "411.36"
+}

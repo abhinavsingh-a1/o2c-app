@@ -1,0 +1,39 @@
+{
+  "po_number": "BP0053912",
+  "po_date": "2026-08-24",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Industriereiniger Konzentrat, 10 l Kanister",
+      "quantity": "5",
+      "unit": "PC",
+      "unit_price": "38.90",
+      "line_total": "194.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "5214.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "7",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "130.20"
+    }
+  ],
+  "total_amount": "5538.90"
+}

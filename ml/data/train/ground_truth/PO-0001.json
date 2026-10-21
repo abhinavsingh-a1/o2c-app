@@ -1,0 +1,57 @@
+{
+  "po_number": "WA-26-94780",
+  "po_date": "2026-01-06",
+  "customer_name": "Wienerwald Anlagenbau GmbH",
+  "customer_number": "1000104",
+  "currency": "EUR",
+  "delivery_date": "2026-01-20",
+  "ship_to_address": "Brunner Straße 88, 1230 Wien, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "44",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "385.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "26",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "2314.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400101",
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "60",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "894.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Flachstahl S235 40x5 mm",
+      "quantity": "101",
+      "unit": "KG",
+      "unit_price": "2.15",
+      "line_total": "217.15"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "33",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "613.80"
+    }
+  ],
+  "total_amount": "4423.95"
+}

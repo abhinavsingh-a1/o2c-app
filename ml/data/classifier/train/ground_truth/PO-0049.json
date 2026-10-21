@@ -1,0 +1,48 @@
+{
+  "po_number": "AFT/32439",
+  "po_date": "2026-09-24",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-10-24",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "58",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "507.50"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "200",
+      "unit": "L",
+      "unit_price": "3.87",
+      "line_total": "774.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "5",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "137.50"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "9",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "44.10"
+    }
+  ],
+  "total_amount": "1463.10"
+}

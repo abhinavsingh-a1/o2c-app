@@ -1,0 +1,21 @@
+{
+  "po_number": "SAT-075899",
+  "po_date": "2026-05-18",
+  "customer_name": "Schwarzwald Antriebstechnik KG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Am Kanal 19, 79108 Freiburg im Breisgau, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400124",
+      "description": "Mantelleitung NYM-J 3x1,5 mm², 100 m Ring",
+      "quantity": "22",
+      "unit": "PC",
+      "unit_price": "89.90",
+      "line_total": "1977.80"
+    }
+  ],
+  "total_amount": "1977.80"
+}

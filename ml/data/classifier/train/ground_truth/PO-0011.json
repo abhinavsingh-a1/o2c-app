@@ -1,0 +1,30 @@
+{
+  "po_number": "4500082956",
+  "po_date": "2026-02-07",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-03-20",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "48",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1320.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "17",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "148.75"
+    }
+  ],
+  "total_amount": "1468.75"
+}

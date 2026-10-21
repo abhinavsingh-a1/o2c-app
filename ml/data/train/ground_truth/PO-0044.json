@@ -1,0 +1,39 @@
+{
+  "po_number": "NSH009323",
+  "po_date": "2026-10-08",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-11-04",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400101",
+      "description": "Sechskantschraube DIN 933 M8x30 verzinkt, 100 Stk",
+      "quantity": "6",
+      "unit": "PAK",
+      "unit_price": "14.90",
+      "line_total": "89.40"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "490.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "20",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "69.00"
+    }
+  ],
+  "total_amount": "648.40"
+}

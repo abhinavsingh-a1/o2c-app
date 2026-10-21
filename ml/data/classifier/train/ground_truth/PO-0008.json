@@ -1,0 +1,39 @@
+{
+  "po_number": "NSH000922",
+  "po_date": "2026-02-01",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-03-08",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "6",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "534.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "4",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "74.40"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "50",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "360.00"
+    }
+  ],
+  "total_amount": "968.40"
+}

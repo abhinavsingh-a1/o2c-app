@@ -1,0 +1,75 @@
+{
+  "po_number": "AFT/61029",
+  "po_date": "2026-09-12",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-10-17",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400113",
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "24",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "153.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "889.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "24",
+      "unit": "PC",
+      "unit_price": "114.55",
+      "line_total": "2749.20"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "4",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "12.80"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "17",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "467.50"
+    },
+    {
+      "line_no": 7,
+      "material_number": "400120",
+      "description": "Stretchfolie 500 mm x 300 m, 23 my",
+      "quantity": "15",
+      "unit": "ROL",
+      "unit_price": "16.40",
+      "line_total": "246.00"
+    }
+  ],
+  "total_amount": "5235.90"
+}

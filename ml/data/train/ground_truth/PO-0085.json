@@ -1,0 +1,30 @@
+{
+  "po_number": "B-26/41493",
+  "po_date": "2026-05-02",
+  "customer_name": "Salzach Kunststofftechnik GmbH",
+  "customer_number": "1000107",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Münchner Bundesstraße 140, 5020 Salzburg, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "100",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "345.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "34",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "632.40"
+    }
+  ],
+  "total_amount": "977.40"
+}

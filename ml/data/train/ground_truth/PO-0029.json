@@ -1,0 +1,30 @@
+{
+  "po_number": "BP0044150",
+  "po_date": "2026-05-04",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-05-20",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "41",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "1918.80"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "2",
+      "unit": "PC",
+      "unit_price": "1.10",
+      "line_total": "2.20"
+    }
+  ],
+  "total_amount": "1921.00"
+}

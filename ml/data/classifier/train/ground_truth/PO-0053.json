@@ -1,0 +1,57 @@
+{
+  "po_number": "4500060084",
+  "po_date": "2026-03-10",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-03-27",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "18",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "1602.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400107",
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "38",
+      "unit": "PAK",
+      "unit_price": "4.90",
+      "line_total": "186.20"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400110",
+      "description": "Trennscheibe 125x1,0 mm INOX",
+      "quantity": "12",
+      "unit": "PC",
+      "unit_price": "1.35",
+      "line_total": "16.20"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "42",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "781.20"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "1",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "129.00"
+    }
+  ],
+  "total_amount": "2714.60"
+}

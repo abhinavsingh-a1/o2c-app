@@ -1,0 +1,102 @@
+{
+  "po_number": "PO-2026-14584",
+  "po_date": "2026-08-28",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-09-05",
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400109",
+      "description": "Schweißdraht SG2 1,0 mm, 15 kg Spule",
+      "quantity": "10",
+      "unit": "PC",
+      "unit_price": "46.80",
+      "line_total": "468.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "24",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "660.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "2",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "64.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400112",
+      "description": "Hochleistungsfett Lithium EP2, 400 g Kartusche",
+      "quantity": "56",
+      "unit": "PC",
+      "unit_price": "7.20",
+      "line_total": "403.20"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "27",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "236.25"
+    },
+    {
+      "line_no": 6,
+      "material_number": null,
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "147",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "271.95"
+    },
+    {
+      "line_no": 7,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "13",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "81.25"
+    },
+    {
+      "line_no": 8,
+      "material_number": "400105",
+      "description": "Hydraulikschlauch DN10 2SN, Meterware",
+      "quantity": "142.5",
+      "unit": "M",
+      "unit_price": "12.60",
+      "line_total": "1795.50"
+    },
+    {
+      "line_no": 9,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "29",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "1566.00"
+    },
+    {
+      "line_no": 10,
+      "material_number": "400103",
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "55",
+      "unit": "PAK",
+      "unit_price": "3.20",
+      "line_total": "176.00"
+    }
+  ],
+  "total_amount": "5722.15"
+}

@@ -1,0 +1,39 @@
+{
+  "po_number": "NSH008107",
+  "po_date": "2026-03-24",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "52",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "967.20"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400102",
+      "description": "Sechskantmutter DIN 934 M8 verzinkt, 100 Stk",
+      "quantity": "24",
+      "unit": "PAK",
+      "unit_price": "6.40",
+      "line_total": "153.60"
+    },
+    {
+      "line_no": 3,
+      "material_number": null,
+      "description": "Hydrauliköl HLP 46",
+      "quantity": "208",
+      "unit": "L",
+      "unit_price": "3.45",
+      "line_total": "717.60"
+    }
+  ],
+  "total_amount": "1838.40"
+}

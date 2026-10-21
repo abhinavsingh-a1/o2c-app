@@ -1,0 +1,57 @@
+{
+  "po_number": "PO-2026-24721",
+  "po_date": "2026-06-25",
+  "customer_name": "Donautal Maschinenbau AG",
+  "customer_number": "1000102",
+  "currency": "EUR",
+  "delivery_date": null,
+  "ship_to_address": "Hafenstraße 45, 4020 Linz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "45",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "837.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400108",
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "16",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "440.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "55",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "214.50"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400123",
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "3",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "96.00"
+    },
+    {
+      "line_no": 5,
+      "material_number": "400115",
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "39",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3471.00"
+    }
+  ],
+  "total_amount": "5058.50"
+}

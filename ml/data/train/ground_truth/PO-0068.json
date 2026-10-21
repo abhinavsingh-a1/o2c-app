@@ -1,0 +1,48 @@
+{
+  "po_number": "BP0001316",
+  "po_date": "2026-08-29",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-09-14",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "19",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "74.10"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400106",
+      "description": "Druckluftschlauch PU 8x6 mm blau",
+      "quantity": "31",
+      "unit": "M",
+      "unit_price": "1.85",
+      "line_total": "57.35"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400125",
+      "description": "LED-Hallenstrahler 150 W IP65",
+      "quantity": "25",
+      "unit": "PC",
+      "unit_price": "129.00",
+      "line_total": "3225.00"
+    },
+    {
+      "line_no": 4,
+      "material_number": null,
+      "description": "Gehörschutzstöpsel, 200 Paar",
+      "quantity": "26",
+      "unit": "BOX",
+      "unit_price": "32.00",
+      "line_total": "832.00"
+    }
+  ],
+  "total_amount": "4188.45"
+}

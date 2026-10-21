@@ -25,6 +25,8 @@ poc = [
     "python-dotenv>=1.2.4",
     "reportlab>=5.0.1",
 ]
+# E10 model training and evaluation (filled in Part B)
+ml = []
 
 [tool.pytest.ini_options]
 testpaths = ["libs", "services"]

@@ -1,0 +1,57 @@
+{
+  "po_number": "4500009111",
+  "po_date": "2026-01-18",
+  "customer_name": "Steirische Metallbau GmbH",
+  "customer_number": "1000101",
+  "currency": "EUR",
+  "delivery_date": "2026-02-14",
+  "ship_to_address": "Industriestraße 12, 8020 Graz, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Gewindebohrer-Satz M3-M12 HSS-E",
+      "quantity": "40",
+      "unit": "PC",
+      "unit_price": "89.00",
+      "line_total": "3560.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400111",
+      "description": "Schruppscheibe 125x6 mm Stahl",
+      "quantity": "10",
+      "unit": "PC",
+      "unit_price": "3.90",
+      "line_total": "39.00"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400104",
+      "description": "Rillenkugellager 6205-2RS C3",
+      "quantity": "14",
+      "unit": "PC",
+      "unit_price": "8.75",
+      "line_total": "122.50"
+    },
+    {
+      "line_no": 4,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "22",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "409.20"
+    },
+    {
+      "line_no": 5,
+      "material_number": null,
+      "description": "Gewebeklebeband 50 mm x 50 m silber",
+      "quantity": "15",
+      "unit": "ROL",
+      "unit_price": "6.25",
+      "line_total": "93.75"
+    }
+  ],
+  "total_amount": "4224.45"
+}

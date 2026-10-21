@@ -1,0 +1,30 @@
+{
+  "po_number": "NSH027505",
+  "po_date": "2026-08-04",
+  "customer_name": "Niederrhein Stahlhandel GmbH",
+  "customer_number": "1000108",
+  "currency": "EUR",
+  "delivery_date": "2026-08-18",
+  "ship_to_address": "Hafenweg 21, 47119 Duisburg, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Unterlegscheibe DIN 125 A 8,4 verzinkt, 100 Stk",
+      "quantity": "43",
+      "unit": "PAK",
+      "unit_price": "3.03",
+      "line_total": "130.29"
+    },
+    {
+      "line_no": 2,
+      "material_number": "400117",
+      "description": "Keilriemen SPZ 1250",
+      "quantity": "11",
+      "unit": "PC",
+      "unit_price": "9.80",
+      "line_total": "107.80"
+    }
+  ],
+  "total_amount": "238.09"
+}

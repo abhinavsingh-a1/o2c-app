@@ -1,0 +1,39 @@
+{
+  "po_number": "AFT/54760",
+  "po_date": "2026-01-07",
+  "customer_name": "Alpenland Fördertechnik GmbH",
+  "customer_number": null,
+  "currency": "EUR",
+  "delivery_date": "2026-02-14",
+  "ship_to_address": "Gewerbepark 7, 6020 Innsbruck, Austria",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": "400118",
+      "description": "Rollenkette 08B-1 Simplex, 5 m",
+      "quantity": "38",
+      "unit": "PC",
+      "unit_price": "54.00",
+      "line_total": "2052.00"
+    },
+    {
+      "line_no": 2,
+      "material_number": null,
+      "description": "Schutzhandschuhe Nitril Gr. 9, 12 Paar",
+      "quantity": "39",
+      "unit": "BOX",
+      "unit_price": "27.50",
+      "line_total": "1072.50"
+    },
+    {
+      "line_no": 3,
+      "material_number": "400116",
+      "description": "Spiralbohrer HSS-G 8,0 mm DIN 338, 10 Stk",
+      "quantity": "33",
+      "unit": "PAK",
+      "unit_price": "18.60",
+      "line_total": "613.80"
+    }
+  ],
+  "total_amount": "3738.30"
+}

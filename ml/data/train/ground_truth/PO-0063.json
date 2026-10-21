@@ -1,0 +1,21 @@
+{
+  "po_number": "BP0053216",
+  "po_date": "2026-05-20",
+  "customer_name": "Bayerische Präzisionsteile GmbH",
+  "customer_number": "1000105",
+  "currency": "EUR",
+  "delivery_date": "2026-06-11",
+  "ship_to_address": "Lindenweg 3, 85053 Ingolstadt, Germany",
+  "lines": [
+    {
+      "line_no": 1,
+      "material_number": null,
+      "description": "Kabelbinder 4,8x200 mm schwarz, 100 Stk",
+      "quantity": "45",
+      "unit": "PAK",
+      "unit_price": "5.54",
+      "line_total": "249.30"
+    }
+  ],
+  "total_amount": "249.30"
+}
