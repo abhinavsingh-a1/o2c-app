@@ -1,24 +1,30 @@
 """Seed 12 months of completed sales orders (2025-10-01 to 2026-09-30) into vbak/vbap.
 
-Each customer regularly buys a fixed set of 6-10 materials, each with its own
-typical quantity (mean and spread). About 2% of lines are outliers: a quantity
-5-20x the usual, or a material the customer never buys. Outliers are written
-to poc/data/history_outliers.json as {vbeln, posnr, reason}.
+The history is sampled from the customer buying profiles derived from the generated
+purchase orders (poc/data/customer_profiles.json, see poc/derive_customer_profiles.py),
+so history and POs describe the same buying behaviour: each customer orders the
+materials it orders in the POs, as often as it does there, and quantities are drawn
+from the quantities actually ordered for that material. About 2% of lines are outliers:
+a quantity 5-20x the material's typical (median) quantity, or - once per material at
+most, with a normal quantity - a material the customer never orders. Outliers are
+written to poc/data/history_outliers.json as {vbeln, posnr, reason}.
 
-Deterministic: every customer gets its own seeded random generator, and orders
-use fixed keys (vbeln H<kunnr[-4:]><n>, idempotency key hist-<kunnr>-<n>), so a
-second run inserts nothing. Run seed.py first.
+Deterministic: every customer gets its own seeded random generator, and orders use fixed
+keys (vbeln H<kunnr[-4:]><n>, idempotency key hist-<kunnr>-<n>), so a second run inserts
+nothing. --reset first deletes the generated history orders (idempotency key "hist-..."),
+e.g. after the profiles changed; other orders are never touched. Run seed.py first.
 
-CLI: uv run python -m erp_mock.seed_history
+CLI: uv run python -m erp_mock.seed_history [--reset]
 """
 
+import argparse
 import json
 import random
 from datetime import date, datetime, time
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from erp_mock.models import Customer, Material, Price, SalesOrder, SalesOrderItem
@@ -27,21 +33,11 @@ SEED = 1234
 START = date(2025, 10, 1)
 MONTHS = 12
 OUTLIER_RATE = 0.02
+MAX_LINES = 6
 KEY_PREFIX = "hist-"
-DEFAULT_OUTLIERS_PATH = (
-    Path(__file__).resolve().parents[4] / "poc" / "data" / "history_outliers.json"
-)
-
-# Typical order quantity range per unit; each customer-material mean is drawn from it.
-MEAN_RANGE = {
-    "PC": (5, 40),
-    "PAK": (5, 30),
-    "BOX": (2, 15),
-    "ROL": (5, 40),
-    "M": (20, 200),
-    "KG": (50, 300),
-    "L": (20, 200),
-}
+REPO_DATA = Path(__file__).resolve().parents[4] / "poc" / "data"
+DEFAULT_OUTLIERS_PATH = REPO_DATA / "history_outliers.json"
+DEFAULT_PROFILES_PATH = REPO_DATA / "customer_profiles.json"
 
 
 def months() -> list[date]:
@@ -66,26 +62,41 @@ def list_prices(session: Session) -> dict[str, Decimal]:
     return {p.matnr: p.kbetr for p in prices}
 
 
-def quantity(rng: random.Random, mean: float, spread: float) -> Decimal:
-    return Decimal(max(1, round(rng.gauss(mean, spread))))
+def load_profiles(path: Path = DEFAULT_PROFILES_PATH) -> dict:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def weighted_sample(rng: random.Random, weights: dict[str, int], k: int) -> list[str]:
+    """k different keys, each drawn with probability proportional to its weight."""
+    remaining = dict(weights)
+    chosen = []
+    for _ in range(min(k, len(remaining))):
+        key = rng.choices(list(remaining), weights=list(remaining.values()))[0]
+        chosen.append(key)
+        del remaining[key]
+    return chosen
+
+
+def typical_quantity(profile: dict) -> Decimal:
+    return Decimal(str(profile["median"]))
 
 
 def customer_orders(
     rng: random.Random,
     kunnr: str,
+    customer_profile: dict,
+    material_profiles: dict,
     materials: dict[str, Material],
     prices: dict[str, Decimal],
 ) -> tuple[list[SalesOrder], list[dict]]:
     """All history orders for one customer, plus the outliers among their lines."""
-    regular = sorted(rng.sample(sorted(materials), rng.randint(6, 10)))
-    never = sorted(set(materials) - set(regular))
-    profile = {}
-    for matnr in regular:
-        low, high = MEAN_RANGE.get(materials[matnr].meins, (5, 40))
-        mean = rng.uniform(low, high)
-        profile[matnr] = (mean, mean * rng.uniform(0.15, 0.35))
+    ordered = {
+        m: n for m, n in sorted(customer_profile["materials"].items()) if m in materials
+    }
+    never = sorted(set(materials) - set(ordered))
 
     orders, outliers, n = [], [], 0
+    used_never: set[str] = set()  # each never-ordered material is an outlier only once
     for first in months():
         days = sorted(
             rng.randint(1, days_in_month(first)) for _ in range(rng.randint(4, 8))
@@ -95,20 +106,29 @@ def customer_orders(
             bstdk = first.replace(day=day)
             vbeln = f"H{kunnr[-4:]}{n:05d}"
             items = []
-            for i, matnr in enumerate(rng.sample(regular, rng.randint(1, 6)), start=1):
+            picked = weighted_sample(rng, ordered, rng.randint(1, MAX_LINES))
+            for i, matnr in enumerate(picked, start=1):
                 posnr = 10 * i
-                mean, spread = profile[matnr]
-                kwmeng = quantity(rng, mean, spread)
+                # Bootstrap: a quantity this material was really ordered in.
+                kwmeng = Decimal(
+                    str(rng.choice(material_profiles[matnr]["quantities"]))
+                )
                 if rng.random() < OUTLIER_RATE:
-                    if rng.random() < 0.5:
-                        kwmeng = Decimal(round(mean * rng.uniform(5, 20)))
-                        reason = f"quantity {kwmeng} is {kwmeng / Decimal(round(mean)):.1f}x the usual {round(mean)}"
-                    else:
-                        matnr = rng.choice(
-                            [m for m in never if m not in {it.matnr for it in items}]
+                    unused = [m for m in never if m not in used_never]
+                    if unused and rng.random() < 0.5:
+                        matnr = rng.choice(unused)
+                        used_never.add(matnr)
+                        # A normal amount of that material: the material is the anomaly.
+                        kwmeng = Decimal(
+                            str(rng.choice(material_profiles[matnr]["quantities"]))
                         )
-                        kwmeng = Decimal(rng.randint(1, 20))
                         reason = f"material {matnr} is never bought by customer {kunnr}"
+                    else:
+                        usual = typical_quantity(material_profiles[matnr])
+                        kwmeng = Decimal(
+                            round(usual * Decimal(str(rng.uniform(5, 20))))
+                        )
+                        reason = f"quantity {kwmeng} is {kwmeng / usual:.1f}x the usual {usual}"
                     outliers.append({"vbeln": vbeln, "posnr": posnr, "reason": reason})
                 netpr = prices[matnr]
                 items.append(
@@ -154,10 +174,28 @@ def history_counts(session: Session) -> tuple[int, int]:
     return orders, lines
 
 
+def delete_history(session: Session) -> int:
+    """Delete only the generated history orders (idempotency key "hist-..."); returns
+    the number of orders deleted."""
+    history = select(SalesOrder.vbeln).where(
+        SalesOrder.idempotency_key.startswith(KEY_PREFIX)
+    )
+    session.execute(delete(SalesOrderItem).where(SalesOrderItem.vbeln.in_(history)))
+    deleted = session.execute(
+        delete(SalesOrder).where(SalesOrder.idempotency_key.startswith(KEY_PREFIX))
+    ).rowcount
+    session.commit()
+    return deleted
+
+
 def seed_history(
-    session: Session, outliers_path: Path = DEFAULT_OUTLIERS_PATH
+    session: Session,
+    outliers_path: Path = DEFAULT_OUTLIERS_PATH,
+    profiles_path: Path = DEFAULT_PROFILES_PATH,
+    reset: bool = False,
 ) -> dict[str, int]:
-    """Insert missing history orders; returns created and total counts."""
+    """Insert missing history orders; returns deleted, created and total counts."""
+    profiles = load_profiles(profiles_path)
     materials = {m.matnr: m for m in session.scalars(select(Material))}
     prices = list_prices(session)
     missing = sorted(set(materials) - set(prices))
@@ -165,6 +203,14 @@ def seed_history(
         raise ValueError(
             f"No list price for materials {missing}; run erp_mock.seed first"
         )
+    customers = list(session.scalars(select(Customer.kunnr).order_by(Customer.kunnr)))
+    unprofiled = sorted(set(customers) - set(profiles["customers"]))
+    if unprofiled:
+        raise ValueError(
+            f"No buying profile for customers {unprofiled} in {profiles_path}"
+        )
+
+    deleted = delete_history(session) if reset else 0
     existing = set(
         session.scalars(
             select(SalesOrder.idempotency_key).where(
@@ -175,10 +221,15 @@ def seed_history(
 
     created_orders = created_lines = 0
     all_outliers = []
-    for kunnr in session.scalars(select(Customer.kunnr).order_by(Customer.kunnr)):
+    for kunnr in customers:
         # One generator per customer: adding a customer doesn't change the others' history.
         orders, outliers = customer_orders(
-            random.Random(f"{SEED}-{kunnr}"), kunnr, materials, prices
+            random.Random(f"{SEED}-{kunnr}"),
+            kunnr,
+            profiles["customers"][kunnr],
+            profiles["materials"],
+            materials,
+            prices,
         )
         all_outliers += outliers
         for order in orders:
@@ -196,6 +247,7 @@ def seed_history(
 
     orders, lines = history_counts(session)
     return {
+        "orders_deleted": deleted,
         "orders_created": created_orders,
         "lines_created": created_lines,
         "orders": orders,
@@ -204,11 +256,20 @@ def seed_history(
     }
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Seed the ERP order history.")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help='delete the generated history orders ("hist-" keys) first',
+    )
+    args = parser.parse_args(argv)
     from erp_mock.db import SessionLocal  # needs ERP_DATABASE_URL, so import only here
 
     with SessionLocal() as session:
-        counts = seed_history(session)
+        counts = seed_history(session, reset=args.reset)
+    if args.reset:
+        print(f"Deleted {counts['orders_deleted']} history orders")
     print(f"History orders: {counts['orders']} ({counts['orders_created']} created)")
     print(f"History lines:  {counts['lines']} ({counts['lines_created']} created)")
     print(

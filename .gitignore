@@ -226,3 +226,5 @@ local/users.json
 
 # ML evaluation output (ml/eval_*.py)
 ml/results/
+# kfp.local pipeline runs (ml/pipelines/run_local.py)
+ml/pipelines/local_outputs/

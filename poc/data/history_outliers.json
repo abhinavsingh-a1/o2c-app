@@ -2,136 +2,256 @@
   {
     "vbeln": "H010100017",
     "posnr": 30,
-    "reason": "quantity 53 is 8.8x the usual 6"
+    "reason": "material 400113 is never bought by customer 1000101"
   },
   {
-    "vbeln": "H010200008",
-    "posnr": 60,
-    "reason": "material 400123 is never bought by customer 1000102"
-  },
-  {
-    "vbeln": "H010200045",
+    "vbeln": "H010100019",
     "posnr": 40,
-    "reason": "material 400118 is never bought by customer 1000102"
+    "reason": "material 400117 is never bought by customer 1000101"
   },
   {
-    "vbeln": "H010200070",
-    "posnr": 20,
-    "reason": "quantity 47 is 9.4x the usual 5"
+    "vbeln": "H010100024",
+    "posnr": 40,
+    "reason": "quantity 404 is 18.4x the usual 22"
   },
   {
-    "vbeln": "H010300061",
-    "posnr": 10,
-    "reason": "material 400103 is never bought by customer 1000103"
-  },
-  {
-    "vbeln": "H010300065",
+    "vbeln": "H010100044",
     "posnr": 50,
-    "reason": "material 400111 is never bought by customer 1000103"
+    "reason": "quantity 282 is 9.6x the usual 29.5"
+  },
+  {
+    "vbeln": "H010100061",
+    "posnr": 40,
+    "reason": "quantity 592 is 19.7x the usual 30"
+  },
+  {
+    "vbeln": "H010100061",
+    "posnr": 50,
+    "reason": "material 400106 is never bought by customer 1000101"
+  },
+  {
+    "vbeln": "H010200023",
+    "posnr": 30,
+    "reason": "quantity 293 is 12.2x the usual 24"
+  },
+  {
+    "vbeln": "H010200047",
+    "posnr": 10,
+    "reason": "quantity 696 is 19.6x the usual 35.5"
+  },
+  {
+    "vbeln": "H010200052",
+    "posnr": 20,
+    "reason": "quantity 410 is 12.4x the usual 33"
+  },
+  {
+    "vbeln": "H010200063",
+    "posnr": 30,
+    "reason": "quantity 394 is 15.5x the usual 25.5"
+  },
+  {
+    "vbeln": "H010200067",
+    "posnr": 20,
+    "reason": "quantity 512 is 18.3x the usual 28"
+  },
+  {
+    "vbeln": "H010300020",
+    "posnr": 20,
+    "reason": "quantity 308 is 9.3x the usual 33"
+  },
+  {
+    "vbeln": "H010300025",
+    "posnr": 20,
+    "reason": "quantity 618 is 18.7x the usual 33"
+  },
+  {
+    "vbeln": "H010300025",
+    "posnr": 30,
+    "reason": "quantity 524 is 12.3x the usual 42.5"
+  },
+  {
+    "vbeln": "H010300038",
+    "posnr": 30,
+    "reason": "quantity 1743 is 18.3x the usual 95.25"
+  },
+  {
+    "vbeln": "H010300039",
+    "posnr": 20,
+    "reason": "quantity 245 is 10.2x the usual 24"
+  },
+  {
+    "vbeln": "H010300049",
+    "posnr": 60,
+    "reason": "quantity 1002 is 16.7x the usual 60"
+  },
+  {
+    "vbeln": "H010300052",
+    "posnr": 10,
+    "reason": "quantity 552 is 17.0x the usual 32.5"
+  },
+  {
+    "vbeln": "H010300067",
+    "posnr": 20,
+    "reason": "quantity 258 is 12.3x the usual 21"
   },
   {
     "vbeln": "H010300071",
-    "posnr": 40,
-    "reason": "quantity 157 is 9.8x the usual 16"
-  },
-  {
-    "vbeln": "H010400019",
-    "posnr": 40,
-    "reason": "material 400106 is never bought by customer 1000104"
-  },
-  {
-    "vbeln": "H010400027",
-    "posnr": 10,
-    "reason": "quantity 616 is 18.7x the usual 33"
-  },
-  {
-    "vbeln": "H010400027",
     "posnr": 30,
-    "reason": "quantity 250 is 8.6x the usual 29"
+    "reason": "quantity 245 is 11.1x the usual 22"
   },
   {
-    "vbeln": "H010400052",
-    "posnr": 40,
-    "reason": "quantity 194 is 6.7x the usual 29"
+    "vbeln": "H010400022",
+    "posnr": 30,
+    "reason": "material 400119 is never bought by customer 1000104"
+  },
+  {
+    "vbeln": "H010400026",
+    "posnr": 50,
+    "reason": "material 400113 is never bought by customer 1000104"
+  },
+  {
+    "vbeln": "H010400028",
+    "posnr": 20,
+    "reason": "quantity 194 is 6.6x the usual 29.5"
+  },
+  {
+    "vbeln": "H010400062",
+    "posnr": 50,
+    "reason": "quantity 637 is 16.8x the usual 38"
   },
   {
     "vbeln": "H010400065",
     "posnr": 10,
-    "reason": "material 400114 is never bought by customer 1000104"
+    "reason": "quantity 198 is 6.7x the usual 29.5"
   },
   {
-    "vbeln": "H010500023",
-    "posnr": 10,
-    "reason": "quantity 111 is 13.9x the usual 8"
+    "vbeln": "H010400074",
+    "posnr": 60,
+    "reason": "quantity 395 is 14.4x the usual 27.5"
+  },
+  {
+    "vbeln": "H010500005",
+    "posnr": 30,
+    "reason": "quantity 266 is 9.5x the usual 28"
+  },
+  {
+    "vbeln": "H010500020",
+    "posnr": 40,
+    "reason": "quantity 340 is 12.6x the usual 27"
   },
   {
     "vbeln": "H010500040",
-    "posnr": 10,
-    "reason": "material 400121 is never bought by customer 1000105"
-  },
-  {
-    "vbeln": "H010500064",
     "posnr": 40,
-    "reason": "quantity 385 is 14.3x the usual 27"
+    "reason": "quantity 957 is 16.0x the usual 60"
   },
   {
-    "vbeln": "H010600005",
+    "vbeln": "H010500043",
+    "posnr": 20,
+    "reason": "material 400108 is never bought by customer 1000105"
+  },
+  {
+    "vbeln": "H010500052",
     "posnr": 50,
-    "reason": "material 400107 is never bought by customer 1000106"
+    "reason": "quantity 523 is 15.6x the usual 33.5"
   },
   {
-    "vbeln": "H010600009",
-    "posnr": 40,
-    "reason": "material 400119 is never bought by customer 1000106"
-  },
-  {
-    "vbeln": "H010600013",
-    "posnr": 20,
-    "reason": "material 400107 is never bought by customer 1000106"
-  },
-  {
-    "vbeln": "H010600024",
+    "vbeln": "H010600006",
     "posnr": 30,
-    "reason": "material 400115 is never bought by customer 1000106"
+    "reason": "quantity 1556 is 16.4x the usual 95"
   },
   {
-    "vbeln": "H010600066",
-    "posnr": 40,
-    "reason": "material 400112 is never bought by customer 1000106"
-  },
-  {
-    "vbeln": "H010700012",
+    "vbeln": "H010600007",
     "posnr": 10,
-    "reason": "material 400114 is never bought by customer 1000107"
+    "reason": "quantity 636 is 19.3x the usual 33"
   },
   {
-    "vbeln": "H010700028",
+    "vbeln": "H010600008",
     "posnr": 30,
-    "reason": "material 400115 is never bought by customer 1000107"
+    "reason": "quantity 278 is 9.9x the usual 28"
   },
   {
-    "vbeln": "H010700059",
-    "posnr": 20,
-    "reason": "material 400104 is never bought by customer 1000107"
+    "vbeln": "H010600019",
+    "posnr": 10,
+    "reason": "quantity 308 is 10.3x the usual 30"
   },
   {
-    "vbeln": "H010800022",
-    "posnr": 20,
-    "reason": "quantity 1839 is 14.0x the usual 131"
+    "vbeln": "H010600036",
+    "posnr": 40,
+    "reason": "quantity 392 is 17.0x the usual 23"
   },
   {
-    "vbeln": "H010800038",
+    "vbeln": "H010600049",
     "posnr": 20,
-    "reason": "material 400106 is never bought by customer 1000108"
+    "reason": "quantity 378 is 11.5x the usual 33"
+  },
+  {
+    "vbeln": "H010600053",
+    "posnr": 10,
+    "reason": "quantity 812 is 9.7x the usual 84"
+  },
+  {
+    "vbeln": "H010700003",
+    "posnr": 40,
+    "reason": "quantity 494 is 8.2x the usual 60"
+  },
+  {
+    "vbeln": "H010700015",
+    "posnr": 30,
+    "reason": "quantity 340 is 13.3x the usual 25.5"
+  },
+  {
+    "vbeln": "H010700027",
+    "posnr": 10,
+    "reason": "quantity 1259 is 13.3x the usual 95"
+  },
+  {
+    "vbeln": "H010700029",
+    "posnr": 60,
+    "reason": "quantity 797 is 8.4x the usual 95.25"
+  },
+  {
+    "vbeln": "H010700074",
+    "posnr": 30,
+    "reason": "quantity 240 is 9.4x the usual 25.5"
+  },
+  {
+    "vbeln": "H010700075",
+    "posnr": 30,
+    "reason": "quantity 233 is 6.1x the usual 38"
+  },
+  {
+    "vbeln": "H010700077",
+    "posnr": 10,
+    "reason": "quantity 245 is 8.3x the usual 29.5"
+  },
+  {
+    "vbeln": "H010800039",
+    "posnr": 20,
+    "reason": "quantity 458 is 14.1x the usual 32.5"
+  },
+  {
+    "vbeln": "H010800042",
+    "posnr": 20,
+    "reason": "quantity 216 is 7.2x the usual 30"
+  },
+  {
+    "vbeln": "H010800045",
+    "posnr": 50,
+    "reason": "quantity 355 is 11.8x the usual 30"
   },
   {
     "vbeln": "H010800056",
-    "posnr": 20,
-    "reason": "quantity 466 is 19.4x the usual 24"
+    "posnr": 50,
+    "reason": "quantity 469 is 11.0x the usual 42.5"
   },
   {
-    "vbeln": "H010800068",
-    "posnr": 10,
-    "reason": "material 400114 is never bought by customer 1000108"
+    "vbeln": "H010800060",
+    "posnr": 20,
+    "reason": "quantity 425 is 15.2x the usual 28"
+  },
+  {
+    "vbeln": "H010800061",
+    "posnr": 20,
+    "reason": "quantity 200 is 6.7x the usual 30"
   }
 ]

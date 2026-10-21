@@ -29,6 +29,9 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - The agent always runs through agent.checkpoint.run_or_resume with thread_id = idempotency key; never invoke the graph without a checkpointer in services.
 - Every /reviews endpoint requires a logged-in user (CurrentUser); the reviewer is always taken from the token.
 - review_decisions is append-only: never update or delete audit rows.
+- Add Python packages only with `uv add` (never pip install), so uv.lock stays the single source of truth.
+- Never tune prompts or models on ml/data/holdout; it is only for final measurement.
+- Models are promoted only through MLflow aliases (@champion) by the promotion rule; restart the agent to load a new champion.
 
 ## Commands
 - make up: start local stack (Postgres, Kafka, SeaweedFS, MLflow, LiteLLM, Langfuse)
@@ -57,6 +60,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - uv run python -m agent.auth add-user <username> "<Full Name>": create a reviewer in local/users.json (git-ignored)
 - make ui-test: run the UI tests (Vitest)
 - The full system including the UI runs with make up; UI at http://localhost:5180
+- make ml-image / make ml-pipeline-local / make ml-pipeline-compile: build and run the anomaly training pipeline
+- uv run python -m erp_mock.seed_history --reset: regenerate ERP history after customer profiles change
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

@@ -26,7 +26,7 @@ MATERIALS = [f"4001{i:02d}" for i in range(1, 26)]
 
 
 def synthetic_history(seed: int = 7) -> tuple[pd.DataFrame, np.ndarray, dict]:
-    """Like erp_mock.seed_history: each customer buys 6-10 materials with a typical
+    """A small order history: each customer buys 6-10 materials with a typical
     quantity; a few lines are 5-20x outliers or a material the customer never buys."""
     rng = np.random.default_rng(seed)
     rows, labels, means = [], [], {}
