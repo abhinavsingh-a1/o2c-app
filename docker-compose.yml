@@ -266,6 +266,15 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+  ui:
+    build:
+      context: .
+      dockerfile: ui/Dockerfile
+    ports:
+      - "5180:8080"
+    depends_on:
+      agent:
+        condition: service_started
 
 volumes:
   pgdata:
