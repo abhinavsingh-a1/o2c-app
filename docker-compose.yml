@@ -298,6 +298,26 @@ services:
       postgres:
         condition: service_healthy
 
+  audit-archiver:
+    # Decisions and review decisions -> hash-chained JSONL in s3://o2c-audit (ADR-014)
+    build:
+      context: .
+      dockerfile: docker/python-service.Dockerfile
+      args:
+        PACKAGE: audit-archiver
+    command: python -m audit_archiver.app
+    environment:
+      <<: *pipeline-env
+      AUDIT_BUCKET: o2c-audit # created by make buckets
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_started
+      s3:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
   # --- Observability (ADR-012) ---
   prometheus:
     image: prom/prometheus:v3.5.0

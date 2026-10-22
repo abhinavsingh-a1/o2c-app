@@ -43,6 +43,11 @@ models:
               values: [auto_post, exception]
       - name: touchless
         data_tests: [not_null]
+      - name: llm_cost_usd
+        description: >
+          LiteLLM cost of the calls made for this order (session_id = idempotency key:
+          classify, extract, explain), evaluations excluded.
+        data_tests: [not_null]
       - name: cycle_time_seconds
         description: From receipt to the final decision (posted or rejected); NULL while open.
         data_tests:
@@ -101,12 +106,21 @@ models:
                 severity: warn
 
   - name: mart_llm_cost
-    description: LLM cost per day, LiteLLM key alias and model, with the cost per order.
+    description: >
+      LLM cost per day, LiteLLM key alias, service and model, split into order,
+      document, shared and evaluation cost, and the cost per order (ADR-013).
     data_tests:
       - unique:
-          column_name: "date_day || '/' || key_alias || '/' || model"
+          column_name: "date_day || '/' || key_alias || '/' || service || '/' || model"
     columns:
       - name: cost_usd
         data_tests: [not_null]
       - name: key_alias
         data_tests: [not_null]
+      - name: service
+        data_tests: [not_null]
+      - name: order_cost_usd
+        data_tests:
+          - between:
+              min_value: 0
+              max_value: 1000000

@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from erp_mock.api import app, get_session
+from erp_mock.api import app, get_session, line_value
 from erp_mock.models import Base, Price
 from erp_mock.seed import DEFAULT_PATH, seed
 from fastapi.testclient import TestClient
@@ -171,6 +171,39 @@ def test_create_order_returns_201(client):
     assert body["status"] == "OPEN"
     assert [item["posnr"] for item in body["items"]] == [10, 20]
     assert Decimal(body["netwr"]) == Decimal("149.00") + Decimal("35.00")
+
+
+@pytest.mark.parametrize(
+    ("quantity", "price", "expected"),
+    [
+        ("168.5", "1.85", "311.73"),  # 311.725: half-even would give 311.72
+        ("191.5", "2.15", "411.73"),  # 411.725
+        ("2", "0.125", "0.25"),
+        ("10", "14.90", "149.00"),
+    ],
+)
+def test_line_value_rounds_half_cents_up_like_the_agent(quantity, price, expected):
+    assert line_value(Decimal(quantity), Decimal(price)) == Decimal(expected)
+
+
+def test_half_cent_order_total_matches_the_po(client):
+    # The real case behind three ORDER_VERIFY_FAILED orders (BP0052582)
+    payload = order_payload(
+        items=[
+            {
+                "matnr": "400101",
+                "arktx": "x",
+                "kwmeng": "168.5",
+                "vrkme": "PAK",
+                "netpr": "1.85",
+            }
+        ]
+    )
+
+    body = client.post("/salesorders", json=payload).json()
+
+    assert Decimal(body["items"][0]["netwr"]) == Decimal("311.73")
+    assert Decimal(body["netwr"]) == Decimal("311.73")
 
 
 def test_same_idempotency_key_returns_200_with_same_vbeln(client):

@@ -52,7 +52,7 @@ def defined_metrics() -> list:
 
 def test_every_o2c_metric_uses_only_allowed_low_cardinality_labels():
     defined = defined_metrics()
-    assert len(defined) == 17
+    assert len(defined) == 18
     for metric in defined:
         labels = set(metric._labelnames)
         assert metric._name.startswith("o2c_")

@@ -136,3 +136,48 @@ Verified: `grafana_ro` reads `analytics.fct_orders`. It gets "permission denied"
 
   `public.review_decisions` was empty, so the review panels show no rows yet. The unit
   tests cover their logic.
+
+## Cost per order corrected (E15 Part C, 2026-10-22)
+The dashboard showed an LLM cost per order of $0.00015, about 8x too low.
+- **raw.llm_spend was complete:** the same 12 key/model groups, counts and spend as
+  LiteLLM's table.
+- **The attribution was wrong.** mart_llm_cost counted only calls made with the
+  per-service keys (classifier, extractor, agent) as order cost. Those keys exist only
+  since 2026-10-22 (ADR-011); earlier pipeline calls used the master key. The stat then
+  divided one day's keyed cost by the orders of all days.
+- **Calls that serve many orders** (contract tolerance lookup, material matching,
+  embeddings) were counted per order as well.
+
+Fix:
+- **The sink also copies `session_id` and the calling service** (the first request tag
+  that is not a User-Agent tag). The services send the order's idempotency key as the
+  session of every call made for one document: classify, extract, explain.
+- **Rows copied before these columns existed** were backfilled once. The watermark only
+  counts complete rows, and an upsert fills the two columns.
+- **`fct_orders.llm_cost_usd`** is the cost of the calls whose session is the order, eval
+  key excluded. `mart_daily_kpis.llm_cost_per_order_usd` is its daily average, and the
+  dashboard's cost per order uses these.
+- **`mart_llm_cost` splits every call into one category:**
+  - **order:** the session is an order;
+  - **document:** the session is a received document that is not an order, e.g.
+    classifying an invoice;
+  - **shared:** agent calls with no document session;
+  - **evaluation:** the eval key or tag, `eval-`/`redteam-`/`judge-` sessions, and
+    classifier or extractor calls for no real document. These services only ever call
+    the LLM for a document, so such calls come from evaluations made with the master
+    key before the eval key existed.
+
+  `cost_per_order_usd` = order cost / orders that day.
+
+Result on the local data:
+
+| Measure | Value |
+|---|---|
+| Average cost per order | $0.00121 (was $0.00015) |
+| Range per order | $0.00028–$0.00228 |
+| Order calls | $0.023 |
+| Shared calls | $0.026 |
+| Evaluations | $3.12 of the $3.17 total |
+
+Shared cost is reported but not divided by orders. Covered by the dbt unit test
+`cost_per_order_counts_only_calls_for_orders`.

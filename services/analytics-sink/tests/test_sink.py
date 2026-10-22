@@ -13,6 +13,7 @@ from analytics_sink.db import (
     llm_spend,
     setup,
     setup_statements,
+    upsert_spend,
     usable_password,
 )
 from analytics_sink.spend import (
@@ -20,6 +21,7 @@ from analytics_sink.spend import (
     OVERLAP,
     SpendCopier,
     run_periodically,
+    service_tag,
     spend_row,
 )
 from o2c_common.events import Envelope
@@ -45,12 +47,23 @@ class FakeStore:
         key = (row["topic"], row["kafka_partition"], row["kafka_offset"])
         self.dlq.setdefault(key, row)
 
-    def insert_spend(self, rows):
+    def insert_spend(self, rows):  # as upsert_spend
         for row in rows:
-            self.spend.setdefault(row["request_id"], row)
+            old = self.spend.get(row["request_id"])
+            if old is None:
+                self.spend[row["request_id"]] = row
+            elif old["service"] is None:
+                old.update(session_id=row["session_id"], service=row["service"])
 
     def max_spend_created_at(self):
-        return max((r["source_created_at"] for r in self.spend.values()), default=None)
+        return max(
+            (
+                r["source_created_at"]
+                for r in self.spend.values()
+                if r["service"] is not None
+            ),
+            default=None,
+        )
 
 
 class FakeMessage:
@@ -207,7 +220,6 @@ def test_dlq_messages_are_copied_once_through_the_raw_consumer():
     [
         (events, "(event_id)"),
         (dlq, "(topic, kafka_partition, kafka_offset)"),
-        (llm_spend, "(request_id)"),
     ],
 )
 def test_every_insert_ignores_duplicates_on_the_primary_key(table, key):
@@ -228,6 +240,8 @@ def litellm_row(n: int, created: datetime, alias="extractor") -> dict:
         "model": "openai/gpt-6-luna",
         "model_group": "o2c-extract",
         "key_alias": alias,
+        "session_id": "k" * 64,
+        "request_tags": ["extractor", "User-Agent: OpenAI"],
         "created_at": created,
     }
 
@@ -255,6 +269,44 @@ def test_spend_row_converts_litellm_columns():
     assert row["key_alias"] is None  # the master key
     assert row["model_group"] == "o2c-extract"
     assert row["source_created_at"] == T0
+    assert row["session_id"] == "k" * 64
+    assert row["service"] == "extractor"
+
+
+@pytest.mark.parametrize(
+    ("tags", "service"),
+    [
+        (["agent", "User-Agent: OpenAI"], "agent"),
+        (["User-Agent: OpenAI", "eval"], "eval"),
+        (["User-Agent: curl"], "untagged"),
+        ([], "untagged"),
+        (None, "untagged"),
+    ],
+)
+def test_service_tag(tags, service):
+    assert service_tag(tags) == service
+
+
+def test_spend_upsert_only_completes_rows_copied_before_the_new_columns():
+    sql = str(upsert_spend().compile(dialect=postgresql.dialect()))
+
+    assert "ON CONFLICT (request_id) DO UPDATE" in sql
+    assert "SET session_id = excluded.session_id, service = excluded.service" in sql
+    assert "WHERE raw.llm_spend.service IS NULL" in sql
+
+
+def test_rows_without_service_are_read_again_once_and_completed():
+    store = FakeStore()
+    old = spend_row(litellm_row(1, T0)) | {"session_id": None, "service": None}
+    store.spend["req-1"] = old  # copied by the first version of the sink
+    litellm = FakeLiteLLM([litellm_row(1, T0), litellm_row(2, T0)])
+
+    SpendCopier(litellm, store).run_once()
+
+    assert litellm.queries[0][0] == EPOCH  # no complete row yet: read everything
+    assert store.spend["req-1"]["service"] == "extractor"
+    assert store.spend["req-1"]["session_id"] == "k" * 64
+    assert store.max_spend_created_at() == T0
 
 
 def test_spend_copy_is_incremental_paged_and_idempotent():
@@ -367,6 +419,14 @@ def test_setup_without_a_password_creates_schemas_and_tables_but_no_role():
     assert created == [engine.conn]
     assert not any("grafana_ro" in s for s in engine.conn.sql)
     assert "CREATE SCHEMA IF NOT EXISTS analytics" in engine.conn.sql
+    # columns added after the first version of raw.llm_spend
+    assert (
+        "ALTER TABLE raw.llm_spend ADD COLUMN IF NOT EXISTS session_id text"
+        in engine.conn.sql
+    )
+    assert "ALTER TABLE raw.llm_spend ADD COLUMN IF NOT EXISTS service text" in (
+        engine.conn.sql
+    )
 
 
 def test_setup_with_a_password_creates_the_role(monkeypatch):

@@ -38,7 +38,7 @@ ALLOWED_LABELS = frozenset(
         "status",  # HTTP status code
         "group",  # Kafka consumer group
         "reason",  # DLQ reason (DLQ_REASONS)
-        "source",  # intake source: email | upload
+        "source",  # intake: email | upload; audit: the 3 order topics | review_decisions
         "doc_type",  # purchase_order | invoice | remittance | other
         "classified_by",  # distilbert | gpt
         "outcome",  # order status: posted | awaiting_review | rejected | failed
@@ -144,6 +144,13 @@ SPEND_COPY_RUNS = Counter(
     "o2c_llm_spend_copy_runs_total",
     "Runs of the LiteLLM spend log copy by result",
     ["result"],
+)
+
+# --- audit archive (ADR-014) ---
+AUDIT_RECORDS = Counter(
+    "o2c_audit_records_total",
+    "Records appended to the hash-chained audit archive, by source",
+    ["source"],
 )
 
 COST_HEADER = "x-litellm-response-cost"

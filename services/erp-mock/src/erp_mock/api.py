@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Annotated
 from uuid import uuid4
 
@@ -21,6 +21,17 @@ from erp_mock.schemas import (
 )
 
 app = FastAPI(title="ERP mock", version="0.1.0")
+CENT = Decimal("0.01")
+
+
+def line_value(quantity: Decimal, price: Decimal) -> Decimal:
+    """Quantity x price in cents, half-up like commercial rounding and the agent
+    (agent.graph._money). Decimal's default (half-even) made 168.5 x 1.85 = 311.725 into
+    311.72 here and 311.73 on the PO, so the agent's verify step cancelled the order
+    (ADR-004)."""
+    return (quantity * price).quantize(CENT, rounding=ROUND_HALF_UP)
+
+
 instrument_fastapi(app)
 
 
@@ -128,7 +139,7 @@ def create_order(order: SalesOrderIn, response: Response, session: SessionDep):
             kwmeng=it.kwmeng,
             vrkme=it.vrkme,
             netpr=it.netpr,
-            netwr=(it.kwmeng * it.netpr).quantize(Decimal("0.01")),
+            netwr=line_value(it.kwmeng, it.netpr),
         )
         for i, it in enumerate(order.items)
     ]

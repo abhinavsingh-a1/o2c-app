@@ -31,6 +31,8 @@ SPEND_QUERY = text(
         model,
         model_group,
         metadata ->> 'user_api_key_alias' AS key_alias,
+        session_id,
+        request_tags,
         created_at
     FROM "LiteLLM_SpendLogs"
     WHERE created_at >= :since
@@ -54,6 +56,15 @@ def litellm_fetcher(engine: Engine) -> FetchSpend:
     return fetch
 
 
+def service_tag(tags) -> str:
+    """The first request tag that is not added by the client library: the services set
+    tags ["extractor"], ["classifier"], ["agent"], evaluations ["eval"]."""
+    for tag in tags or []:
+        if isinstance(tag, str) and tag and not tag.startswith("User-Agent"):
+            return tag
+    return "untagged"
+
+
 def spend_row(source: dict) -> dict:
     start = source["start_time"]
     return {
@@ -64,6 +75,8 @@ def spend_row(source: dict) -> dict:
         "model": source["model"] or "",
         "model_group": source.get("model_group") or None,
         "key_alias": source.get("key_alias") or None,
+        "session_id": source.get("session_id") or None,
+        "service": service_tag(source.get("request_tags")),
         "source_created_at": source["created_at"],
         "ingested_at": datetime.now(UTC),
     }

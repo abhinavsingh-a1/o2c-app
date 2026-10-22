@@ -1,0 +1,26 @@
+[project]
+name = "audit-archiver"
+version = "0.1.0"
+description = "Appends pipeline decisions and review decisions to a hash-chained audit archive in S3 (ADR-014)"
+readme = "README.md"
+authors = [
+    { name = "Abhinav", email = "a1.abhinavsingh@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.43.115",
+    "o2c-common",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.16.0",
+    "sqlalchemy>=2.1.4",
+]
+
+[project.scripts]
+audit-archiver = "audit_archiver.app:main"
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+o2c-common = { workspace = true }

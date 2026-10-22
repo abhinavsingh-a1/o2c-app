@@ -30,6 +30,9 @@ scrape_configs:
   - job_name: analytics-sink # health server (ADR-013)
     static_configs:
       - targets: ["analytics-sink:8310"]
+  - job_name: audit-archiver # health server (ADR-014)
+    static_configs:
+      - targets: ["audit-archiver:8320"]
 
   # LiteLLM's own metrics (callbacks: ["prometheus"] in local/litellm/config.yaml):
   # requests, latency, tokens and spend per model and virtual key. The path needs the

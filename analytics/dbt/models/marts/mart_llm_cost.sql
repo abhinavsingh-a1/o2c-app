@@ -1,39 +1,89 @@
--- One row per day (UTC), LiteLLM key alias and model: LLM cost and calls, and the cost
--- per order extracted that day. Only the pipeline keys (classifier, extractor, agent)
--- are order costs; eval and master-key calls are shown but not divided by orders.
+-- One row per day (UTC), LiteLLM key alias, calling service and model: LLM cost and
+-- calls by category (ADR-013):
+--   order:      session_id is an order's idempotency key (classify, extract, explain)
+--   document:   session_id is the key of a received document that is not an order
+--               (e.g. classifying an invoice)
+--   shared:     agent calls that serve many orders (contract tolerance lookup, material
+--               matching, embeddings) and carry no document session
+--   evaluation: everything else - the eval key or tag, evaluation sessions (eval-,
+--               redteam-, judge-) and classifier/extractor calls for no real document
+-- cost_per_order_usd = order cost / orders extracted that day; the rows of one day add up
+-- to that day's LLM cost per order.
 with
 
-spend as (
+orders as (
     select
-        started_at::date as date_day,
-        key_alias,
-        model,
-        sum(spend_usd) as cost_usd,
-        count(*) as calls
-    from {{ ref('stg_llm_spend') }}
-    group by started_at::date, key_alias, model
+        idempotency_key,
+        extracted_at::date as date_day
+    from {{ ref('fct_orders') }}
 ),
 
 order_days as (
     select
-        extracted_at::date as date_day,
+        date_day,
         count(*) as orders
-    from {{ ref('fct_orders') }}
-    group by extracted_at::date
+    from orders
+    group by date_day
+),
+
+calls as (
+    select
+        spend.started_at::date as date_day,
+        spend.key_alias,
+        spend.service,
+        spend.model,
+        spend.spend_usd,
+        case
+            when
+                spend.key_alias = 'eval'
+                or spend.service = 'eval'
+                or spend.session_id ~ '^(eval|redteam|judge)-'
+                then 'evaluation'
+            when orders.idempotency_key is not null then 'order'
+            when documents.idempotency_key is not null then 'document'
+            when spend.service = 'agent' then 'shared'
+            else 'evaluation'
+        end as cost_category
+    from {{ ref('stg_llm_spend') }} as spend
+    left join orders
+        on spend.session_id = orders.idempotency_key
+    left join {{ ref('fct_documents') }} as documents
+        on spend.session_id = documents.idempotency_key
+),
+
+spend as (
+    select
+        date_day,
+        key_alias,
+        service,
+        model,
+        sum(spend_usd) as cost_usd,
+        count(*) as calls,
+        coalesce(sum(spend_usd) filter (where cost_category = 'order'), 0)
+            as order_cost_usd,
+        coalesce(sum(spend_usd) filter (where cost_category = 'document'), 0)
+            as document_cost_usd,
+        coalesce(sum(spend_usd) filter (where cost_category = 'shared'), 0)
+            as shared_cost_usd,
+        coalesce(sum(spend_usd) filter (where cost_category = 'evaluation'), 0)
+            as evaluation_cost_usd
+    from calls
+    group by date_day, key_alias, service, model
 )
 
 select
     spend.date_day,
     spend.key_alias,
+    spend.service,
     spend.model,
     spend.cost_usd,
     spend.calls,
-    spend.key_alias in ('classifier', 'extractor', 'agent') as is_pipeline,
+    spend.order_cost_usd,
+    spend.document_cost_usd,
+    spend.shared_cost_usd,
+    spend.evaluation_cost_usd,
     coalesce(order_days.orders, 0) as orders,
-    case
-        when spend.key_alias in ('classifier', 'extractor', 'agent')
-            then spend.cost_usd / nullif(order_days.orders, 0)
-    end as cost_per_order_usd
+    spend.order_cost_usd / nullif(order_days.orders, 0) as cost_per_order_usd
 from spend
 left join order_days
     on spend.date_day = order_days.date_day

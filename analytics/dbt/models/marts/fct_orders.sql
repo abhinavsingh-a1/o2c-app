@@ -69,6 +69,17 @@ reviews as (
     group by idempotency_key
 ),
 
+order_llm_cost as (
+    -- Calls made for this document (session_id = idempotency key), not by evaluations
+    select
+        session_id as idempotency_key,
+        sum(spend_usd) as llm_cost_usd,
+        count(*) as llm_calls
+    from {{ ref('stg_llm_spend') }}
+    where session_id is not null and key_alias != 'eval'
+    group by session_id
+),
+
 issues as (
     select
         idempotency_key,
@@ -97,6 +108,8 @@ joined as (
         coalesce(latest.final_status, 'in_progress') as final_status,
         coalesce(reviews.review_decisions, 0) as review_decisions,
         coalesce(issues.issue_count, 0) as issue_count,
+        coalesce(order_llm_cost.llm_cost_usd, 0) as llm_cost_usd,
+        coalesce(order_llm_cost.llm_calls, 0) as llm_calls,
         coalesce(reviews.review_decisions, 0) > 0
         or coalesce(review_events.has_review_event, false) as reviewed,
         case
@@ -120,6 +133,8 @@ joined as (
         on extracted.idempotency_key = reviews.idempotency_key
     left join issues
         on extracted.idempotency_key = issues.idempotency_key
+    left join order_llm_cost
+        on extracted.idempotency_key = order_llm_cost.idempotency_key
 )
 
 select
@@ -142,6 +157,8 @@ select
     reviewed,
     issue_count,
     issue_codes,
+    llm_cost_usd,
+    llm_calls,
     final_status = 'posted' and not reviewed as touchless,
     round(extract(epoch from decided_at - coalesce(received_at, extracted_at)))::bigint
         as cycle_time_seconds

@@ -75,6 +75,12 @@ llm_spend = Table(
     Column("model", Text, nullable=False),
     Column("model_group", Text),  # the LiteLLM alias, e.g. o2c-extract
     Column("key_alias", Text),  # the virtual key (ADR-011); NULL for the master key
+    # Langfuse session id: the order's idempotency key for the calls a service makes for
+    # one document (classify, extract, explain), so cost can be attributed per order.
+    Column("session_id", Text, index=True),
+    # The calling service from the request tags (extractor, classifier, agent, eval,
+    # untagged). NULL only in rows copied before this column existed.
+    Column("service", Text),
     # LiteLLM's insert time (UTC, without time zone as in LiteLLM's table): the
     # watermark of the incremental copy.
     Column("source_created_at", DateTime(timezone=False), nullable=False, index=True),
@@ -136,17 +142,37 @@ class Store:
 
     def insert_spend(self, rows: list[dict]) -> None:
         if rows:
-            self._insert(llm_spend, rows)
+            with self.engine.begin() as conn:
+                conn.execute(upsert_spend(), rows)
 
     def max_spend_created_at(self) -> datetime | None:
+        """The watermark: the newest copied row that has all columns. Rows copied
+        before session_id/service existed do not count, so they are read again once
+        and completed by upsert_spend."""
         with self.engine.connect() as conn:
             return conn.execute(
-                select(func.max(llm_spend.c.source_created_at))
+                select(func.max(llm_spend.c.source_created_at)).where(
+                    llm_spend.c.service.is_not(None)
+                )
             ).scalar()
 
     def _insert(self, table: Table, rows: list[dict]) -> None:
         with self.engine.begin() as conn:
             conn.execute(insert_ignoring_duplicates(table), rows)
+
+
+def upsert_spend():
+    """Insert spend rows; a row already copied is only completed (session_id, service)
+    if it predates those columns, otherwise left as it is. Idempotent."""
+    statement = insert(llm_spend)
+    return statement.on_conflict_do_update(
+        index_elements=["request_id"],
+        set_={
+            "session_id": statement.excluded.session_id,
+            "service": statement.excluded.service,
+        },
+        where=llm_spend.c.service.is_(None),
+    )
 
 
 def insert_ignoring_duplicates(table: Table):
@@ -156,6 +182,14 @@ def insert_ignoring_duplicates(table: Table):
 
 
 # --- schemas and the read-only role ---
+
+
+# Columns added after raw.llm_spend was first created (create_all does not alter tables)
+MIGRATIONS = [
+    f"ALTER TABLE {RAW}.llm_spend ADD COLUMN IF NOT EXISTS session_id text",
+    f"ALTER TABLE {RAW}.llm_spend ADD COLUMN IF NOT EXISTS service text",
+    f"CREATE INDEX IF NOT EXISTS ix_raw_llm_spend_session_id ON {RAW}.llm_spend (session_id)",
+]
 
 
 def setup_statements(database: str) -> list[str]:
@@ -194,6 +228,8 @@ def setup(engine: Engine, bi_password: str | None, create_tables=None) -> None:
     with engine.begin() as conn:
         conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {RAW}"))
         (create_tables or metadata.create_all)(conn)
+        for statement in MIGRATIONS:
+            conn.execute(text(statement))
         if not usable_password(bi_password):
             log.warning(
                 "GRAFANA_DB_PASSWORD not set: role %s not created/updated", BI_ROLE

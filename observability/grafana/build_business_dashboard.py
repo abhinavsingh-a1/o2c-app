@@ -11,7 +11,6 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "dashboards" / "o2c-business.json"
 DATASOURCE = {"type": "grafana-postgresql-datasource", "uid": "o2c-analytics"}
-PIPELINE_KEYS = "('classifier', 'extractor', 'agent')"
 
 
 def sql(raw: str, fmt: str = "table", ref: str = "A") -> dict:
@@ -89,13 +88,13 @@ def build() -> dict:
         ),
         stat(
             "LLM cost per order",
-            f"""select sum(cost_usd) filter (where key_alias in {PIPELINE_KEYS})
-                  / nullif((select count(*) from analytics.fct_orders
-                            where $__timeFilter(extracted_at)), 0)
-                from analytics.mart_llm_cost where $__timeFilter(date_day)""",
+            """select avg(llm_cost_usd) from analytics.fct_orders
+               where $__timeFilter(extracted_at)""",
             18,
             "currencyUSD",
-            "Cost of the classifier, extractor and agent keys / orders.",
+            "LLM calls made for each order (classify, extract, explain; session = the "
+            "order), averaged. Shared calls (tolerance, material matching) and "
+            "evaluations are not included (ADR-013).",
             decimals=4,
         ),
         # --- row 2: quality ---
@@ -172,12 +171,10 @@ def build() -> dict:
             (8, 12, 8, 8),
             [
                 sql(
-                    f"""select date_day::timestamp as time,
-                          sum(cost_usd) filter (where key_alias in {PIPELINE_KEYS})
-                            / nullif(max(orders), 0) as cost_per_order
-                        from analytics.mart_llm_cost
-                        where $__timeFilter(date_day)
-                        group by date_day order by 1""",
+                    """select date_day::timestamp as time,
+                         llm_cost_per_order_usd as cost_per_order
+                       from analytics.mart_daily_kpis
+                       where $__timeFilter(date_day) order by 1""",
                     "time_series",
                 )
             ],
@@ -189,17 +186,25 @@ def build() -> dict:
             (16, 12, 8, 8),
             [
                 sql(
-                    """select date_day::timestamp as time, key_alias as metric,
-                         sum(cost_usd) as cost
+                    """select date_day::timestamp as time, service as metric,
+                         sum(order_cost_usd + document_cost_usd + shared_cost_usd)
+                           as cost
                        from analytics.mart_llm_cost
                        where $__timeFilter(date_day)
-                       group by date_day, key_alias order by 1""",
+                         and service in ('classifier', 'extractor', 'agent')
+                       group by date_day, service
+                       union all
+                       select date_day::timestamp, 'evaluations', sum(evaluation_cost_usd)
+                       from analytics.mart_llm_cost
+                       where $__timeFilter(date_day)
+                       group by date_day
+                       order by 1""",
                     "time_series",
                 )
             ],
             "currencyUSD",
-            "Per LiteLLM key (ADR-011): classifier, extractor, agent; eval and master "
-            "are evaluation and admin calls.",
+            "Pipeline cost per calling service (order, document and shared calls), and "
+            "evaluation runs separately (ADR-013).",
         ),
         # --- row 4: people and orders ---
         panel(

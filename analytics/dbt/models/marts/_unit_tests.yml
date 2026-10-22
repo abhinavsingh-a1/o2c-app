@@ -40,6 +40,10 @@ unit_tests:
       - input: ref('stg_review_decisions')
         rows:
           - { idempotency_key: approved, review_id: 1, action: approve }
+      - input: ref('stg_llm_spend')
+        rows:
+          - { session_id: auto, key_alias: extractor, spend_usd: 0.003 }
+          - { session_id: auto, key_alias: eval, spend_usd: 0.5 }
       - input: ref('stg_order_issues')
         rows:
           - { idempotency_key: approved, issue_code: PRICE_DEVIATION }
@@ -47,10 +51,10 @@ unit_tests:
           - { idempotency_key: waiting, issue_code: UNKNOWN_MATERIAL }
     expect:
       rows:
-        - { idempotency_key: auto, final_status: posted, touchless: true, reviewed: false, cycle_time_seconds: 20, issue_codes: null }
-        - { idempotency_key: approved, final_status: posted, touchless: false, reviewed: true, cycle_time_seconds: 3600, issue_codes: "ABOVE_AUTO_POST_LIMIT,PRICE_DEVIATION" }
-        - { idempotency_key: waiting, final_status: awaiting_review, touchless: false, reviewed: false, cycle_time_seconds: null, issue_codes: UNKNOWN_MATERIAL }
-        - { idempotency_key: rejected, final_status: rejected, touchless: false, reviewed: true, cycle_time_seconds: 1800, issue_codes: null }
+        - { idempotency_key: auto, final_status: posted, touchless: true, reviewed: false, cycle_time_seconds: 20, issue_codes: null, llm_cost_usd: 0.003 }
+        - { idempotency_key: approved, final_status: posted, touchless: false, reviewed: true, cycle_time_seconds: 3600, issue_codes: "ABOVE_AUTO_POST_LIMIT,PRICE_DEVIATION", llm_cost_usd: 0 }
+        - { idempotency_key: waiting, final_status: awaiting_review, touchless: false, reviewed: false, cycle_time_seconds: null, issue_codes: UNKNOWN_MATERIAL, llm_cost_usd: 0 }
+        - { idempotency_key: rejected, final_status: rejected, touchless: false, reviewed: true, cycle_time_seconds: 1800, issue_codes: null, llm_cost_usd: 0 }
 
   - name: daily_touchless_rate_counts_agent_decisions_only
     model: mart_daily_kpis
@@ -94,3 +98,40 @@ unit_tests:
       rows:
         - { review_id: 1, action: approve, reviewer: anna, seconds_to_decision: 900 }
         - { review_id: 2, action: reject, reviewer: ben, seconds_to_decision: null }
+
+  - name: cost_per_order_counts_only_calls_for_orders
+    description: >
+      Order cost: the session is an order's key and it is no evaluation (also before
+      the per-service keys, with the master key). Classifying a non-order document is
+      document cost; agent calls without a document session are shared; evaluations
+      (eval key, eval-/redteam-/judge- sessions, extractor calls for no document) are
+      none of these.
+    model: mart_llm_cost
+    given:
+      - input: ref('fct_orders')
+        rows:
+          - { idempotency_key: o1, extracted_at: "2026-10-22 08:00:00+00" }
+          - { idempotency_key: o2, extracted_at: "2026-10-22 09:00:00+00" }
+      - input: ref('fct_documents')
+        rows:
+          - { idempotency_key: o1 }
+          - { idempotency_key: o2 }
+          - { idempotency_key: inv1 }
+      - input: ref('stg_llm_spend')
+        rows:
+          - { started_at: "2026-10-22 08:00:01+00", key_alias: master, service: extractor, model: m, session_id: o1, spend_usd: 0.004 }
+          - { started_at: "2026-10-22 09:00:01+00", key_alias: extractor, service: extractor, model: m, session_id: o2, spend_usd: 0.002 }
+          - { started_at: "2026-10-22 09:00:01+00", key_alias: classifier, service: classifier, model: m, session_id: inv1, spend_usd: 0.0005 }
+          - { started_at: "2026-10-22 09:00:02+00", key_alias: agent, service: agent, model: m, session_id: random, spend_usd: 0.001 }
+          - { started_at: "2026-10-22 10:00:00+00", key_alias: eval, service: extractor, model: e, session_id: o1, spend_usd: 0.5 }
+          - { started_at: "2026-10-22 10:00:00+00", key_alias: master, service: extractor, model: e, session_id: eval-data-PO-0001, spend_usd: 0.25 }
+          - { started_at: "2026-10-22 10:00:00+00", key_alias: master, service: classifier, model: e, session_id: no-such-document, spend_usd: 0.125 }
+    expect:
+      rows:
+        - { key_alias: master, service: extractor, model: m, order_cost_usd: 0.004, document_cost_usd: 0, shared_cost_usd: 0, evaluation_cost_usd: 0, orders: 2, cost_per_order_usd: 0.002 }
+        - { key_alias: extractor, service: extractor, model: m, order_cost_usd: 0.002, document_cost_usd: 0, shared_cost_usd: 0, evaluation_cost_usd: 0, orders: 2, cost_per_order_usd: 0.001 }
+        - { key_alias: classifier, service: classifier, model: m, order_cost_usd: 0, document_cost_usd: 0.0005, shared_cost_usd: 0, evaluation_cost_usd: 0, orders: 2, cost_per_order_usd: 0 }
+        - { key_alias: agent, service: agent, model: m, order_cost_usd: 0, document_cost_usd: 0, shared_cost_usd: 0.001, evaluation_cost_usd: 0, orders: 2, cost_per_order_usd: 0 }
+        - { key_alias: eval, service: extractor, model: e, order_cost_usd: 0, document_cost_usd: 0, shared_cost_usd: 0, evaluation_cost_usd: 0.5, orders: 2, cost_per_order_usd: 0 }
+        - { key_alias: master, service: extractor, model: e, order_cost_usd: 0, document_cost_usd: 0, shared_cost_usd: 0, evaluation_cost_usd: 0.25, orders: 2, cost_per_order_usd: 0 }
+        - { key_alias: master, service: classifier, model: e, order_cost_usd: 0, document_cost_usd: 0, shared_cost_usd: 0, evaluation_cost_usd: 0.125, orders: 2, cost_per_order_usd: 0 }
