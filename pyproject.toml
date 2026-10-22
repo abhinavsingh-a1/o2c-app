@@ -40,7 +40,7 @@ ml = [
     "docker>=7.2.0",
     "kfp>=2.13.0",
     "langfuse>=2.60.10",
-    "mlflow-skinny==2.17.2",
+    "mlflow-skinny==3.17.1",
     "pandas>=3.0.6,<4",
     "pyyaml>=6.0.3",
     "scikit-learn>=1.9.1",
