@@ -5,6 +5,7 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Response
+from o2c_common.metrics import instrument_fastapi
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
@@ -20,6 +21,7 @@ from erp_mock.schemas import (
 )
 
 app = FastAPI(title="ERP mock", version="0.1.0")
+instrument_fastapi(app)
 
 
 def get_session() -> Iterator[Session]:

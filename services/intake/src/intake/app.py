@@ -11,6 +11,12 @@ from flask import Flask, jsonify, request
 from o2c_common.events import Envelope
 from o2c_common.ids import idempotency_key
 from o2c_common.kafka import EventProducer
+from o2c_common.metrics import (
+    DOCUMENTS_RECEIVED,
+    SOURCES,
+    init_labels,
+    instrument_flask,
+)
 from pydantic import BaseModel, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -52,6 +58,8 @@ def create_app(settings: Settings | None = None, s3=None, producer=None) -> Flas
     app.config["MAX_CONTENT_LENGTH"] = (
         15 * 1024 * 1024
     )  # base64 makes files ~33% larger
+    instrument_flask(app)
+    init_labels(DOCUMENTS_RECEIVED, SOURCES)
 
     @app.get("/health")
     def health():
@@ -105,6 +113,7 @@ def create_app(settings: Settings | None = None, s3=None, producer=None) -> Flas
         )
         producer.send("docs.received", event)
         producer.flush()
+        DOCUMENTS_RECEIVED.labels(req.source).inc()
         return jsonify(idempotency_key=key, event_id=str(event.event_id)), 202
 
     return app

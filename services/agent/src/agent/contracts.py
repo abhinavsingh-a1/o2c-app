@@ -5,6 +5,7 @@ from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_postgres import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from o2c_common.metrics import llm_http_client
 from pydantic import BaseModel, ConfigDict
 
 from agent.settings import Settings
@@ -27,6 +28,7 @@ def make_store(settings: Settings) -> PGVector:
         base_url=settings.litellm_base_url,
         api_key=settings.litellm_master_key,
         check_embedding_ctx_length=False,
+        http_client=llm_http_client("agent"),  # o2c_llm_cost_usd_total
     )
     return PGVector(
         embeddings=embeddings,
@@ -91,6 +93,7 @@ def make_tolerance_lookup(settings: Settings, store: PGVector) -> ToleranceLooku
         api_key=settings.litellm_master_key,
         temperature=0,
         extra_body={"metadata": {"trace_name": "tolerance", "tags": ["agent"]}},
+        http_client=llm_http_client("agent"),
     )
     return ToleranceLookup(
         store,

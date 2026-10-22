@@ -64,8 +64,12 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - uv run python -m erp_mock.seed_history --reset: regenerate ERP history after customer profiles change
 - make eval-quick / make eval: evaluation gate against eval/thresholds.yaml (report in eval/report.md, exit 1 on FAIL)
 - uv run python ml/litellm_keys.py / ml/litellm_spend.py: create the per-service LiteLLM keys / show spend per key
+- make grafana / make prom-alerts / make prom-test: dashboard URLs / firing alerts / promtool config check and alert unit tests
+- Metrics: define them only in o2c_common.metrics; labels only from ALLOWED_LABELS (never idempotency keys, ids or raw paths, ADR-012)
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,
 Langfuse http://localhost:3000,
-SeaweedFS http://localhost:9333
+SeaweedFS http://localhost:9333,
+Prometheus http://localhost:9090,
+Grafana http://localhost:3001

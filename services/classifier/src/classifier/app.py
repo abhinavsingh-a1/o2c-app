@@ -9,6 +9,14 @@ from botocore.exceptions import ClientError
 from o2c_common.events import Envelope
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
 from o2c_common.llm import strict_response_format
+from o2c_common.metrics import (
+    CLASSIFIED_BY,
+    DOC_TYPES,
+    DOCUMENTS_CLASSIFIED,
+    init_labels,
+    llm_http_client,
+    metrics_payload,
+)
 from o2c_common.pdf import pdf_text
 from openai import OpenAI
 from pydantic import BaseModel, ConfigDict
@@ -99,6 +107,7 @@ def make_handler(
         result = classify_hybrid(
             pdf_text(pdf, drop_invisible=True), local, non_po_threshold, gpt
         )
+        DOCUMENTS_CLASSIFIED.labels(result.doc_type, result.classified_by).inc()
         producer.send(
             "docs.classified",
             event.child(
@@ -118,9 +127,18 @@ def make_handler(
     return handle
 
 
-def start_health_server(port: int) -> None:
+def start_health_server(port: int) -> HTTPServer:
+    """GET /health and GET /metrics (Prometheus) on `port` (0: any free port)."""
+
     class Health(BaseHTTPRequestHandler):
         def do_GET(self):
+            if self.path == "/metrics":
+                body, content_type = metrics_payload()
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.end_headers()
+                self.wfile.write(body)
+                return
             ok = self.path == "/health"
             self.send_response(200 if ok else 404)
             self.end_headers()
@@ -132,6 +150,7 @@ def start_health_server(port: int) -> None:
 
     server = HTTPServer(("0.0.0.0", port), Health)
     threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
 
 
 def main() -> None:
@@ -139,6 +158,7 @@ def main() -> None:
         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
     )
     settings = Settings()
+    init_labels(DOCUMENTS_CLASSIFIED, DOC_TYPES, CLASSIFIED_BY)
     start_health_server(settings.health_port)
     s3 = boto3.client(
         "s3",
@@ -147,7 +167,9 @@ def main() -> None:
         aws_secret_access_key=settings.s3_secret_key,
     )
     llm = OpenAI(
-        base_url=settings.litellm_base_url, api_key=settings.litellm_master_key
+        base_url=settings.litellm_base_url,
+        api_key=settings.litellm_master_key,
+        http_client=llm_http_client("classifier"),  # o2c_llm_cost_usd_total
     )
     producer = EventProducer(settings.kafka_bootstrap, "classifier")
     EventConsumer(

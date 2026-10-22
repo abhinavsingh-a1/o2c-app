@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
 
 up:
 	docker compose up -d --build
@@ -144,3 +144,15 @@ eval-quick:
 
 eval:
 	uv run --group ml python ml/eval_gate.py --full
+
+grafana:
+	@echo "Grafana: http://localhost:3001 (user admin, password GRAFANA_ADMIN_PASSWORD in .env)"
+	@echo "Dashboard O2C Operations: http://localhost:3001/d/o2c-operations"
+	@echo "Prometheus: http://localhost:9090 (alerts: http://localhost:9090/alerts)"
+
+prom-alerts:
+	uv run python observability/prom_alerts.py
+
+prom-test:
+	MSYS_NO_PATHCONV=1 docker run --rm -v "$(CURDIR)/observability/prometheus:/etc/prometheus" --entrypoint promtool prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
+	MSYS_NO_PATHCONV=1 docker run --rm -v "$(CURDIR)/observability/prometheus:/etc/prometheus" --entrypoint promtool prom/prometheus:v3.5.0 test rules /etc/prometheus/alerts_test.yml

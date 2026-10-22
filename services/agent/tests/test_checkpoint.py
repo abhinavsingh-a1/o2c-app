@@ -1,5 +1,5 @@
 import pytest
-from agent.checkpoint import run_or_resume, thread_config
+from agent.checkpoint import is_decided, run_or_resume, thread_config
 
 # FakeErp and the erp / make_graph / make_state fixtures live in conftest.py.
 
@@ -56,3 +56,16 @@ def test_crash_in_verify_resumes_without_reposting(graph, erp, make_state):
     assert result.status == "posted"
     assert len(erp.created) == 1  # resumed at verify_order, not post_order
     assert len(erp.orders) == 1
+
+
+def test_is_decided_only_after_a_complete_run(graph, erp, make_state):
+    key = make_state().idempotency_key
+    assert not is_decided(graph, key)  # never seen
+
+    erp.crash_once.add("get_order")
+    with pytest.raises(Exception, match="get_order"):
+        run_or_resume(graph, make_state())
+    assert not is_decided(graph, key)  # crashed half-way: the retry decides
+
+    run_or_resume(graph, make_state())
+    assert is_decided(graph, key)

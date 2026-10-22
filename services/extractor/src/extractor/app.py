@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -13,6 +14,7 @@ from langchain_openai import ChatOpenAI
 from o2c_common.events import Envelope
 from o2c_common.injection import detect
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
+from o2c_common.metrics import EXTRACTION_SECONDS, instrument_fastapi, llm_http_client
 from o2c_common.pdf import pdf_text
 from o2c_common.schema import PurchaseOrder
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -56,9 +58,12 @@ def make_extractor(
     http_client: httpx.Client | None = None,
 ) -> Extract:
     """`model` is a LiteLLM alias; evaluations pass another alias to compare models,
-    and an `http_client` to read LiteLLM's response headers (cost). `trace_id` lets an
-    evaluation choose the Langfuse trace id of a call (to link it to a dataset item)."""
+    and an `http_client` to read LiteLLM's response headers (cost). Without one, the
+    service's client records the cost in o2c_llm_cost_usd_total{service="extractor"}.
+    `trace_id` lets an evaluation choose the Langfuse trace id of a call (to link it to
+    a dataset item). Each call is timed in o2c_extraction_seconds."""
     system_prompt = load_prompt(settings.prompts_dir)
+    http_client = http_client or llm_http_client("extractor")
 
     def extract(
         text: str, session_id: str, trace_id: str | None = None
@@ -79,7 +84,13 @@ def make_extractor(
             extra_body={"metadata": metadata},
         )
         chain = llm.with_structured_output(PurchaseOrder, method="json_mode")
-        return chain.invoke([("system", system_prompt), ("human", wrap_document(text))])
+        start = time.perf_counter()
+        try:
+            return chain.invoke(
+                [("system", system_prompt), ("human", wrap_document(text))]
+            )
+        finally:
+            EXTRACTION_SECONDS.observe(time.perf_counter() - start)
 
     return extract
 
@@ -145,6 +156,7 @@ def create_app(
         yield
 
     app = FastAPI(title="Extractor", version="0.1.0", lifespan=lifespan)
+    instrument_fastapi(app)
 
     @app.get("/health")
     def health() -> dict[str, str]:

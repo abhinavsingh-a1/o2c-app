@@ -49,6 +49,6 @@ ml = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["libs", "services", "ml"]
+testpaths = ["libs", "services", "ml", "observability"]
 # Services each have tests/test_app.py; importlib mode allows duplicate basenames.
 addopts = ["--import-mode=importlib"]

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import Column, DateTime, MetaData, String, Table, create_engine, select
 from sqlalchemy.dialects.postgresql import insert
 
+from o2c_common import metrics
 from o2c_common.events import Envelope
 
 log = logging.getLogger(__name__)
@@ -130,6 +131,7 @@ class EventConsumer:
         self.bootstrap, self.group_id, self.topics = bootstrap, group_id, topics
         self.handler, self.producer, self.store = handler, producer, store
         self.max_attempts, self.base_delay = max_attempts, base_delay
+        metrics.init_consumer_metrics(group_id)
 
     def run(self, max_messages: int | None = None) -> None:
         consumer = Consumer(
@@ -157,27 +159,41 @@ class EventConsumer:
             consumer.close()
 
     def process(self, msg: Message) -> None:
+        group = self.group_id
+        metrics.EVENTS_CONSUMED.labels(group).inc()
         try:
             event = Envelope.from_bytes(msg.value())
         except ValidationError as exc:
-            self._to_dlq(msg, f"invalid envelope: {exc.errors()[0]['msg']}")
+            self._to_dlq(
+                msg,
+                f"invalid envelope: {exc.errors()[0]['msg']}",
+                "invalid_envelope",
+            )
             return
 
-        if self.store.seen(self.group_id, event.event_id):
+        if self.store.seen(group, event.event_id):
             log.info("duplicate %s skipped", event.event_id)
+            metrics.EVENTS_DUPLICATE.labels(group).inc()
             return
 
         error: Exception | None = None
+        reason = "retries_exhausted"
         for attempt in range(1, self.max_attempts + 1):
+            start = time.perf_counter()
             try:
                 self.handler(event)
                 self.producer.flush()  # outgoing events are stored before we mark and commit
-                self.store.mark(self.group_id, event.event_id)
+                self.store.mark(group, event.event_id)
+                metrics.HANDLER_SECONDS.labels(group).observe(
+                    time.perf_counter() - start
+                )
                 return
             except PermanentError as exc:
-                error = exc
+                self._attempt_failed(start)
+                error, reason = exc, "permanent_error"
                 break
             except Exception as exc:  # noqa: BLE001 - any other error is retried
+                self._attempt_failed(start)
                 error = exc
                 log.warning(
                     "attempt %s/%s failed for %s: %s",
@@ -188,9 +204,15 @@ class EventConsumer:
                 )
                 if attempt < self.max_attempts:
                     time.sleep(self.base_delay * 2 ** (attempt - 1))
-        self._to_dlq(msg, repr(error))
+        self._to_dlq(msg, repr(error), reason)
 
-    def _to_dlq(self, msg: Message, error: str) -> None:
+    def _attempt_failed(self, start: float) -> None:
+        metrics.EVENTS_FAILED.labels(self.group_id).inc()
+        metrics.HANDLER_SECONDS.labels(self.group_id).observe(
+            time.perf_counter() - start
+        )
+
+    def _to_dlq(self, msg: Message, error: str, reason: str) -> None:
         headers = [
             ("original_topic", msg.topic().encode()),
             ("original_partition", str(msg.partition()).encode()),
@@ -201,3 +223,4 @@ class EventConsumer:
         ]
         self.producer.send_raw(DLQ_TOPIC, msg.key(), msg.value(), headers)
         self.producer.flush()
+        metrics.EVENTS_DLQ.labels(self.group_id, reason).inc()

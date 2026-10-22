@@ -1,0 +1,83 @@
+# Alert rules (ADR-012). Thresholds are for the local stack and the M2 demo volume;
+# observability/prometheus/alerts_test.yml has a promtool unit test for each rule
+# (make prom-test).
+groups:
+  - name: o2c
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "Prometheus could not scrape {{ $labels.job }} ({{ $labels.instance }}) for 2 minutes."
+
+      - alert: DeadLetterQueueReceivedMessages
+        # Offsets of orders.dlq from kafka-exporter: counts every message that reached
+        # the DLQ, whichever consumer sent it.
+        expr: sum(increase(kafka_topic_partition_current_offset{topic="orders.dlq"}[10m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Messages reached the DLQ in the last 10 minutes (about {{ $value | printf \"%.0f\" }})"
+          description: "Inspect with make dlq-list; replay after the fix with make dlq-replay."
+
+      - alert: ConsumerLagHigh
+        expr: sum by (consumergroup) (kafka_consumergroup_lag) > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumer group {{ $labels.consumergroup }} is {{ $value }} messages behind"
+          description: "Lag above 50 for 5 minutes: the consumer is stuck or too slow."
+
+      - alert: TouchlessRateLow
+        # Share of orders the agent posted without a person, over the last hour, once
+        # at least 5 orders were decided. `or vector(0)`: no posted order at all is 0%.
+        expr: |
+          (
+            (sum(increase(o2c_orders_total{decided_by="agent", outcome="posted"}[1h])) or vector(0))
+            /
+            sum(increase(o2c_orders_total{decided_by="agent"}[1h]))
+          ) < 0.5
+          and
+          sum(increase(o2c_orders_total{decided_by="agent"}[1h])) >= 5
+        labels:
+          severity: warning
+        annotations:
+          summary: "Touchless rate {{ $value | humanizePercentage }} in the last hour (< 50%)"
+          description: "Most orders go to review: check o2c_issues_total by code (a bad prompt, model or master data change)."
+
+      - alert: LlmCostHigh
+        expr: sum(increase(o2c_llm_cost_usd_total[1h])) > 0.5
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM cost ${{ $value | printf \"%.2f\" }} in the last hour (> $0.50)"
+          description: "OpenAI cost of the services (x-litellm-response-cost). Check calls per service and the LiteLLM key budgets (ml/litellm_spend.py)."
+
+      - alert: HttpErrorRateHigh
+        expr: |
+          sum by (job) (rate(o2c_http_requests_total{status=~"5.."}[5m]))
+          /
+          sum by (job) (rate(o2c_http_requests_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.job }}: {{ $value | humanizePercentage }} of HTTP requests fail (> 5%)"
+
+      - alert: EventErrorRateHigh
+        # Failed handler attempts (retried or sent to the DLQ) per consumed message
+        expr: |
+          sum by (group) (rate(o2c_events_failed_total[5m]))
+          /
+          sum by (group) (rate(o2c_events_consumed_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumer group {{ $labels.group }}: {{ $value | humanizePercentage }} of events fail (> 5%)"
