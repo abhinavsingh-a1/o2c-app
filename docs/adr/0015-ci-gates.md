@@ -81,6 +81,10 @@ Security gates:
 - **`.github/dependabot.yml`:** weekly updates with minor and patch grouped into one PR
   per ecosystem. It covers uv (root), npm (pnpm lockfile at the root, covering ui),
   docker (every Dockerfile directory), docker-compose and github-actions.
+- **Dependabot ignores (uv)**, each with its reason in the file: major updates of
+  `mlflow-skinny` (it must match the MLflow 2.17.2 server; the two are upgraded together
+  as a planned change), `transformers>=4.47` and `pandas>=3` (both capped by MLflow 2.17).
+  Every other package still gets the grouped minor/patch PR.
 - **o2c-infra** has Dependabot for terraform and github-actions; **o2c-gitops** for
   github-actions.
 

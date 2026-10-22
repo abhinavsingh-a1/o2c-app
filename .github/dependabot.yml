@@ -7,6 +7,19 @@ updates:
     directory: "/" # uv.lock of the workspace (libs/*, services/*)
     schedule:
       interval: weekly
+    # Ignored updates apply to grouped and single PRs alike; every other package still
+    # gets the grouped minor/patch PR below and separate major PRs.
+    ignore:
+      # Must match the MLflow 2.17.2 server in docker-compose.yml (local/mlflow); upgrade
+      # server and client together as a planned change, not as a Dependabot bump.
+      - dependency-name: mlflow-skinny
+        update-types: ["version-update:semver-major"]
+      # MLflow 2.17's transformers flavour breaks on transformers 4.47 and later (E10).
+      - dependency-name: transformers
+        versions: [">=4.47"]
+      # Capped by MLflow 2.17, which does not support pandas 3.
+      - dependency-name: pandas
+        versions: [">=3"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
