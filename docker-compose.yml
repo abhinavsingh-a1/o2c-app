@@ -320,7 +320,7 @@ services:
 
   # --- Observability (ADR-012) ---
   prometheus:
-    image: prom/prometheus:v3.5.0
+    image: prom/prometheus:v3.15.0
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
@@ -333,7 +333,7 @@ services:
 
   kafka-exporter:
     # Consumer lag per group and topic offsets (DLQ). Restarts until Kafka is reachable.
-    image: danielqsj/kafka-exporter:v1.9.0
+    image: danielqsj/kafka-exporter:v1.10.0
     command: ["--kafka.server=kafka:19092"]
     restart: unless-stopped
     depends_on:
