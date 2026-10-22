@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from langchain_openai import ChatOpenAI
 from o2c_common.events import Envelope
+from o2c_common.injection import detect
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
 from o2c_common.pdf import pdf_text
 from o2c_common.schema import PurchaseOrder
@@ -94,9 +95,12 @@ def make_handler(s3, extract: Extract, producer: EventProducer):
             if exc.response["Error"]["Code"] in ("NoSuchKey", "404"):
                 raise PermanentError(f"document missing: {p['s3_key']}") from exc
             raise
-        po = extract(pdf_text(pdf), event.correlation_id)
+        po = extract(pdf_text(pdf, drop_invisible=True), event.correlation_id)
         payload = {k: v for k, v in p.items() if k != "reason"}
         payload["purchase_order"] = po.model_dump(mode="json")
+        # On the full text, including invisible text: hidden instructions are reported
+        # even though the model never sees them.
+        payload["injection_findings"] = [f.to_dict() for f in detect(pdf_text(pdf))]
         producer.send(
             "orders.extracted", event.child("orders.extracted", "extractor", payload)
         )
@@ -153,6 +157,6 @@ def create_app(
         data = file.file.read()
         if not data.startswith(b"%PDF-"):
             raise HTTPException(415, "file is not a PDF")
-        return extract(pdf_text(data), f"manual-{file.filename}")
+        return extract(pdf_text(data, drop_invisible=True), f"manual-{file.filename}")
 
     return app

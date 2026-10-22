@@ -94,7 +94,9 @@ def make_handler(
             result = classify(llm, system_prompt, text, event)
             return result.doc_type, result.reason
 
-        result = classify_hybrid(pdf_text(pdf), local, non_po_threshold, gpt)
+        result = classify_hybrid(
+            pdf_text(pdf, drop_invisible=True), local, non_po_threshold, gpt
+        )
         producer.send(
             "docs.classified",
             event.child(

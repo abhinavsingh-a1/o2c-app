@@ -72,19 +72,25 @@ def agent_key(name: str) -> str:
     return name.ljust(KEY_LENGTH, "0")
 
 
-def initial_state(po: PurchaseOrder, name: str) -> AgentState:
+def initial_state(
+    po: PurchaseOrder, name: str, injection_findings: list[dict] | None = None
+) -> AgentState:
     key = agent_key(name)
     return AgentState(
         idempotency_key=key,
         correlation_id=key,
         source_event_id="eval",
         purchase_order=po,
+        injection_findings=injection_findings or [],
     )
 
 
-def run_agent(graph, po: PurchaseOrder, name: str) -> AgentState:
-    """Run the graph on one PO until it posts or pauses for review."""
+def run_agent(
+    graph, po: PurchaseOrder, name: str, injection_findings: list[dict] | None = None
+) -> AgentState:
+    """Run the graph on one PO until it posts or pauses for review.
+    `injection_findings` as the extractor puts them into orders.extracted."""
     from agent.graph import run
 
-    state = initial_state(po, name)
+    state = initial_state(po, name, injection_findings)
     return run(graph, state, {"configurable": {"thread_id": state.idempotency_key}})

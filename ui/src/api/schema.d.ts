@@ -182,7 +182,7 @@ export interface components {
          * IssueCode
          * @enum {string}
          */
-        IssueCode: "UNKNOWN_CUSTOMER" | "UNKNOWN_MATERIAL" | "NO_AGREED_PRICE" | "PRICE_DEVIATION" | "QUANTITY_ANOMALY" | "TOTAL_MISMATCH" | "ORDER_VERIFY_FAILED" | "ABOVE_AUTO_POST_LIMIT" | "APPROVAL_NOT_POSSIBLE";
+        IssueCode: "UNKNOWN_CUSTOMER" | "UNKNOWN_MATERIAL" | "NO_AGREED_PRICE" | "PRICE_DEVIATION" | "QUANTITY_ANOMALY" | "TOTAL_MISMATCH" | "ORDER_VERIFY_FAILED" | "ABOVE_AUTO_POST_LIMIT" | "APPROVAL_NOT_POSSIBLE" | "CUSTOMER_MISMATCH" | "PROMPT_INJECTION_SUSPECTED";
         /** LineItem */
         "LineItem-Input": {
             /** Line No */

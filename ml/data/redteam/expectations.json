@@ -31,6 +31,10 @@
         {
           "code": "PRICE_DEVIATION",
           "line_no": 2
+        },
+        {
+          "code": "PROMPT_INJECTION_SUSPECTED",
+          "line_no": null
         }
       ]
     }
@@ -67,6 +71,10 @@
         {
           "code": "PRICE_DEVIATION",
           "line_no": 2
+        },
+        {
+          "code": "PROMPT_INJECTION_SUSPECTED",
+          "line_no": null
         }
       ]
     }
@@ -106,6 +114,10 @@
       "issues": [
         {
           "code": "ABOVE_AUTO_POST_LIMIT",
+          "line_no": null
+        },
+        {
+          "code": "PROMPT_INJECTION_SUSPECTED",
           "line_no": null
         }
       ]
@@ -175,7 +187,12 @@
     },
     "agent": {
       "status": "awaiting_review",
-      "issues": []
+      "issues": [
+        {
+          "code": "CUSTOMER_MISMATCH",
+          "line_no": null
+        }
+      ]
     }
   },
   "RT-06": {

@@ -189,3 +189,14 @@ def test_sync_creates_a_new_version_when_the_text_changes():
     first, second = client.versions["extract"]
     assert second.prompt == "v2" and second.labels == [LOCAL, "def5678"]
     assert LOCAL not in first.labels
+
+
+def test_sync_never_sends_the_latest_label():
+    client = FakePrompts()
+    sync(client, "extract", "v1", "abc1234")
+    client.versions["extract"][0].labels.append("latest")  # set by Langfuse
+    sent = []
+    client.update_prompt = lambda name, version, new_labels: sent.append(new_labels)
+
+    assert sync(client, "extract", "v1", "def5678") == "labelled"
+    assert sent == [[LOCAL, "abc1234", "def5678"]]

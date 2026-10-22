@@ -41,7 +41,24 @@ Rules:
 - verify_order reads the order back; on mismatch, cancel_order compensates (saga).
 
 Issue codes: UNKNOWN_CUSTOMER, UNKNOWN_MATERIAL, NO_AGREED_PRICE, PRICE_DEVIATION,
-QUANTITY_ANOMALY, TOTAL_MISMATCH, ORDER_VERIFY_FAILED.
+QUANTITY_ANOMALY, TOTAL_MISMATCH, ORDER_VERIFY_FAILED, ABOVE_AUTO_POST_LIMIT,
+APPROVAL_NOT_POSSIBLE, CUSTOMER_MISMATCH, PROMPT_INJECTION_SUSPECTED.
+
+Customer resolution (resolve_customer; ADR-005, extended in E11 after red-team case RT-05,
+ADR-010):
+- A printed customer number is used only if the ERP customer with that number has the
+  printed name.
+- Otherwise the customer is resolved by name. If the printed number belongs to a
+  *different* ERP customer, the issue CUSTOMER_MISMATCH is raised as well, so the order
+  goes to review: a real customer's number next to another customer's name is a mix-up or
+  fraud signal. Before E11 this case was posted silently.
+- A printed number that does not exist in the ERP (e.g. our supplier number at the
+  customer, "formular" layout) is still ignored without an issue.
+
+Prompt injection (decide; ADR-010): the extractor puts o2c_common.injection findings into
+orders.extracted (`injection_findings`). If there are any, decide raises
+PROMPT_INJECTION_SUSPECTED, so the order always goes to a human. After an edit the
+findings stay, so the order comes back to review; approve posts it.
 
 Human review (implemented):
 - human_review pauses with interrupt(); the decision resumes the run via Command(resume=...).

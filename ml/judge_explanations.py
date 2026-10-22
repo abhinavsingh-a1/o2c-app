@@ -1,6 +1,7 @@
 """LLM-as-judge for the agent's exception explanations (ADR-010).
 
-Usage: uv run --group ml python ml/judge_explanations.py
+Usage: uv run --group ml python ml/judge_explanations.py [--dataset poc/data|holdout ...]
+  (default: both; judge poc/data first after a prompt change, the holdout once at the end)
 
 1. Judge validation: ml/data/judge_calibration.jsonl holds 3 good and 4 deliberately bad
    explanations (invented price, wrong line number, no action, 8 sentences). The judge
@@ -146,6 +147,14 @@ def price_deviation_pos(dataset_dir: Path) -> list[str]:
     return sorted(po_id for po_id, label in labels.items() if label["price_deviation"])
 
 
+def results_path(datasets: list[str] | None) -> Path:
+    """ml/results/judge-explanations[-<dataset>...].json"""
+    if not datasets:
+        return RESULTS
+    suffix = "-".join(d.replace("/", "_") for d in datasets)
+    return RESULTS.with_name(f"judge-explanations-{suffix}.json")
+
+
 def summarize(rows: list[dict]) -> dict:
     n = len(rows)
     costs = [r["cost_usd"] for r in rows if r.get("cost_usd") is not None]
@@ -194,7 +203,9 @@ def attach_scores(client, trace_id: str, row: dict) -> None:
     )
 
 
-def judge_agent_explanations(judge: Judge, langfuse=None) -> list[dict]:
+def judge_agent_explanations(
+    judge: Judge, langfuse=None, datasets: list[str] | None = None
+) -> list[dict]:
     from agent.explain import explanation_facts, make_explainer
     from agent.settings import Settings
     from agent_harness import make_graph, run_agent
@@ -209,6 +220,8 @@ def judge_agent_explanations(judge: Judge, langfuse=None) -> list[dict]:
     graph = make_graph(explain=explainer, settings=settings)
     rows = []
     for label, directory in DATASETS.items():
+        if datasets and label not in datasets:
+            continue
         for po_id in price_deviation_pos(directory):
             po = PurchaseOrder.model_validate_json(
                 (directory / "ground_truth" / f"{po_id}.json").read_text(
@@ -236,8 +249,14 @@ def judge_agent_explanations(judge: Judge, langfuse=None) -> list[dict]:
     return rows
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
     from langfuse_common import make_langfuse
+
+    parser = argparse.ArgumentParser(description="Judge the exception explanations.")
+    parser.add_argument("--dataset", action="append", choices=list(DATASETS))
+    args = parser.parse_args(argv)
 
     judge = make_judge()
     calibration = calibrate(load_calibration(), judge)
@@ -254,15 +273,16 @@ def main() -> int:
     print("judge validation passed\n")
 
     langfuse = make_langfuse()
-    rows = judge_agent_explanations(judge, langfuse)
+    rows = judge_agent_explanations(judge, langfuse, args.dataset)
     langfuse.flush()
     summary = summarize(rows)
     calibration_cost = summarize(calibration)["judge_cost_usd"]
     print()
     print(format_table(summary))
     print(f"(judge validation cost: ${calibration_cost or 0:.4f})")
-    RESULTS.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS.write_text(
+    out = results_path(args.dataset)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
         json.dumps(
             {"summary": summary, "calibration": calibration, "explanations": rows},
             indent=2,
@@ -271,7 +291,7 @@ def main() -> int:
         + "\n",
         encoding="utf-8",
     )
-    print(f"wrote {RESULTS}")
+    print(f"wrote {out}")
     return 0
 
 

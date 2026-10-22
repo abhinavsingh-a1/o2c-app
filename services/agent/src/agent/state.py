@@ -16,6 +16,8 @@ class IssueCode(StrEnum):
     ORDER_VERIFY_FAILED = "ORDER_VERIFY_FAILED"
     ABOVE_AUTO_POST_LIMIT = "ABOVE_AUTO_POST_LIMIT"
     APPROVAL_NOT_POSSIBLE = "APPROVAL_NOT_POSSIBLE"
+    CUSTOMER_MISMATCH = "CUSTOMER_MISMATCH"
+    PROMPT_INJECTION_SUSPECTED = "PROMPT_INJECTION_SUSPECTED"
 
 
 class Issue(BaseModel):
@@ -50,6 +52,8 @@ class AgentState(BaseModel):
     source_document: dict[str, Any] = Field(
         default_factory=dict
     )  # s3_bucket, s3_key, filename, sender
+    # o2c_common.injection findings from the extractor: {"pattern", "match"}
+    injection_findings: list[dict[str, str]] = Field(default_factory=list)
 
     # results of the checks
     customer_number: str | None = None

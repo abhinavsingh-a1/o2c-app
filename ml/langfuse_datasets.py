@@ -48,7 +48,10 @@ def dataset_items(dataset_name: str, dataset_dir: Path) -> list[dict]:
         items.append(
             {
                 "id": item_id(dataset_name, pdf.stem),
-                "input": {"filename": pdf.name, "text": pdf_text(pdf.read_bytes())},
+                "input": {
+                    "filename": pdf.name,
+                    "text": pdf_text(pdf.read_bytes(), drop_invisible=True),
+                },
                 "expected_output": json.loads(truth),
                 "metadata": {
                     "po_id": pdf.stem,

@@ -1,0 +1,3 @@
+# PDFs are binary: never convert line endings (core.autocrlf would break the xref
+# offsets of uncompressed PDFs, see ADR-010).
+*.pdf binary

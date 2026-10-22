@@ -204,3 +204,11 @@ def test_initial_state_uses_a_padded_key():
     assert agent_key("rt-1") == "rt-1000000000000"
     assert state.idempotency_key == state.correlation_id == "rt-1000000000000"
     assert state.status == "running"
+
+
+def test_initial_state_carries_injection_findings():
+    po = PurchaseOrder.model_validate(base_po().model_dump())
+    findings = [{"pattern": "pre_approved", "match": "pre-approved"}]
+
+    assert initial_state(po, "rt-2", findings).injection_findings == findings
+    assert initial_state(po, "rt-3").injection_findings == []

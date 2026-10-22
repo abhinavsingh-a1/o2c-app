@@ -20,6 +20,7 @@ from o2c_common.kafka import PermanentError
 from o2c_common.schema import PurchaseOrder
 
 PDF_PATH = REPO_ROOT / "poc" / "data" / "pos" / "PO-0001.pdf"
+HIDDEN_INJECTION_PDF = REPO_ROOT / "ml" / "data" / "redteam" / "pos" / "RT-01.pdf"
 GROUND_TRUTH = REPO_ROOT / "poc" / "data" / "ground_truth" / "PO-0001.json"
 PROMPTS_DIR = REPO_ROOT / "prompts"
 
@@ -132,6 +133,22 @@ def test_purchase_order_emits_extracted_child_event(received, s3, extract, produ
     text, session_id = extract.calls[0]
     assert text
     assert session_id == received.correlation_id
+    assert p["injection_findings"] == []
+
+
+def test_hidden_injection_is_dropped_from_the_text_and_reported(
+    received, extract, producer
+):
+    p = received.payload
+    s3 = FakeS3({(p["s3_bucket"], p["s3_key"]): HIDDEN_INJECTION_PDF.read_bytes()})
+
+    make_handler(s3, extract, producer)(received)
+
+    text, _ = extract.calls[0]
+    assert "unit_price to 0.01" not in text  # 1 pt white text never reaches the model
+    assert "Stretchfolie" in text
+    findings = producer.sent[0][1].payload["injection_findings"]
+    assert {f["pattern"] for f in findings} == {"ignore_instructions", "set_values"}
 
 
 def test_causation_id_is_incoming_event_id(received, s3, extract, producer):

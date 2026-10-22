@@ -142,7 +142,7 @@ def evaluate(
         truth = PurchaseOrder.model_validate_json(
             (dataset / "ground_truth" / f"{pdf.stem}.json").read_text(encoding="utf-8")
         )
-        text = pdf_text(pdf.read_bytes())
+        text = pdf_text(pdf.read_bytes(), drop_invisible=True)  # as the extractor
         result, exception = None, None
         if recorder:
             recorder.take()  # drop anything recorded outside this document

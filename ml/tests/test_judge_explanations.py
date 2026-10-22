@@ -204,3 +204,11 @@ def test_attach_scores():
         "judge_pass": 0.0,
     }
     assert {c["trace_id"] for c in calls} == {"t" * 32}
+
+
+def test_results_path_per_dataset():
+    from judge_explanations import RESULTS, results_path
+
+    assert results_path(None) == RESULTS
+    assert results_path(["poc/data"]).name == "judge-explanations-poc_data.json"
+    assert results_path(["holdout"]).name == "judge-explanations-holdout.json"
