@@ -1,4 +1,3 @@
-import json
 import logging
 import threading
 from collections.abc import Callable
@@ -39,8 +38,10 @@ class Settings(BaseSettings):
 
 
 def load_prompt(prompts_dir: Path) -> str:
-    template = (prompts_dir / "extract.md").read_text(encoding="utf-8")
-    return template.replace("{schema}", json.dumps(PurchaseOrder.model_json_schema()))
+    # PurchaseOrder has Decimal and date fields, which strict structured outputs cannot
+    # express; the prompt describes the fields with a JSON example instead of the raw
+    # JSON schema (which gpt-6-luna echoed back wrapped in {"properties": ...}, ADR-008).
+    return (prompts_dir / "extract.md").read_text(encoding="utf-8")
 
 
 def wrap_document(text: str) -> str:

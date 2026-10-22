@@ -230,8 +230,11 @@ noise (ADR-002):
 First runs (2026-10-22): quick gate PASS with gpt-4.1-mini (10/10, 100%, red team 8/8,
 0 false positives, $0.0211 for 29 calls). The first full run, after the switch to
 gpt-6-luna (ADR-008), was stopped by the host for low memory in the classifier step;
-extraction had passed (poc/data 50/50, holdout 10/20). The full gate still has to be run
-to completion.
+extraction had passed (poc/data 50/50, holdout 10/20). After structured outputs were
+fixed at every call site (ADR-008), the full gate passed with gpt-4.1-mini ($0.1931) and
+with gpt-6-luna ($0.1088), 146 LLM calls and 0 fallbacks each, about 9-10 minutes. The
+report now names the model behind o2c-extract and the fallback count; full runs are kept
+as ml/results/gate-<model>.json for the migration rule.
 
 ## Consequences
 - Extraction runs can be compared per item in Langfuse; JSON results stay the record of

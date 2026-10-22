@@ -18,7 +18,14 @@ current model (should_migrate). A candidate passes if
   - poc/data and train: mean perfect POs >= the current model's mean - 1 and mean field
     accuracy at most 0.2 points lower;
   - holdout: perfect POs >= the current model's - 1;
-  - every dataset: cost per PO at most 50% higher and mean latency at most 2.5x.
+  - every dataset: cost per PO at most 50% higher and mean latency at most 2.5x;
+  - all LLM call sites: a passing full gate (make eval) without fallbacks, run with
+    o2c-extract temporarily pointed at the candidate's model in local/litellm/config.yaml
+    (copy its litellm_params, restart litellm, make eval, point it back). Extraction
+    alone is not enough: the classifier's GPT path, tolerance lookup, material matching
+    and explanations also use o2c-extract (gpt-6-luna broke the tolerance lookup while
+    passing extraction, ADR-008). eval_gate.py saves the run as
+    ml/results/gate-<model>.json; a missing or failed one fails the candidate.
 Of the candidates that pass, the best has the most perfect POs over all datasets (then
 the lower cost).
 """
@@ -26,6 +33,9 @@ the lower cost).
 import json
 import sys
 from pathlib import Path
+
+from eval_gate import gate_result_path
+from litellm_common import alias_target
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 RUNS = 3
@@ -140,6 +150,26 @@ def should_migrate(
     return not reasons, reasons
 
 
+def gate_failures(candidate: str, results_dir: Path = RESULTS_DIR) -> list[str]:
+    """Reasons why the full gate does not support the candidate; empty if it passed
+    without fallbacks with o2c-extract pointed at the candidate's model."""
+    target = alias_target(candidate)
+    path = gate_result_path(target, results_dir)
+    if not path.exists():
+        return [f"full gate: not run with o2c-extract -> {target} (make eval)"]
+    report = json.loads(path.read_text(encoding="utf-8"))
+    failures = [
+        f"full gate: {c['name']} {c['shown_actual']}"
+        for c in report["checks"]
+        if not c["passed"]
+    ]
+    if report.get("llm_fallbacks"):
+        failures.append(
+            f"full gate: {report['llm_fallbacks']} calls answered by a fallback"
+        )
+    return failures
+
+
 def best_candidate(
     decisions: dict[str, bool], summaries: dict[str, dict[str, dict | None]]
 ) -> str | None:
@@ -199,6 +229,8 @@ def main(argv: list[str] | None = None) -> dict[str, bool]:
     decisions = {}
     for candidate in candidates:
         ok, reasons = should_migrate(summaries[current], summaries[candidate])
+        reasons += gate_failures(candidate)
+        ok = not reasons
         decisions[candidate] = ok
         verdict = "PASSES" if ok else "fails: " + "; ".join(reasons)
         print(f"{candidate} {verdict}")

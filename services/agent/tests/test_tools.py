@@ -1,4 +1,3 @@
-import json
 from decimal import Decimal
 
 import httpx
@@ -175,8 +174,7 @@ def test_material_matcher_prompt_lists_every_candidate():
 
     (_, prompt), (_, description) = chain.calls[0]
     assert "{candidates}" not in prompt
-    assert "{schema}" not in prompt
-    assert json.dumps(MaterialMatch.model_json_schema()) in prompt
+    assert '"properties"' not in prompt  # the schema goes to the API (strict mode)
     for c in CANDIDATES:
         assert f"{c['matnr']}: {c['maktx']} ({c['meins']})" in prompt
     assert description == "Rollenkette 08B-1 Simplex, 5 m"

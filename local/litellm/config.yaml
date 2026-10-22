@@ -1,5 +1,6 @@
 model_list:
-  # Migrated 2026-10-22 from gpt-4.1-mini by the noise-aware rule (ADR-008).
+  # Migrated 2026-10-22 from gpt-4.1-mini by the noise-aware rule, confirmed by a full
+  # make eval with every LLM call site on gpt-6-luna (ADR-008).
   - model_name: o2c-extract
     litellm_params:
       model: openai/gpt-6-luna

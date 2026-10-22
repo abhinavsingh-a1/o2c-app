@@ -1,4 +1,3 @@
-import json
 from decimal import Decimal
 from pathlib import Path
 
@@ -6,7 +5,7 @@ from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_postgres import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from agent.settings import Settings
 
@@ -14,6 +13,10 @@ COLLECTION = "contracts"
 
 
 class Tolerance(BaseModel):
+    # Decimal is not usable with strict structured outputs, so this call uses JSON mode
+    # and the prompt describes the fields with an example (ADR-008). No extra keys: an
+    # answer wrapped in {"properties": ...} is rejected, never unwrapped.
+    model_config = ConfigDict(extra="forbid")
     tolerance_pct: Decimal | None
     evidence: str
 
@@ -57,10 +60,7 @@ class ToleranceLookup:
 
     def __init__(self, store: PGVector, chain, prompts_dir: Path):
         self._store, self._chain = store, chain
-        template = (prompts_dir / "tolerance.md").read_text(encoding="utf-8")
-        self._prompt = template.replace(
-            "{schema}", json.dumps(Tolerance.model_json_schema())
-        )
+        self._prompt = (prompts_dir / "tolerance.md").read_text(encoding="utf-8")
         self._cache: dict[str, Tolerance] = {}
 
     def __call__(self, customer_number: str) -> Tolerance:
@@ -79,6 +79,11 @@ class ToleranceLookup:
         return result
 
 
+def structured_tolerance(llm: ChatOpenAI):
+    """The LLM in JSON mode, parsed into a Tolerance (OutputParserException otherwise)."""
+    return llm.with_structured_output(Tolerance, method="json_mode")
+
+
 def make_tolerance_lookup(settings: Settings, store: PGVector) -> ToleranceLookup:
     llm = ChatOpenAI(
         model="o2c-extract",
@@ -89,7 +94,7 @@ def make_tolerance_lookup(settings: Settings, store: PGVector) -> ToleranceLooku
     )
     return ToleranceLookup(
         store,
-        llm.with_structured_output(Tolerance, method="json_mode"),
+        structured_tolerance(llm),
         settings.prompts_dir,
     )
 

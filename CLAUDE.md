@@ -51,7 +51,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - make intake: run the intake webhook at http://localhost:8200
 - make classifier: run the classifier consumer
 - make extractor: run the extractor at http://localhost:8300/docs
-- Prompts live in prompts/*.md; {schema} is replaced with the JSON schema at startup.
+- Prompts live in prompts/*.md. Structured LLM calls use strict structured outputs (schema sent to the API) or, for Decimal/date models, a field list with a JSON example in the prompt; never paste model_json_schema() into a prompt (ADR-008).
 - make send PDF=<path>: send a PDF to intake (the full pipeline runs in Docker via make up)
 - make agent: run the agent locally at http://localhost:8400/docs (stop the Compose agent first)
 - Review a paused order: GET/POST http://localhost:8400/reviews/{idempotency_key}

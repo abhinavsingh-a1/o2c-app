@@ -208,12 +208,16 @@ def test_extract_non_pdf_returns_415(client, extract):
 # --- prompt ---
 
 
-def test_load_prompt_inserts_json_schema():
+def test_load_prompt_has_a_valid_example_instead_of_the_raw_schema():
     prompt = load_prompt(PROMPTS_DIR)
 
     assert "{schema}" not in prompt
-    assert json.dumps(PurchaseOrder.model_json_schema()) in prompt
+    assert '"properties"' not in prompt
     assert prompt.startswith("You extract purchase orders")
+    example = prompt[prompt.index("{", prompt.index("Example of the shape")) :]
+    po = PurchaseOrder.model_validate_json(example)
+    assert set(json.loads(example)) == set(PurchaseOrder.model_fields)
+    assert po.lines[0].line_total == po.total_amount
 
 
 # --- extractor ---

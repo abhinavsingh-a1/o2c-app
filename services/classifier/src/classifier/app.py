@@ -1,4 +1,3 @@
-import json
 import logging
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -9,9 +8,10 @@ import boto3
 from botocore.exceptions import ClientError
 from o2c_common.events import Envelope
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
+from o2c_common.llm import strict_response_format
 from o2c_common.pdf import pdf_text
 from openai import OpenAI
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from classifier.hybrid import DistilBert, classify_hybrid, load_distilbert
@@ -25,6 +25,8 @@ DEFAULT_NON_PO_THRESHOLD = 0.005
 
 
 class Classification(BaseModel):
+    # Strict structured outputs: no extra keys, every field required (ADR-008).
+    model_config = ConfigDict(extra="forbid")
     doc_type: Literal["purchase_order", "invoice", "remittance", "other"]
     reason: str
 
@@ -45,8 +47,8 @@ class Settings(BaseSettings):
 
 
 def load_prompt(prompts_dir: Path) -> str:
-    template = (prompts_dir / "classify.md").read_text(encoding="utf-8")
-    return template.replace("{schema}", json.dumps(Classification.model_json_schema()))
+    # The schema goes to the API as a strict response_format, not into the prompt.
+    return (prompts_dir / "classify.md").read_text(encoding="utf-8")
 
 
 def classify(
@@ -55,7 +57,7 @@ def classify(
     response = llm.chat.completions.create(
         model="o2c-extract",
         temperature=0,
-        response_format={"type": "json_object"},
+        response_format=strict_response_format(Classification),
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text[:4000]},

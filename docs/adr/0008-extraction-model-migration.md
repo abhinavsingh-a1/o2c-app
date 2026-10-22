@@ -160,11 +160,77 @@ others, so latencies are comparable only roughly); it still met the 2.5x limit.
 - The holdout has now been used to compare models twice. It stays a final check; it was
   not used to change prompts.
 
-### Gate with the new model (pending)
-`make eval` (full) with `o2c-extract` = gpt-6-luna was started on 2026-10-22 and stopped by
-the host (low memory) while the hybrid classifier step loaded DistilBERT. The steps that
-had finished were within the thresholds: poc/data 50/50 perfect, holdout 10/20 perfect
-(>= 9). Classifier, judge, red team and injection checks have not been run with the new
-model in the full gate yet (the quick gate before the switch passed with gpt-4.1-mini).
-**Open: run `make eval` again and record the result here.** If it fails, point
-`o2c-extract` back at `o2c-extract-previous` (gpt-4.1-mini) and restart LiteLLM.
+### First switch and rollback (2026-10-22)
+`o2c-extract` was switched to gpt-6-luna on the extraction comparison alone. The first full
+`make eval` with it was stopped by the host (low memory). With gpt-6-luna, the agent's
+contract tolerance lookup then failed with `OutputParserException` in
+`agent/contracts.py` (`ToleranceLookup`): gpt-6-luna answered with
+`{"properties": {"tolerance_pct": ..., "evidence": ...}}`. Every structured call pasted
+`model_json_schema()` into the prompt and used JSON mode
+(`with_structured_output(method="json_mode")`), and gpt-6-luna echoed the schema's
+structure back. The comparison had only tested extraction, so the other users of
+`o2c-extract` (tolerance, material matching, classifier GPT path, explanations) had never
+been checked with the new model. `o2c-extract` was rolled back to gpt-4.1-mini.
+
+### Structured outputs at every call site (fix/e11-gate)
+No call pastes a raw JSON schema into a prompt any more, and nothing unwraps a wrapped
+answer: a wrong shape is rejected (models have `extra="forbid"`, so a `properties` key
+fails validation).
+
+| Call site | Model / alias | Method |
+|---|---|---|
+| Material matching (`agent/materials.py`) | `MaterialMatch` / o2c-extract | OpenAI strict structured outputs: `with_structured_output(method="json_schema", strict=True)` |
+| Classifier GPT path (`classifier/app.py`) | `Classification` / o2c-extract | strict structured outputs, `response_format` from `o2c_common.llm.strict_response_format` (OpenAI client) |
+| Judge (`ml/judge_explanations.py`) | `Judgement` / o2c-judge | strict structured outputs, same helper |
+| Tolerance (`agent/contracts.py`) | `Tolerance` (Decimal) / o2c-extract | JSON mode; the prompt lists the two fields with a one-line JSON example |
+| Extraction (`extractor/app.py`) | `PurchaseOrder` (Decimal, date) / o2c-extract | JSON mode; the prompt lists the fields with a JSON example (validated against `PurchaseOrder` in a test) |
+
+Strict mode needs every object closed and every field required; `strict_response_format`
+checks that and raises otherwise. Decimal and date fields have no strict-mode
+equivalent that keeps the exact money maths, so those two models keep JSON mode with an
+example. Regression tests (`services/agent/tests/test_structured_output.py`) feed the real
+ChatOpenAI parsers recorded completions: a correct answer is accepted, a wrapped one is
+rejected (also for the classifier and the judge).
+
+### Migration procedure: every LLM call site, not only extraction
+Added to the rule (`ml/compare_extraction.py`): a candidate also needs a **passing full
+gate without fallbacks, run with `o2c-extract` temporarily pointed at the candidate**:
+copy the candidate's `litellm_params` to `o2c-extract`, restart litellm, `make eval`,
+point it back unless the candidate is adopted. `ml/eval_gate.py` records which model is
+behind `o2c-extract` (read from `local/litellm/config.yaml`) and the number of calls
+answered by a fallback, and saves each full run as `ml/results/gate-<model>.json`; a
+missing or failed gate fails the candidate. The full gate covers every call site:
+extraction, the hybrid classifier (GPT path), the agent's tolerance lookup, material
+matching and explanations (judge step and red team run the real agent graph).
+
+### Full gate, both models (2026-10-22, same code and prompts)
+
+| Check | Threshold | gpt-4.1-mini | gpt-6-luna |
+|---|---|---|---|
+| poc/data: perfect POs | >= 48/50 | 50/50 | 50/50 |
+| poc/data: field accuracy | >= 99.50% | 100.00% | 100.00% |
+| holdout: perfect POs | >= 9/20 | 9/20 | 10/20 |
+| holdout: field accuracy | >= 98.80% | 99.01% | 99.10% |
+| hybrid holdout: accuracy | >= 97.50% | 100.00% | 100.00% |
+| hybrid holdout: false purchase_order labels | <= 0 | 0 | 0 |
+| judge validation: correct verdicts | >= 7/7 | 7/7 | 7/7 |
+| explanation pass rate | >= 90% | 100% (14/14) | 100% (14/14) |
+| red-team cases passed | >= 8/8 | 8/8 | 8/8 |
+| injection false positives (200 docs) | <= 0 | 0 | 0 |
+| **Gate** | | **PASS** | **PASS** |
+| LiteLLM fallbacks | 0 | 0 | 0 |
+| OpenAI cost of the run (146 calls) | | $0.1931 | $0.1088 |
+
+The holdout errors are all `customer_number` (ADR-005). Langfuse confirms every call site
+ran on gpt-6-luna in its run, without errors: extract 78, explain_exception 22, classify
+10, tolerance 7, match_material 1 (the judge's 21 calls per run use gpt-5.6-terra).
+Material matching is only reached by one case of the evaluation sets, so its coverage is
+thin; its parser is covered by the regression tests.
+
+### Decision (final)
+- **gpt-6-luna stays**: `o2c-extract` -> `openai/gpt-6-luna`, LiteLLM restarted.
+  `ml/compare_extraction.py` with the gate criterion: `o2c-extract-candidate` passes;
+  `o2c-extract-candidate-low` fails only because no full gate was run for it.
+- `o2c-extract-previous` (gpt-4.1-mini) remains the fallback until 2027-01-06.
+- The service containers must be rebuilt (`make up`) to run the new code and prompts;
+  the gate ran them in-process.

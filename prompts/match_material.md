@@ -5,4 +5,7 @@ Candidates (material number: description, unit):
 
 Return the material number only if the line clearly describes the same product
 (same type, size and pack size). If no candidate clearly matches, use null.
-Return only JSON matching: {schema}
+
+Answer with a JSON object with exactly these fields:
+- "matnr": the material number of the matching candidate, or null.
+- "reason": one short sentence why it matches or why none does.

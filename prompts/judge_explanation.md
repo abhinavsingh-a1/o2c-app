@@ -21,4 +21,8 @@ Score the explanation from 1 (very poor) to 5 (excellent) on each criterion:
 
 Verdict: "pass" only if every criterion scores 4 or 5, otherwise "fail".
 
-Return only JSON matching this JSON schema: {schema}
+Answer with a JSON object with exactly these fields:
+- "faithful", "specific", "actionable", "concise": each an object
+  {"score": 1 to 5, "reason": one short sentence}.
+- "verdict": "pass" or "fail".
+- "reason": one or two sentences summarising the judgement.

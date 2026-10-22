@@ -16,6 +16,7 @@ from judge_explanations import (
     scores,
     summarize,
 )
+from o2c_common.llm import strict_response_format
 from pydantic import ValidationError
 
 
@@ -72,14 +73,26 @@ def test_pass_needs_every_criterion_at_least_4():
     assert not passed(parse_judgement(answer(actionable=2, verdict="pass")))
 
 
-def test_rubric_names_all_criteria_and_has_the_schema():
+def test_rubric_names_all_criteria_without_the_raw_schema():
     rubric = load_rubric()
 
     assert "{schema}" not in rubric
-    assert json.dumps(Judgement.model_json_schema()) in rubric
+    assert '"properties"' not in rubric
+    assert '"verdict"' in rubric
     for criterion in CRITERIA:
         assert f"- {criterion}:" in rubric
     assert "2 to 4 sentences" in rubric
+
+
+def test_judgement_is_usable_with_strict_structured_outputs():
+    fmt = strict_response_format(Judgement)  # ValueError if not strict-compatible
+
+    assert fmt["json_schema"]["strict"] is True
+
+
+def test_parse_judgement_rejects_an_answer_wrapped_in_properties():
+    with pytest.raises(ValidationError):
+        parse_judgement(json.dumps({"properties": json.loads(answer())}))
 
 
 def test_calibration_set_has_3_good_and_4_bad():
