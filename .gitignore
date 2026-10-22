@@ -228,3 +228,6 @@ local/users.json
 ml/results/
 # kfp.local pipeline runs (ml/pipelines/run_local.py)
 ml/pipelines/local_outputs/
+# Evaluation gate reports (ml/eval_gate.py)
+eval/report.md
+eval/report.json

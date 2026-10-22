@@ -35,6 +35,7 @@ from classifier_common import (
     write_results,
 )
 from eval_classifier_gpt import make_classify_text
+from litellm_common import use_eval_key
 from o2c_common.pdf import pdf_text
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -51,7 +52,9 @@ def evaluate(
 ) -> list[dict]:
     rows = []
     for file, expected in read_labels(dataset):
-        text = pdf_text((dataset / file).read_bytes())
+        text = pdf_text(
+            (dataset / file).read_bytes(), drop_invisible=True
+        )  # as the service
         start = time.perf_counter()
         try:
             result, usage = classify(text, file)
@@ -128,6 +131,7 @@ def main(argv: list[str] | None = None) -> Path:
     args = sys.argv[1:] if argv is None else argv
     dataset = Path(args[0]) if args else HOLDOUT
     threshold = float(args[1]) if len(args) > 1 else DEFAULT_NON_PO_THRESHOLD
+    use_eval_key()
 
     rows = evaluate(
         dataset,

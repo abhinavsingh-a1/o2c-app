@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
 
 up:
 	docker compose up -d --build
@@ -137,3 +137,10 @@ kfp-run:
 kfp-uninstall:
 	kubectl delete -k "$(KFP_MANIFESTS)/env/platform-agnostic?ref=$(KFP_VERSION)"
 	kubectl delete -k "$(KFP_MANIFESTS)/cluster-scoped-resources?ref=$(KFP_VERSION)"
+
+# E11: evaluation gate against eval/thresholds.yaml (needs make up); exits 1 on any FAIL
+eval-quick:
+	uv run --group ml python ml/eval_gate.py --quick
+
+eval:
+	uv run --group ml python ml/eval_gate.py --full

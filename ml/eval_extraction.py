@@ -5,6 +5,7 @@ Usage: uv run python ml/eval_extraction.py <dataset dir> [model alias] [--limit 
        uv run --group ml python ml/eval_extraction.py poc/data --langfuse
        uv run python ml/eval_extraction.py ml/data/holdout o2c-extract-candidate
        uv run python ml/eval_extraction.py ml/data/train --limit 20
+       uv run python ml/eval_extraction.py poc/data o2c-extract --run 2
 
 Runs extractor.app.make_extractor on every PDF in <dataset>/pos (text via
 o2c_common.pdf.pdf_text), scores each result against <dataset>/ground_truth with
@@ -12,7 +13,8 @@ o2c_common.scoring.score, prints per-document scores and a JSON summary (perfect
 field accuracy, average latency, cost per PO from LiteLLM's x-litellm-response-cost
 header, and how many calls LiteLLM answered from a fallback model), and writes
 ml/results/<dataset>-<model>.json (<dataset>-first<N>-<model>.json with --limit N, which
-evaluates only the first N POs).
+evaluates only the first N POs; "-run<N>" is appended with --run N, for repeated runs of
+the same model, see ml/compare_extraction.py).
 
 --langfuse (poc/data = dataset "golden", ml/data/holdout = "holdout", uploaded by
 ml/langfuse_datasets.py): each extraction gets its own Langfuse trace id, the trace is
@@ -21,7 +23,8 @@ accuracy (and perfect 1/0) are attached to the trace as scores, so runs can be c
 in the Langfuse UI.
 
 All LLM calls go through LiteLLM: LITELLM_BASE_URL and LITELLM_MASTER_KEY come from
-the environment or .env (run from the repository root). The model is a LiteLLM alias.
+the environment or .env (run from the repository root); LITELLM_KEY_EVAL is used instead
+of the master key when it is set (ml/litellm_common.py). The model is a LiteLLM alias.
 """
 
 import argparse
@@ -34,6 +37,7 @@ from pathlib import Path
 
 import httpx
 from extractor.app import Extract, Settings, make_extractor
+from litellm_common import use_eval_key
 from o2c_common.pdf import pdf_text
 from o2c_common.schema import PurchaseOrder
 from o2c_common.scoring import score
@@ -202,9 +206,13 @@ def format_row(row: dict) -> str:
     )
 
 
-def results_path(dataset: Path, model: str, limit: int | None = None) -> Path:
+def results_path(
+    dataset: Path, model: str, limit: int | None = None, run: int | None = None
+) -> Path:
     name = dataset.name if limit is None else f"{dataset.name}-first{limit}"
-    return RESULTS_DIR / f"{name}-{model.replace('/', '_').replace(':', '_')}.json"
+    suffix = "" if run is None else f"-run{run}"
+    model = model.replace("/", "_").replace(":", "_")
+    return RESULTS_DIR / f"{name}-{model}{suffix}.json"
 
 
 def make_settings() -> Settings:
@@ -222,9 +230,13 @@ def main(argv: list[str] | None = None) -> Path:
     parser.add_argument("model", nargs="?", default=DEFAULT_MODEL)
     parser.add_argument("--limit", type=int, help="evaluate only the first N POs")
     parser.add_argument(
+        "--run", type=int, help="number of a repeated run (results file suffix)"
+    )
+    parser.add_argument(
         "--langfuse", action="store_true", help="record a Langfuse dataset run"
     )
     args = parser.parse_args(argv)
+    use_eval_key()
     dataset, model, limit = args.dataset, args.model, args.limit
 
     langfuse_run = None
@@ -251,7 +263,7 @@ def main(argv: list[str] | None = None) -> Path:
     summary = summarize(rows)
     print(json.dumps(summary, indent=2))
 
-    out = results_path(dataset, model, limit)
+    out = results_path(dataset, model, limit, args.run)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         json.dumps(
@@ -259,6 +271,7 @@ def main(argv: list[str] | None = None) -> Path:
                 "dataset": str(dataset),
                 "model": model,
                 "limit": limit,
+                "run": args.run,
                 "summary": summary,
                 "documents": rows,
             },

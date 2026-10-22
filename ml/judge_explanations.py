@@ -16,6 +16,7 @@ Usage: uv run --group ml python ml/judge_explanations.py [--dataset poc/data|hol
 4. Attaches the scores to the explain_exception trace in Langfuse (judge_<criterion>,
    judge_pass) and prints: explanations judged, pass rate, average per criterion, judge
    cost (x-litellm-response-cost). Writes ml/results/judge-explanations.json.
+LiteLLM is called with LITELLM_KEY_EVAL when it is set (ml/litellm_common.py).
 """
 
 import json
@@ -253,10 +254,12 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
 
     from langfuse_common import make_langfuse
+    from litellm_common import use_eval_key
 
     parser = argparse.ArgumentParser(description="Judge the exception explanations.")
     parser.add_argument("--dataset", action="append", choices=list(DATASETS))
     args = parser.parse_args(argv)
+    use_eval_key()
 
     judge = make_judge()
     calibration = calibrate(load_calibration(), judge)

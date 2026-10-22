@@ -199,13 +199,47 @@ case fails.
 **8/8 passed; `ml/eval_redteam.py` exits 0.** Regression after all prompt and pdf_text
 changes: poc/data 50/50 (100%), first 20 of train 19/20 (99.84%, PO-0015 as before).
 
+## E. Quality gate (E11 Part 3)
+`ml/eval_gate.py` compares the evaluations with absolute thresholds in
+`eval/thresholds.yaml`, set from the baselines after Part 2b with room for run-to-run
+noise (ADR-002):
+
+| Check | Threshold | Mode |
+|---|---|---|
+| Extraction poc/data | perfect >= 48/50, field accuracy >= 99.5% | full |
+| Extraction poc/data, first 10 POs | perfect >= 9/10, field accuracy >= 99.5% | quick |
+| Extraction holdout | perfect >= 9/20, field accuracy >= 98.8% | full |
+| Hybrid classifier holdout | accuracy >= 97.5%, false purchase_order labels = 0 | full |
+| Judge | validation 7/7, explanation pass rate >= 90% | full |
+| Red team | 8/8 | both |
+| Injection detector | 0 false positives on the 200 real documents | both |
+
+- `make eval-quick` (`--quick`) takes about 1.5 minutes and about $0.02; `make eval`
+  (`--full`) runs everything. Unit tests are not part of the gate (`uv run pytest`).
+- It prints a PASS/FAIL table, writes `eval/report.md` and `eval/report.json`
+  (git-ignored) and exits 1 on any failed check. A step that cannot run (e.g. MLflow
+  down) is a failed check; the other steps still run.
+- The OpenAI cost of the run is the sum of LiteLLM's `x-litellm-response-cost` header over
+  every call, collected by wrapping `Client.send` of httpx and httpx2 (the OpenAI SDK 3.x
+  uses httpx2) for the duration of the run, so calls inside the agent (explanations,
+  material matching, embeddings) are counted too.
+- The gate runs with the eval key (`LITELLM_KEY_EVAL`, ADR-011).
+- The first 10 POs threshold (9/10) is a choice for the quick mode, not from the baseline
+  (10/10): it allows one noisy PO, like 48/50 allows two.
+
+First runs (2026-10-22): quick gate PASS with gpt-4.1-mini (10/10, 100%, red team 8/8,
+0 false positives, $0.0211 for 29 calls). The first full run, after the switch to
+gpt-6-luna (ADR-008), was stopped by the host for low memory in the classifier step;
+extraction had passed (poc/data 50/50, holdout 10/20). The full gate still has to be run
+to completion.
+
 ## Consequences
 - Extraction runs can be compared per item in Langfuse; JSON results stay the record of
   the gate decisions (ADR-008).
 - Explanation quality has a validated, repeatable measure. The judge costs about $0.005
   per explanation, so it runs on small sets only.
 - `ml/eval_redteam.py` is a regression test for attacks (8/8). It needs the local stack
-  and LLM calls, so it is run by hand, not in pytest.
+  and LLM calls, so it is not in pytest; it runs in both modes of the gate.
 - Two new issue codes reach the review UI (CUSTOMER_MISMATCH, PROMPT_INJECTION_SUSPECTED);
   `ui/src/api/schema.d.ts` lists them (edited to match the agent's schema).
 - Injection detection is a signal for the reviewer, not the defence: the checks in code

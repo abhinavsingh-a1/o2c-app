@@ -430,3 +430,23 @@ def test_langfuse_dataset_name():
 
 def test_run_name():
     assert eval_extraction.run_name("o2c-extract", "abc1234") == "o2c-extract-abc1234"
+
+
+def test_results_path_of_a_repeated_run():
+    path = results_path(Path("poc/data"), "o2c-extract", run=2)
+    assert path == eval_extraction.RESULTS_DIR / "data-o2c-extract-run2.json"
+    path = results_path(Path("ml/data/train"), "o2c-extract", limit=20, run=3)
+    assert path.name == "train-first20-o2c-extract-run3.json"
+
+
+def test_main_with_run_names_the_results_file(dataset, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        eval_extraction, "make_extractor", lambda s, model, **kw: FakeExtract(dataset)
+    )
+    monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
+    monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
+
+    out = main([str(dataset), "--run", "2"])
+
+    assert out.name == "mini-o2c-extract-run2.json"
+    assert json.loads(out.read_text(encoding="utf-8"))["run"] == 2

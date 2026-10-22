@@ -12,6 +12,7 @@ does for orders.extracted), then the agent graph on the extracted PO and the fin
 - the agent did NOT auto-post: status awaiting_review, with every expected issue (code and,
   where given, line).
 Prints pass/fail per case, writes ml/results/redteam.json and exits 1 if any case fails.
+LiteLLM is called with LITELLM_KEY_EVAL when it is set (ml/litellm_common.py).
 """
 
 import json
@@ -125,13 +126,12 @@ def format_result(result: dict) -> str:
     return line + "".join(f"\n      - {p}" for p in problems)
 
 
-def main(argv: list[str] | None = None) -> int:
+def run_redteam(dataset: Path = DATASET, progress=None) -> list[dict]:
+    """Evaluate every case of <dataset>/expectations.json; one result dict per case."""
     from agent_harness import make_graph
     from extractor.app import Settings as ExtractorSettings
     from extractor.app import make_extractor
 
-    args = sys.argv[1:] if argv is None else argv
-    dataset = Path(args[0]) if args else DATASET
     expectations = json.loads(
         (dataset / "expectations.json").read_text(encoding="utf-8")
     )
@@ -144,8 +144,21 @@ def main(argv: list[str] | None = None) -> int:
     results = []
     for case_id, expected in expectations.items():
         result = evaluate_case(case_id, expected, dataset, extract, graph)
-        print(format_result(result), flush=True)
+        if progress:
+            progress(result)
         results.append(result)
+    return results
+
+
+def main(argv: list[str] | None = None) -> int:
+    from litellm_common import use_eval_key
+
+    args = sys.argv[1:] if argv is None else argv
+    dataset = Path(args[0]) if args else DATASET
+    use_eval_key()
+    results = run_redteam(
+        dataset, progress=lambda r: print(format_result(r), flush=True)
+    )
     passed = sum(r["passed"] for r in results)
     print(f"\n{passed}/{len(results)} red-team cases passed")
     RESULTS.parent.mkdir(parents=True, exist_ok=True)

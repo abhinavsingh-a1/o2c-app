@@ -1,12 +1,24 @@
 model_list:
+  # Migrated 2026-10-22 from gpt-4.1-mini by the noise-aware rule (ADR-008).
   - model_name: o2c-extract
     litellm_params:
-      model: openai/gpt-4.1-mini # shuts down 2027-01-14 (ADR-005, ADR-008)
+      model: openai/gpt-6-luna
+      api_key: os.environ/OPENAI_API_KEY
+  # The previous model, only as a fallback for o2c-extract; remove by 2027-01-06
+  # (gpt-4.1-mini shuts down 2027-01-14, ADR-005, ADR-008).
+  - model_name: o2c-extract-previous
+    litellm_params:
+      model: openai/gpt-4.1-mini
       api_key: os.environ/OPENAI_API_KEY
   # Migration candidates (ml/list_models.py, compared with ml/eval_extraction.py)
   - model_name: o2c-extract-candidate
     litellm_params:
       model: openai/gpt-6-luna
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: o2c-extract-candidate-low
+    litellm_params:
+      model: openai/gpt-6-luna
+      reasoning_effort: low
       api_key: os.environ/OPENAI_API_KEY
   - model_name: o2c-extract-candidate-2
     litellm_params:
@@ -33,5 +45,6 @@ litellm_settings:
   drop_params: true
 
 router_settings:
-  # If a call to o2c-extract fails (after retries), it is retried once on the candidate.
-  fallbacks: [{ "o2c-extract": ["o2c-extract-candidate"] }]
+  # If a call to o2c-extract fails (after retries), it is retried once on the previous
+  # model (until 2027-01-06).
+  fallbacks: [{ "o2c-extract": ["o2c-extract-previous"] }]
