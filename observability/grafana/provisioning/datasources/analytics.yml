@@ -1,0 +1,19 @@
+# Postgres datasource for the dbt marts (ADR-013): the read-only role grafana_ro, which
+# can SELECT in schema analytics only (created by analytics-sink). The password comes
+# from the container environment (GRAFANA_DB_PASSWORD in .env), never from Git.
+apiVersion: 1
+datasources:
+  - name: O2C Analytics
+    uid: o2c-analytics
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: postgres:5432
+    user: grafana_ro
+    editable: false
+    jsonData:
+      database: o2c
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD

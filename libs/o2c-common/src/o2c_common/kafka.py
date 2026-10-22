@@ -224,3 +224,60 @@ class EventConsumer:
         self.producer.send_raw(DLQ_TOPIC, msg.key(), msg.value(), headers)
         self.producer.flush()
         metrics.EVENTS_DLQ.labels(self.group_id, reason).inc()
+
+
+class RawMessageConsumer(EventConsumer):
+    """An EventConsumer for topics whose messages need not be Envelopes, i.e. the DLQ
+    (invalid envelopes end up there). The handler gets the Kafka Message and must be
+    idempotent by itself (key: topic, partition, offset); `store` is not used.
+
+    A failing message is never sent to the DLQ (copying the DLQ into the DLQ would
+    loop): it is retried with backoff (at most max_delay seconds apart) until it
+    succeeds, so nothing is skipped while e.g. the database is down."""
+
+    def __init__(
+        self,
+        *,
+        bootstrap: str,
+        group_id: str,
+        topics: list[str],
+        handler: Callable[[Message], None],
+        base_delay: float = 1.0,
+        max_delay: float = 60.0,
+    ):
+        super().__init__(
+            bootstrap=bootstrap,
+            group_id=group_id,
+            topics=topics,
+            handler=handler,
+            producer=None,
+            store=InMemoryStore(),
+            base_delay=base_delay,
+        )
+        self.max_delay = max_delay
+
+    def process(self, msg: Message) -> None:
+        metrics.EVENTS_CONSUMED.labels(self.group_id).inc()
+        attempt = 0
+        while True:
+            start = time.perf_counter()
+            try:
+                self.handler(msg)
+                metrics.HANDLER_SECONDS.labels(self.group_id).observe(
+                    time.perf_counter() - start
+                )
+                return
+            except Exception as exc:  # noqa: BLE001 - retried until it succeeds
+                self._attempt_failed(start)
+                attempt += 1
+                delay = min(self.base_delay * 2 ** (attempt - 1), self.max_delay)
+                log.warning(
+                    "attempt %s failed for %s[%s]@%s: %s (retry in %.0fs)",
+                    attempt,
+                    msg.topic(),
+                    msg.partition(),
+                    msg.offset(),
+                    exc,
+                    delay,
+                )
+                time.sleep(delay)

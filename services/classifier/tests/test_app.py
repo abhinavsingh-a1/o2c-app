@@ -185,7 +185,7 @@ def test_classified_documents_are_counted_by_type_and_model(received, s3, produc
 def test_health_server_serves_metrics():
     import urllib.request
 
-    from classifier.app import start_health_server
+    from o2c_common.metrics import start_health_server
 
     server = start_health_server(0)
     port = server.server_address[1]

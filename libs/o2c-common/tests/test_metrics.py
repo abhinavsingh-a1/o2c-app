@@ -52,7 +52,7 @@ def defined_metrics() -> list:
 
 def test_every_o2c_metric_uses_only_allowed_low_cardinality_labels():
     defined = defined_metrics()
-    assert len(defined) == 15
+    assert len(defined) == 17
     for metric in defined:
         labels = set(metric._labelnames)
         assert metric._name.startswith("o2c_")
@@ -386,3 +386,23 @@ def test_a_consumer_creates_its_series_at_zero():
     for reason in metrics.DLQ_REASONS:
         labels = {"group": group, "reason": reason}
         assert REGISTRY.get_sample_value("o2c_events_dlq_total", labels) is not None
+
+
+def test_health_server_reports_unhealthy_with_503_and_serves_metrics():
+    import urllib.error
+    import urllib.request
+
+    state = {"ok": True}
+    server = metrics.start_health_server(0, lambda: state["ok"])
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        with urllib.request.urlopen(f"{base}/health") as resp:
+            assert resp.status == 200
+        with urllib.request.urlopen(f"{base}/metrics") as resp:
+            assert b"o2c_events_consumed_total" in resp.read()
+        state["ok"] = False
+        with pytest.raises(urllib.error.HTTPError) as down:
+            urllib.request.urlopen(f"{base}/health")
+        assert down.value.code == 503
+    finally:
+        server.shutdown()

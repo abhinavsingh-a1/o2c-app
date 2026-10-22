@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: fct_documents
+    description: One row per received document (idempotency key) and its classification.
+    columns:
+      - name: idempotency_key
+        data_tests: [unique, not_null]
+      - name: received_at
+        data_tests: [not_null]
+      - name: doc_type
+        description: NULL while not classified yet.
+        data_tests:
+          - accepted_values:
+              values: [purchase_order, invoice, remittance, other]
+      - name: classified_by
+        data_tests:
+          - accepted_values:
+              values: [distilbert, gpt]
+
+  - name: fct_orders
+    description: >
+      One row per idempotency key with an extracted purchase order. touchless = posted
+      without any review decision.
+    columns:
+      - name: idempotency_key
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              to: ref('fct_documents')
+              field: idempotency_key
+      - name: final_status
+        description: The latest orders.validated status; in_progress before the agent decided.
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [posted, awaiting_review, rejected, failed, in_progress]
+      - name: decision
+        description: The agent's own decision (before any review).
+        data_tests:
+          - accepted_values:
+              values: [auto_post, exception]
+      - name: touchless
+        data_tests: [not_null]
+      - name: cycle_time_seconds
+        description: From receipt to the final decision (posted or rejected); NULL while open.
+        data_tests:
+          - between:
+              min_value: 0
+              max_value: 31536000
+
+  - name: mart_daily_kpis
+    description: Documents, orders by current status, touchless rate and cycle time per day.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: touchless_rate
+        description: Touchless orders / orders the agent decided (NULL without orders).
+        data_tests:
+          - between:
+              min_value: 0
+              max_value: 1
+
+  - name: mart_exception_reasons
+    description: Issues of the agent's checks per day and issue code, with their share.
+    data_tests:
+      - unique:
+          column_name: "date_day || '/' || issue_code"
+    columns:
+      - name: issue_code
+        data_tests: [not_null]
+      - name: share_of_day
+        data_tests:
+          - between:
+              min_value: 0
+              max_value: 1
+
+  - name: mart_reviews
+    description: One row per review decision with the time from the first exception.
+    columns:
+      - name: review_id
+        data_tests: [unique, not_null]
+      - name: action
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [approve, edit, reject]
+      - name: result_status
+        data_tests:
+          - accepted_values:
+              values: [posted, awaiting_review, rejected, failed]
+      - name: idempotency_key
+        data_tests:
+          - relationships:
+              to: ref('fct_orders')
+              field: idempotency_key
+              config:
+                # Reviews of orders whose events predate the analytics sink (Kafka
+                # retention) have no fct_orders row: a warning, not an error.
+                severity: warn
+
+  - name: mart_llm_cost
+    description: LLM cost per day, LiteLLM key alias and model, with the cost per order.
+    data_tests:
+      - unique:
+          column_name: "date_day || '/' || key_alias || '/' || model"
+    columns:
+      - name: cost_usd
+        data_tests: [not_null]
+      - name: key_alias
+        data_tests: [not_null]

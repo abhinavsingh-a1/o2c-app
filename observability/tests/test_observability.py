@@ -117,6 +117,7 @@ def test_prometheus_scrapes_every_service_litellm_and_kafka_exporter():
         "extractor": "extractor:8300",
         "agent": "agent:8400",
         "erp-mock": "erp-mock:8100",
+        "analytics-sink": "analytics-sink:8310",
         "litellm": "litellm:4000",
         "kafka-exporter": "kafka-exporter:9308",
     }

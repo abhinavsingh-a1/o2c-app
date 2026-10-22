@@ -1,6 +1,4 @@
 import logging
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Literal
 
@@ -15,7 +13,7 @@ from o2c_common.metrics import (
     DOCUMENTS_CLASSIFIED,
     init_labels,
     llm_http_client,
-    metrics_payload,
+    start_health_server,
 )
 from o2c_common.pdf import pdf_text
 from openai import OpenAI
@@ -125,32 +123,6 @@ def make_handler(
         )
 
     return handle
-
-
-def start_health_server(port: int) -> HTTPServer:
-    """GET /health and GET /metrics (Prometheus) on `port` (0: any free port)."""
-
-    class Health(BaseHTTPRequestHandler):
-        def do_GET(self):
-            if self.path == "/metrics":
-                body, content_type = metrics_payload()
-                self.send_response(200)
-                self.send_header("Content-Type", content_type)
-                self.end_headers()
-                self.wfile.write(body)
-                return
-            ok = self.path == "/health"
-            self.send_response(200 if ok else 404)
-            self.end_headers()
-            if ok:
-                self.wfile.write(b'{"status":"ok"}')
-
-        def log_message(self, *args):
-            pass
-
-    server = HTTPServer(("0.0.0.0", port), Health)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    return server
 
 
 def main() -> None:

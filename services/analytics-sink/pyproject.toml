@@ -1,0 +1,26 @@
+[project]
+name = "analytics-sink"
+version = "0.1.0"
+description = "Copies pipeline events, the DLQ and LiteLLM spend logs into the raw schema (ADR-013)"
+readme = "README.md"
+authors = [
+    { name = "Abhinav", email = "a1.abhinavsingh@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "o2c-common",
+    "prometheus-client>=0.26.0",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.16.0",
+    "sqlalchemy>=2.1.4",
+]
+
+[project.scripts]
+analytics-sink = "analytics_sink.app:main"
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+o2c-common = { workspace = true }

@@ -1,0 +1,96 @@
+version: 2
+
+# dbt unit tests (run by dbt build): the rules of the marts on fixed input rows.
+unit_tests:
+  - name: touchless_only_without_any_review
+    description: >
+      Posted by the agent alone is touchless; posted after a review decision, an order
+      waiting for review and a rejected one are not.
+    model: fct_orders
+    given:
+      - input: ref('stg_orders_extracted')
+        rows:
+          - { idempotency_key: auto, extracted_at: "2026-10-22 10:00:05+00", po_number: P1 }
+          - { idempotency_key: approved, extracted_at: "2026-10-22 10:00:05+00", po_number: P2 }
+          - { idempotency_key: waiting, extracted_at: "2026-10-22 10:00:05+00", po_number: P3 }
+          - { idempotency_key: rejected, extracted_at: "2026-10-22 10:00:05+00", po_number: P4 }
+      - input: ref('fct_documents')
+        rows:
+          - { idempotency_key: auto, received_at: "2026-10-22 10:00:00+00" }
+          - { idempotency_key: approved, received_at: "2026-10-22 10:00:00+00" }
+          - { idempotency_key: waiting, received_at: "2026-10-22 10:00:00+00" }
+          - { idempotency_key: rejected, received_at: "2026-10-22 10:00:00+00" }
+      - input: ref('stg_orders_validated')
+        rows:
+          - { idempotency_key: auto, validated_at: "2026-10-22 10:00:10+00", status: posted, decision: auto_post, after_review: false }
+          - { idempotency_key: approved, validated_at: "2026-10-22 10:00:10+00", status: awaiting_review, decision: exception, after_review: false }
+          - { idempotency_key: approved, validated_at: "2026-10-22 11:00:00+00", status: posted, decision: exception, after_review: true }
+          - { idempotency_key: waiting, validated_at: "2026-10-22 10:00:10+00", status: awaiting_review, decision: exception, after_review: false }
+          - { idempotency_key: rejected, validated_at: "2026-10-22 10:00:10+00", status: awaiting_review, decision: exception, after_review: false }
+          - { idempotency_key: rejected, validated_at: "2026-10-22 10:30:00+00", status: rejected, decision: exception, after_review: true }
+      - input: ref('stg_orders_posted')
+        rows:
+          - { idempotency_key: auto, posted_at: "2026-10-22 10:00:20+00", sales_order_number: "1" }
+          - { idempotency_key: approved, posted_at: "2026-10-22 11:00:00+00", sales_order_number: "2" }
+      - input: ref('stg_orders_exceptions')
+        rows:
+          - { idempotency_key: approved, exception_at: "2026-10-22 10:00:10+00" }
+          - { idempotency_key: waiting, exception_at: "2026-10-22 10:00:10+00" }
+          - { idempotency_key: rejected, exception_at: "2026-10-22 10:00:10+00" }
+      - input: ref('stg_review_decisions')
+        rows:
+          - { idempotency_key: approved, review_id: 1, action: approve }
+      - input: ref('stg_order_issues')
+        rows:
+          - { idempotency_key: approved, issue_code: PRICE_DEVIATION }
+          - { idempotency_key: approved, issue_code: ABOVE_AUTO_POST_LIMIT }
+          - { idempotency_key: waiting, issue_code: UNKNOWN_MATERIAL }
+    expect:
+      rows:
+        - { idempotency_key: auto, final_status: posted, touchless: true, reviewed: false, cycle_time_seconds: 20, issue_codes: null }
+        - { idempotency_key: approved, final_status: posted, touchless: false, reviewed: true, cycle_time_seconds: 3600, issue_codes: "ABOVE_AUTO_POST_LIMIT,PRICE_DEVIATION" }
+        - { idempotency_key: waiting, final_status: awaiting_review, touchless: false, reviewed: false, cycle_time_seconds: null, issue_codes: UNKNOWN_MATERIAL }
+        - { idempotency_key: rejected, final_status: rejected, touchless: false, reviewed: true, cycle_time_seconds: 1800, issue_codes: null }
+
+  - name: daily_touchless_rate_counts_agent_decisions_only
+    model: mart_daily_kpis
+    given:
+      - input: ref('fct_documents')
+        rows:
+          - { idempotency_key: a, received_at: "2026-10-22 08:00:00+00" }
+          - { idempotency_key: b, received_at: "2026-10-22 08:00:00+00" }
+          - { idempotency_key: c, received_at: "2026-10-22 08:00:00+00" }
+          - { idempotency_key: d, received_at: "2026-10-22 08:00:00+00" }
+      - input: ref('fct_orders')
+        rows:
+          - { idempotency_key: a, extracted_at: "2026-10-22 08:00:05+00", final_status: posted, decision: auto_post, touchless: true, cycle_time_seconds: 10 }
+          - { idempotency_key: b, extracted_at: "2026-10-22 08:00:05+00", final_status: posted, decision: exception, touchless: false, cycle_time_seconds: 100 }
+          - { idempotency_key: c, extracted_at: "2026-10-22 08:00:05+00", final_status: awaiting_review, decision: exception, touchless: false, cycle_time_seconds: null }
+          - { idempotency_key: d, extracted_at: "2026-10-22 08:00:05+00", final_status: in_progress, decision: null, touchless: false, cycle_time_seconds: null }
+    expect:
+      rows:
+        - date_day: "2026-10-22"
+          documents: 4
+          orders: 4
+          posted: 2
+          awaiting_review: 1
+          rejected: 0
+          touchless_orders: 1
+          touchless_rate: 0.3333
+          avg_cycle_time_seconds: 55
+          p90_cycle_time_seconds: 91
+
+  - name: review_wait_is_measured_from_the_first_exception
+    model: mart_reviews
+    given:
+      - input: ref('stg_review_decisions')
+        rows:
+          - { review_id: 1, idempotency_key: k1, action: approve, reviewer: anna, decided_at: "2026-10-22 10:15:00+00" }
+          - { review_id: 2, idempotency_key: unknown, action: reject, reviewer: ben, decided_at: "2026-10-22 10:20:00+00" }
+      - input: ref('fct_orders')
+        rows:
+          - { idempotency_key: k1, first_exception_at: "2026-10-22 10:00:00+00" }
+    expect:
+      rows:
+        - { review_id: 1, action: approve, reviewer: anna, seconds_to_decision: 900 }
+        - { review_id: 2, action: reject, reviewer: ben, seconds_to_decision: null }

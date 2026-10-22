@@ -15,8 +15,10 @@ repeat the service name.
 
 import itertools
 import os
+import threading
 import time
 from collections.abc import Callable, Iterable
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
@@ -44,6 +46,7 @@ ALLOWED_LABELS = frozenset(
         "code",  # agent IssueCode
         "action",  # review action: approve | edit | reject
         "service",  # classifier | extractor | agent
+        "result",  # ok | error (periodic jobs)
     }
 )
 HTTP_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
@@ -132,6 +135,17 @@ LLM_CALLS = Counter(
     "o2c_llm_calls_total", "LLM calls through LiteLLM (with a cost header)", ["service"]
 )
 
+# --- analytics sink (ADR-013) ---
+SPEND_ROWS_COPIED = Counter(
+    "o2c_llm_spend_rows_read_total",
+    "LiteLLM spend log rows read by the analytics sink (re-read overlap included)",
+)
+SPEND_COPY_RUNS = Counter(
+    "o2c_llm_spend_copy_runs_total",
+    "Runs of the LiteLLM spend log copy by result",
+    ["result"],
+)
+
 COST_HEADER = "x-litellm-response-cost"
 
 
@@ -173,6 +187,37 @@ def metrics_payload() -> tuple[bytes, str]:
         multiprocess.MultiProcessCollector(registry)
         return generate_latest(registry), CONTENT_TYPE_LATEST
     return generate_latest(REGISTRY), CONTENT_TYPE_LATEST
+
+
+def start_health_server(
+    port: int, healthy: Callable[[], bool] = lambda: True
+) -> HTTPServer:
+    """GET /health (200 or 503 from `healthy`) and GET /metrics on `port` (0: any free
+    port), for services without a web framework (classifier, analytics-sink)."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == METRICS_PATH:
+                body, content_type = metrics_payload()
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.end_headers()
+                self.wfile.write(body)
+            elif self.path == "/health":
+                ok = healthy()
+                self.send_response(200 if ok else 503)
+                self.end_headers()
+                self.wfile.write(b'{"status":"ok"}' if ok else b'{"status":"down"}')
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("0.0.0.0", port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
 
 
 def llm_cost_hook(service: str) -> Callable:

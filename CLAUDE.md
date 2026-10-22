@@ -66,6 +66,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - uv run python ml/litellm_keys.py / ml/litellm_spend.py: create the per-service LiteLLM keys / show spend per key
 - make grafana / make prom-alerts / make prom-test: dashboard URLs / firing alerts / promtool config check and alert unit tests
 - Metrics: define them only in o2c_common.metrics; labels only from ALLOWED_LABELS (never idempotency keys, ids or raw paths, ADR-012)
+- make dbt-build / make dbt-docs: build and test the analytics marts (analytics/dbt, connection from .env) / dbt docs at http://localhost:8580
+- Analytics: analytics-sink writes raw.*; dbt builds analytics.*; Grafana reads analytics.* only as grafana_ro (ADR-013). Event payload JSON is read only in the dbt staging models.
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

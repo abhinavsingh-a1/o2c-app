@@ -279,6 +279,25 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+  analytics-sink:
+    # Events, DLQ and LiteLLM spend logs -> raw.* for the dbt marts (ADR-013)
+    build:
+      context: .
+      dockerfile: docker/python-service.Dockerfile
+      args:
+        PACKAGE: analytics-sink
+    command: python -m analytics_sink.app
+    environment:
+      <<: *pipeline-env
+      LITELLM_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/litellm
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD} # read-only role grafana_ro
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
   # --- Observability (ADR-012) ---
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -306,6 +325,8 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      # Password of the read-only database role grafana_ro (analytics datasource, ADR-013)
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"

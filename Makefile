@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test dbt-build dbt-docs kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
 
 up:
 	docker compose up -d --build
@@ -156,3 +156,15 @@ prom-alerts:
 prom-test:
 	MSYS_NO_PATHCONV=1 docker run --rm -v "$(CURDIR)/observability/prometheus:/etc/prometheus" --entrypoint promtool prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
 	MSYS_NO_PATHCONV=1 docker run --rm -v "$(CURDIR)/observability/prometheus:/etc/prometheus" --entrypoint promtool prom/prometheus:v3.5.0 test rules /etc/prometheus/alerts_test.yml
+
+# dbt (analytics/dbt, ADR-013): connection from .env; staging views and analytics marts
+DBT = uv run --group analytics --env-file .env dbt
+DBT_DIRS = --project-dir analytics/dbt --profiles-dir analytics/dbt
+
+dbt-build:
+	$(DBT) source freshness $(DBT_DIRS)
+	$(DBT) build $(DBT_DIRS)
+
+dbt-docs:
+	$(DBT) docs generate $(DBT_DIRS)
+	$(DBT) docs serve --port 8580 $(DBT_DIRS)
