@@ -1,0 +1,13 @@
+# Trivy ignores (ADR-015). One finding per line with an expiry: after the date the
+# finding fails the build again. No package-wide or blanket ignores.
+#
+# MLflow 2.17.2 server (local/mlflow/Dockerfile): fixed only in MLflow 3.x. The server
+# must match the clients, which are pinned to mlflow-skinny 2.17.2 (kfp 2.13 and the
+# transformers flavour, ADR-015). The MLflow server is internal (no public ingress).
+# Upgrade MLflow server and clients together.
+CVE-2025-15036 exp:2026-12-31
+CVE-2025-15379 exp:2026-12-31
+CVE-2026-0596 exp:2026-12-31
+CVE-2026-2635 exp:2026-12-31
+CVE-2026-2651 exp:2026-12-31
+CVE-2026-4035 exp:2026-12-31

@@ -10,7 +10,9 @@ COPY ui ui
 RUN pnpm --dir ui build
 
 # Stage 2: serve them with nginx, as a non-root user
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.30-alpine
 COPY ui/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/ui/dist /usr/share/nginx/html
+# The base image already runs as nginx (uid 101); stated explicitly for scanners
+USER 101
 EXPOSE 8080

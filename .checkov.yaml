@@ -1,0 +1,16 @@
+# Checkov configuration for o2c-app (ADR-015). Every skip names one check and why it
+# does not apply; there are no framework-wide or path-wide skips.
+framework:
+  - dockerfile
+  - secrets
+compact: true
+quiet: true
+skip-path:
+  - node_modules
+  - .venv
+  - ui/node_modules
+skip-check:
+  # CKV_DOCKER_2 "HEALTHCHECK instructions": the images run on Kubernetes, which ignores
+  # the Dockerfile HEALTHCHECK and uses the liveness/readiness probes of the Helm chart
+  # (o2c-infra helm/o2c-service, healthPath); docker-compose uses /health directly.
+  - CKV_DOCKER_2

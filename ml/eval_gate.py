@@ -1,6 +1,6 @@
 """Evaluation quality gate (E11 Part 3, ADR-010).
 
-Usage: uv run --group ml python ml/eval_gate.py --quick | --full
+Usage: uv run --group ml python ml/eval_gate.py --quick | --full | --ci
   make eval-quick / make eval
 
 Runs the evaluations and compares each result with the absolute thresholds in
@@ -11,6 +11,8 @@ eval/thresholds.yaml:
   --full   extraction on poc/data (50) and ml/data/holdout (20), hybrid classifier on
            ml/data/classifier/holdout, judge validation and explanation pass rate
            (poc/data and holdout), red team, injection false positives
+  --ci     GitHub Actions (ADR-015): --quick without the red team, so only LiteLLM
+           is needed (thresholds of the quick section)
 
 Needs the local stack (make up): LiteLLM, the ERP mock, the contract index and, for
 --full, MLflow with o2c-doc-classifier@champion. LiteLLM is called with LITELLM_KEY_EVAL
@@ -307,7 +309,7 @@ def plan(mode: str, thresholds: dict) -> list[tuple[str, Callable[[], list[Check
     """The (step, run) pairs of a mode."""
     ex = thresholds["extraction"]
     steps = []
-    if mode == "quick":
+    if mode in ("quick", "ci"):
         steps.append(
             (
                 "extraction poc/data (first 10)",
@@ -331,10 +333,11 @@ def plan(mode: str, thresholds: dict) -> list[tuple[str, Callable[[], list[Check
             ("hybrid classifier", lambda: classifier_step(thresholds["classifier"])),
             ("judge", lambda: judge_step(thresholds["judge"])),
         ]
-    steps += [
-        ("red team", lambda: redteam_step(thresholds["redteam"])),
-        ("injection detector", lambda: injection_step(thresholds["injection"])),
-    ]
+    if mode != "ci":  # the red team needs the agent's stack (ERP mock, contracts)
+        steps.append(("red team", lambda: redteam_step(thresholds["redteam"])))
+    steps.append(
+        ("injection detector", lambda: injection_step(thresholds["injection"]))
+    )
     return steps
 
 
@@ -452,8 +455,13 @@ def main(argv: list[str] | None = None) -> int:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--quick", action="store_true")
     group.add_argument("--full", action="store_true")
+    group.add_argument(
+        "--ci",
+        action="store_true",
+        help="GitHub Actions: --quick without the red team (needs only LiteLLM)",
+    )
     args = parser.parse_args(argv)
-    mode = "quick" if args.quick else "full"
+    mode = "quick" if args.quick else "ci" if args.ci else "full"
 
     using_eval_key = use_eval_key()
     target = alias_target(MODEL)

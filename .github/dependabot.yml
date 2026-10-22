@@ -1,0 +1,49 @@
+# Weekly dependency updates (ADR-015). Minor and patch updates are grouped into one PR
+# per ecosystem; major updates come as separate PRs. Every PR runs the full PR gates.
+version: 2
+
+updates:
+  - package-ecosystem: uv
+    directory: "/" # uv.lock of the workspace (libs/*, services/*)
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: "/" # pnpm workspace: the lockfile of ui/ is pnpm-lock.yaml at the root
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - "/docker"
+      - "/services/erp-mock"
+      - "/services/hello"
+      - "/ui"
+      - "/local/mlflow"
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker-compose
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

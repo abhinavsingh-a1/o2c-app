@@ -4,6 +4,10 @@
 -- agent emitted after a review).
 with
 
+documents as (
+    select * from {{ ref('fct_documents') }}
+),
+
 extracted as (
     select distinct on (idempotency_key)
         idempotency_key,
@@ -117,7 +121,7 @@ joined as (
             when latest.final_status in ('rejected', 'failed') then latest.last_validated_at
         end as decided_at
     from extracted
-    left join {{ ref('fct_documents') }} as documents
+    left join documents
         on extracted.idempotency_key = documents.idempotency_key
     left join agent_decision
         on extracted.idempotency_key = agent_decision.idempotency_key
