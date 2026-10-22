@@ -71,3 +71,20 @@ Human review (implemented):
 - Every possible path is visible and testable node by node.
 - Human review is a first-class step (EU AI Act: human oversight).
 - Less flexible than a free agent; new behaviour means a new node or edge.
+
+## Finding: the saga caught a real ERP/agent inconsistency (E15, 2026-10-22)
+Three orders ended in review with ORDER_VERIFY_FAILED (BP0052582 twice, SAT-014323;
+found with `analytics.fct_orders`). Each had one line whose value ends in half a cent:
+168.5 x 1.85 = 311.725 and 191.5 x 2.15 = 411.725.
+- The agent and the PO round half-up (`_money`, ROUND_HALF_UP): 311.73, total 1856.13.
+- The ERP mock used `Decimal.quantize` without a rounding mode, i.e. ROUND_HALF_EVEN:
+  311.72, total 1856.12.
+
+verify_order compared the ERP's net value with the PO total, found the one-cent
+difference and cancel_order cancelled the sales orders (all three are CANCELLED in the
+ERP). So the saga worked as designed: no order with a wrong total stayed open. The
+cause was fixed in the ERP mock (`erp_mock.api.line_value`, ROUND_HALF_UP, tested with
+half-cent cases).
+- Lesson: every system that computes money must use the same rounding rule. A real
+  ERP integration needs this checked against the ERP's pricing configuration; the
+  verify step stays because it detects exactly this kind of drift.

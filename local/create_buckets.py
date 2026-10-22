@@ -10,7 +10,8 @@ s3 = boto3.client(
     aws_access_key_id=os.environ["S3_ACCESS_KEY"],
     aws_secret_access_key=os.environ["S3_SECRET_KEY"],
 )
-for bucket in ["mlflow", "o2c-documents", "langfuse"]:
+# o2c-audit: hash-chained audit archive (services/audit-archiver, ADR-014)
+for bucket in ["mlflow", "o2c-documents", "langfuse", "o2c-audit"]:
     try:
         s3.create_bucket(Bucket=bucket)
         print(f"created {bucket}")

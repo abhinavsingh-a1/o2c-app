@@ -1,0 +1,44 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Written by services/analytics-sink (ADR-013), one row per message.
+    schema: raw
+    tables:
+      - name: events
+        description: Every pipeline event (Envelope) from Kafka; event_id is the key.
+        loaded_at_field: ingested_at
+        freshness: # a warning only: a quiet day is not an error
+          warn_after: { count: 24, period: hour }
+        columns:
+          - name: event_id
+            data_tests: [unique, not_null]
+          - name: idempotency_key
+            data_tests: [not_null]
+          - name: event_type
+            data_tests:
+              - accepted_values:
+                  values:
+                    - docs.received
+                    - docs.classified
+                    - orders.extracted
+                    - orders.validated
+                    - orders.posted
+                    - orders.exceptions
+      - name: dlq
+        description: Raw value and headers of every message in orders.dlq.
+      - name: llm_spend
+        description: LiteLLM spend logs (one row per LLM call), copied every 60 s.
+        columns:
+          - name: request_id
+            data_tests: [unique, not_null]
+
+  - name: app
+    description: Tables the agent writes in the o2c database.
+    schema: public
+    tables:
+      - name: review_decisions
+        description: Append-only audit trail of review decisions (never updated).
+        columns:
+          - name: id
+            data_tests: [unique, not_null]

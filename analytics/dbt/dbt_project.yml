@@ -1,0 +1,24 @@
+# dbt project: raw.* (analytics-sink) -> staging views -> analytics marts (ADR-013)
+name: o2c
+version: "1.0.0"
+config-version: 2
+profile: o2c
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: ["target", "dbt_packages", "logs"]
+
+models:
+  o2c:
+    staging:
+      +schema: staging # not readable by grafana_ro
+      +materialized: view
+    marts:
+      +schema: analytics # grafana_ro: SELECT on this schema only
+      +materialized: table
+
+data_tests:
+  o2c:
+    +store_failures: false

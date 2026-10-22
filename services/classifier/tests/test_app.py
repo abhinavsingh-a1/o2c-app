@@ -13,6 +13,7 @@ from classifier.app import (
 )
 from o2c_common.events import Envelope
 from o2c_common.kafka import PermanentError
+from o2c_common.metrics import sample
 
 PDF_PATH = REPO_ROOT / "poc" / "data" / "pos" / "PO-0001.pdf"
 PROMPTS_DIR = REPO_ROOT / "prompts"
@@ -167,3 +168,33 @@ def test_classify_rejects_an_answer_wrapped_in_properties(received):
 
     with pytest.raises(ValueError):
         classify(FakeLLM(wrapped), SYSTEM_PROMPT, "text", received)
+
+
+# --- metrics ---
+
+
+def test_classified_documents_are_counted_by_type_and_model(received, s3, producer):
+    labels = {"doc_type": "purchase_order", "classified_by": "gpt"}
+    before = sample("o2c_documents_classified_total", **labels)
+
+    make_handler(s3, FakeLLM(PO_RESPONSE), producer, SYSTEM_PROMPT)(received)
+
+    assert sample("o2c_documents_classified_total", **labels) - before == 1
+
+
+def test_health_server_serves_metrics():
+    import urllib.request
+
+    from o2c_common.metrics import start_health_server
+
+    server = start_health_server(0)
+    port = server.server_address[1]
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics") as resp:
+            body = resp.read().decode()
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/health") as resp:
+            assert resp.status == 200
+    finally:
+        server.shutdown()
+    assert "o2c_documents_classified_total" in body
+    assert "o2c_events_consumed_total" in body

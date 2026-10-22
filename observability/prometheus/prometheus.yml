@@ -1,0 +1,48 @@
+# Prometheus for the local stack (ADR-012). Every target is a Compose service name.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # O2C services: GET /metrics (o2c_common.metrics). The job label names the service.
+  - job_name: intake # gunicorn, 2 workers, prometheus_client multiprocess mode
+    static_configs:
+      - targets: ["intake:8200"]
+  - job_name: classifier # health server
+    static_configs:
+      - targets: ["classifier:8301"]
+  - job_name: extractor
+    static_configs:
+      - targets: ["extractor:8300"]
+  - job_name: agent
+    static_configs:
+      - targets: ["agent:8400"]
+  - job_name: erp-mock
+    static_configs:
+      - targets: ["erp-mock:8100"]
+  - job_name: analytics-sink # health server (ADR-013)
+    static_configs:
+      - targets: ["analytics-sink:8310"]
+  - job_name: audit-archiver # health server (ADR-014)
+    static_configs:
+      - targets: ["audit-archiver:8320"]
+
+  # LiteLLM's own metrics (callbacks: ["prometheus"] in local/litellm/config.yaml):
+  # requests, latency, tokens and spend per model and virtual key. The path needs the
+  # trailing slash (/metrics redirects).
+  - job_name: litellm
+    metrics_path: /metrics/
+    static_configs:
+      - targets: ["litellm:4000"]
+
+  # Consumer lag per group and topic offsets (DLQ)
+  - job_name: kafka-exporter
+    static_configs:
+      - targets: ["kafka-exporter:9308"]

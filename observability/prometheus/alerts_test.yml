@@ -1,0 +1,169 @@
+# promtool unit tests for alerts.yml: make prom-test
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: service down for 2 minutes
+    interval: 1m
+    input_series:
+      - series: 'up{job="agent", instance="agent:8400"}'
+        values: "0x5"
+      - series: 'up{job="intake", instance="intake:8200"}'
+        values: "1x5"
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: ServiceDown
+        exp_alerts: [] # pending, not firing yet
+      - eval_time: 3m
+        alertname: ServiceDown
+        exp_alerts:
+          - exp_labels: { severity: critical, job: agent, instance: "agent:8400" }
+            exp_annotations:
+              summary: "agent is down"
+              description: "Prometheus could not scrape agent (agent:8400) for 2 minutes."
+
+  - name: a message in the DLQ
+    interval: 1m
+    input_series:
+      - series: 'kafka_topic_partition_current_offset{topic="orders.dlq", partition="0"}'
+        values: "5x10 6x15"
+      - series: 'kafka_topic_partition_current_offset{topic="docs.received", partition="0"}'
+        values: "0+10x25"
+    alert_rule_test:
+      - eval_time: 9m
+        alertname: DeadLetterQueueReceivedMessages
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: DeadLetterQueueReceivedMessages
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "Messages reached the DLQ in the last 10 minutes (about 1)"
+              description: "Inspect with make dlq-list; replay after the fix with make dlq-replay."
+      - eval_time: 25m # nothing new for 10 minutes
+        alertname: DeadLetterQueueReceivedMessages
+        exp_alerts: []
+
+  - name: consumer lag above 50 for 5 minutes
+    interval: 1m
+    input_series:
+      - series: 'kafka_consumergroup_lag{consumergroup="agent", topic="orders.extracted", partition="0"}'
+        values: "40x10"
+      - series: 'kafka_consumergroup_lag{consumergroup="agent", topic="orders.extracted", partition="1"}'
+        values: "20x10"
+      - series: 'kafka_consumergroup_lag{consumergroup="extractor", topic="docs.classified", partition="0"}'
+        values: "45x10"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: ConsumerLagHigh
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: ConsumerLagHigh
+        exp_alerts:
+          - exp_labels: { severity: warning, consumergroup: agent }
+            exp_annotations:
+              summary: "Consumer group agent is 60 messages behind"
+              description: "Lag above 50 for 5 minutes: the consumer is stuck or too slow."
+
+  - name: touchless rate below 50% with enough orders
+    interval: 1m
+    input_series: # per hour: 2 posted by the agent, 6 waiting for review
+      - series: 'o2c_orders_total{job="agent", decided_by="agent", outcome="posted"}'
+        values: "0+0.0333333333x60"
+      - series: 'o2c_orders_total{job="agent", decided_by="agent", outcome="awaiting_review"}'
+        values: "0+0.1x60"
+      - series: 'o2c_orders_total{job="agent", decided_by="reviewer", outcome="posted"}'
+        values: "0+0.1x60" # posted after review: not touchless, not counted
+    alert_rule_test:
+      - eval_time: 60m
+        alertname: TouchlessRateLow
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "Touchless rate 25% in the last hour (< 50%)"
+              description: "Most orders go to review: check o2c_issues_total by code (a bad prompt, model or master data change)."
+
+  - name: touchless rate 0% when nothing was posted
+    interval: 1m
+    input_series: # the posted series does not exist at all
+      - series: 'o2c_orders_total{job="agent", decided_by="agent", outcome="awaiting_review"}'
+        values: "0+0.1x60"
+    alert_rule_test:
+      - eval_time: 60m
+        alertname: TouchlessRateLow
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "Touchless rate 0% in the last hour (< 50%)"
+              description: "Most orders go to review: check o2c_issues_total by code (a bad prompt, model or master data change)."
+
+  - name: no touchless alert below 5 orders or at 50% and above
+    interval: 1m
+    input_series:
+      - series: 'o2c_orders_total{job="agent", decided_by="agent", outcome="awaiting_review"}'
+        values: "0+0.05x60" # 3 orders, all to review
+      - series: 'o2c_orders_total{job="agent", decided_by="reviewer", outcome="rejected"}'
+        values: "0+1x60"
+    alert_rule_test:
+      - eval_time: 60m
+        alertname: TouchlessRateLow
+        exp_alerts: []
+
+  - name: LLM cost above $0.50 per hour
+    interval: 1m
+    input_series:
+      - series: 'o2c_llm_cost_usd_total{job="extractor", service="extractor"}'
+        values: "0+0.01x60"
+      - series: 'o2c_llm_cost_usd_total{job="agent", service="agent"}'
+        values: "0+0.002x60"
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: LlmCostHigh
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: LlmCostHigh
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "LLM cost $0.72 in the last hour (> $0.50)"
+              description: "OpenAI cost of the services (x-litellm-response-cost). Check calls per service and the LiteLLM key budgets (ml/litellm_spend.py)."
+
+  - name: HTTP error rate above 5%
+    interval: 1m
+    input_series:
+      - series: 'o2c_http_requests_total{job="agent", method="POST", route="/reviews/{idempotency_key}", status="500"}'
+        values: "0+1x10"
+      - series: 'o2c_http_requests_total{job="agent", method="GET", route="/reviews", status="200"}'
+        values: "0+9x10"
+      - series: 'o2c_http_requests_total{job="extractor", method="GET", route="/health", status="200"}'
+        values: "0+10x10"
+      - series: 'o2c_http_requests_total{job="extractor", method="POST", route="/extract", status="500"}'
+        values: "0+0.1x10" # 1%
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: HttpErrorRateHigh
+        exp_alerts:
+          - exp_labels: { severity: warning, job: agent }
+            exp_annotations:
+              summary: "agent: 10% of HTTP requests fail (> 5%)"
+
+  - name: event error rate above 5%
+    interval: 1m
+    input_series:
+      - series: 'o2c_events_failed_total{job="agent", group="agent"}'
+        values: "0+1x10"
+      - series: 'o2c_events_consumed_total{job="agent", group="agent"}'
+        values: "0+10x10"
+      - series: 'o2c_events_failed_total{job="extractor", group="extractor"}'
+        values: "0x10"
+      - series: 'o2c_events_consumed_total{job="extractor", group="extractor"}'
+        values: "0+10x10"
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: EventErrorRateHigh
+        exp_alerts:
+          - exp_labels: { severity: warning, group: agent }
+            exp_annotations:
+              summary: "Consumer group agent: 10% of events fail (> 5%)"

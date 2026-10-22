@@ -1,0 +1,14 @@
+# Connection from environment variables only (no secrets in Git). `make dbt-build` loads
+# .env; DBT_HOST/DBT_PORT/DBT_DATABASE default to the local Compose Postgres.
+o2c:
+  target: local
+  outputs:
+    local:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'localhost') }}"
+      port: "{{ env_var('DBT_PORT', '5432') | as_number }}"
+      user: "{{ env_var('POSTGRES_USER') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('DBT_DATABASE', 'o2c') }}"
+      schema: analytics
+      threads: 4

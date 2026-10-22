@@ -2,6 +2,7 @@ import json
 from collections.abc import Callable
 
 from langchain_openai import ChatOpenAI
+from o2c_common.metrics import llm_http_client
 
 from agent.settings import Settings
 from agent.state import AgentState
@@ -37,6 +38,7 @@ def make_explainer(
     system_prompt = (settings.prompts_dir / "explain_exception.md").read_text(
         encoding="utf-8"
     )
+    http_client = llm_http_client("agent")  # o2c_llm_cost_usd_total, one per explainer
 
     def explain(state: AgentState) -> str:
         metadata = {
@@ -53,6 +55,7 @@ def make_explainer(
             api_key=settings.litellm_master_key,
             temperature=0,
             extra_body={"metadata": metadata},
+            http_client=http_client,
         )
         return llm.invoke(
             [

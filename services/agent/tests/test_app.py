@@ -2,6 +2,7 @@ import pytest
 from agent.settings import REPO_ROOT
 from o2c_common.events import Envelope
 from o2c_common.kafka import PermanentError
+from o2c_common.metrics import sample
 
 # The fakes and the app / client / auth_headers / handle / waiting / make_event /
 # document / deviating_po fixtures live in conftest.py.
@@ -237,3 +238,61 @@ def test_injection_findings_from_the_extractor_go_to_review(
     exception = producer.last("orders.exceptions").payload
     assert [i["code"] for i in exception["issues"]] == ["PROMPT_INJECTION_SUSPECTED"]
     assert erp.created == []
+
+
+# --- metrics ---
+
+
+def orders(outcome: str, decided_by: str) -> float:
+    return sample("o2c_orders_total", outcome=outcome, decided_by=decided_by)
+
+
+def test_agent_outcomes_and_issues_are_counted(handle, po, deviating_po, make_event):
+    posted, waiting = orders("posted", "agent"), orders("awaiting_review", "agent")
+    deviations = sample("o2c_issues_total", code="PRICE_DEVIATION")
+
+    handle(make_event(po))
+    handle(make_event(deviating_po, key=OTHER_KEY))
+
+    assert orders("posted", "agent") - posted == 1  # touchless
+    assert orders("awaiting_review", "agent") - waiting == 1
+    assert sample("o2c_issues_total", code="PRICE_DEVIATION") - deviations == 1
+
+
+@pytest.mark.parametrize("which", ["posted", "waiting"])
+def test_a_redelivered_event_does_not_count_the_order_twice(
+    handle, po, deviating_po, make_event, which
+):
+    event = make_event(po if which == "posted" else deviating_po)
+    outcome = "posted" if which == "posted" else "awaiting_review"
+    before = orders(outcome, "agent")
+
+    handle(event)
+    handle(event)
+
+    assert orders(outcome, "agent") - before == 1
+
+
+def test_review_decisions_are_counted(client, auth_headers, waiting):
+    approvals = sample("o2c_reviews_total", action="approve")
+    posted_by_reviewer = orders("posted", "reviewer")
+    posted_by_agent = orders("posted", "agent")
+
+    client.post(f"/reviews/{waiting}", json=APPROVE, headers=auth_headers)
+
+    assert sample("o2c_reviews_total", action="approve") - approvals == 1
+    assert orders("posted", "reviewer") - posted_by_reviewer == 1
+    assert orders("posted", "agent") == posted_by_agent  # not touchless
+
+
+def test_metrics_use_the_route_template_not_the_idempotency_key(
+    client, auth_headers, waiting
+):
+    labels = {"method": "GET", "route": "/reviews/{idempotency_key}", "status": "200"}
+    before = sample("o2c_http_requests_total", **labels)
+
+    client.get(f"/reviews/{waiting}", headers=auth_headers)
+    body = client.get("/metrics").text
+
+    assert sample("o2c_http_requests_total", **labels) - before == 1
+    assert waiting not in body

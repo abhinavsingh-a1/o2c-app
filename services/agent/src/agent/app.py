@@ -13,6 +13,16 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from langgraph.checkpoint.postgres import PostgresSaver
 from o2c_common.events import Envelope
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
+from o2c_common.metrics import (
+    DECIDED_BY,
+    ISSUES,
+    ORDER_OUTCOMES,
+    ORDERS,
+    REVIEW_ACTIONS,
+    REVIEWS,
+    init_labels,
+    instrument_fastapi,
+)
 from o2c_common.schema import PurchaseOrder
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
@@ -22,6 +32,7 @@ from agent.anomaly import anomaly_score
 from agent.auth import Authenticator, LoginRequest, LoginResponse, User
 from agent.checkpoint import (
     is_awaiting_review,
+    is_decided,
     resume_with_review,
     run_or_resume,
     thread_config,
@@ -40,7 +51,7 @@ from agent.reviews import (
     ReviewSummary,
 )
 from agent.settings import Settings
-from agent.state import AgentState, Review
+from agent.state import AgentState, IssueCode, Review
 
 log = logging.getLogger("agent")
 DOCUMENT_FIELDS = ("s3_bucket", "s3_key", "filename", "sender")
@@ -114,6 +125,20 @@ def outcome_events(
     return [(topic, _event(state, topic, payload, parent)) for topic, payload in events]
 
 
+def record_agent_outcome(state: AgentState) -> None:
+    """o2c_orders_total{decided_by="agent"} once per order (posted = touchless) and
+    o2c_issues_total per issue code found by the checks."""
+    ORDERS.labels(state.status, "agent").inc()
+    for issue in state.issues:
+        ISSUES.labels(issue.code.value).inc()
+
+
+def record_review(review: Review, after: AgentState) -> None:
+    """o2c_reviews_total per action and the order outcome after the review."""
+    REVIEWS.labels(review.action).inc()
+    ORDERS.labels(after.status, "reviewer").inc()
+
+
 def make_handler(graph, producer: EventProducer, reviews: ReviewStore):
     def handle(event: Envelope) -> None:
         p = event.payload
@@ -129,7 +154,10 @@ def make_handler(graph, producer: EventProducer, reviews: ReviewStore):
             source_document={k: p.get(k) for k in DOCUMENT_FIELDS},
             injection_findings=p.get("injection_findings") or [],
         )
+        decided_before = is_decided(graph, event.idempotency_key)
         state = run_or_resume(graph, initial)
+        if not decided_before:  # a redelivered event must not count the order twice
+            record_agent_outcome(state)
         reviews.upsert(state)
         log.info("%s -> %s", po.po_number, state.status)
         for topic, out in outcome_events(state, event):
@@ -218,6 +246,10 @@ def create_app(
             pool.close()
 
     app = FastAPI(title="Order agent", version="0.3.0", lifespan=lifespan)
+    instrument_fastapi(app)
+    init_labels(ORDERS, ORDER_OUTCOMES, DECIDED_BY)
+    init_labels(REVIEWS, REVIEW_ACTIONS)
+    init_labels(ISSUES, [code.value for code in IssueCode])
 
     def _state(request: Request, idempotency_key: str):
         snapshot = request.app.state.graph.get_state(thread_config(idempotency_key))
@@ -312,6 +344,7 @@ def create_app(
             raise HTTPException(409, str(exc)) from exc
         request.app.state.reviews.upsert(after)
         request.app.state.reviews.record_decision(before, review, user.name, after)
+        record_review(review, after)
         for topic, out in outcome_events(after, None):
             request.app.state.producer.send(topic, out)
         request.app.state.producer.flush()

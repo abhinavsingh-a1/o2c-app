@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from langchain_openai import ChatOpenAI
+from o2c_common.metrics import llm_http_client
 from pydantic import BaseModel, ConfigDict
 
 from agent.settings import Settings
@@ -47,5 +48,6 @@ def make_material_matcher(settings: Settings) -> MaterialMatcher:
         api_key=settings.litellm_master_key,
         temperature=0,
         extra_body={"metadata": {"trace_name": "match_material", "tags": ["agent"]}},
+        http_client=llm_http_client("agent"),  # o2c_llm_cost_usd_total
     )
     return MaterialMatcher(structured_matcher(llm), settings.prompts_dir)

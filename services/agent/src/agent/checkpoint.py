@@ -23,6 +23,15 @@ def is_awaiting_review(snapshot) -> bool:
     return any(task.interrupts for task in snapshot.tasks)
 
 
+def is_decided(graph, idempotency_key: str) -> bool:
+    """True if the agent already decided this order: finished, or waiting for a review.
+    A crashed run (stopped half-way) is not decided yet."""
+    snapshot = graph.get_state(thread_config(idempotency_key))
+    if not snapshot.values:
+        return False
+    return not snapshot.next or is_awaiting_review(snapshot)
+
+
 def run_or_resume(graph, initial: AgentState) -> AgentState:
     """Start a new run, resume a crashed one, or return the state of a finished or waiting one."""
     config = thread_config(initial.idempotency_key)

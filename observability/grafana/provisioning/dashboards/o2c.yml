@@ -1,0 +1,11 @@
+# Loads every dashboard JSON in /etc/grafana/dashboards (observability/grafana/dashboards).
+# Edit the JSON in the repo (observability/grafana/build_dashboard.py), not in the UI.
+apiVersion: 1
+providers:
+  - name: o2c
+    folder: O2C
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards

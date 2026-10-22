@@ -1,0 +1,529 @@
+{
+  "uid": "o2c-business",
+  "title": "O2C Business",
+  "tags": [
+    "o2c",
+    "dbt"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Orders",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select count(*) from analytics.fct_orders where $__timeFilter(extracted_at)",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 1
+    },
+    {
+      "type": "stat",
+      "title": "Touchless rate",
+      "description": "Posted without any review decision / orders the agent decided.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select count(*) filter (where touchless)::numeric / nullif(count(*) filter (where decision is not null), 0) from analytics.fct_orders where $__timeFilter(extracted_at)",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 2
+    },
+    {
+      "type": "stat",
+      "title": "Avg cycle time",
+      "description": "From receipt of the document to the final decision (posted or rejected).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select avg(cycle_time_seconds) from analytics.fct_orders where $__timeFilter(extracted_at)",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 3
+    },
+    {
+      "type": "stat",
+      "title": "LLM cost per order",
+      "description": "LLM calls made for each order (classify, extract, explain; session = the order), averaged. Shared calls (tolerance, material matching) and evaluations are not included (ADR-013).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select avg(llm_cost_usd) from analytics.fct_orders where $__timeFilter(extracted_at)",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 4
+    },
+    {
+      "type": "barchart",
+      "title": "Touchless rate per day",
+      "description": "Touchless orders / orders the agent decided, per day (UTC).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select date_day::timestamp as time, touchless_rate from analytics.mart_daily_kpis where $__timeFilter(date_day) order by 1",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "xTickLabelRotation": -45
+      },
+      "id": 5
+    },
+    {
+      "type": "piechart",
+      "title": "Orders by final status",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select final_status, count(*) as orders from analytics.fct_orders where $__timeFilter(extracted_at) group by final_status order by orders desc",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        }
+      },
+      "id": 6
+    },
+    {
+      "type": "bargauge",
+      "title": "Top exception reasons",
+      "description": "Issues found by the agent's checks (one order can have several).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 4,
+        "w": 6,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select issue_code, sum(issue_count) as issues from analytics.mart_exception_reasons where $__timeFilter(date_day) group by issue_code order by issues desc limit 10",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "orientation": "horizontal",
+        "displayMode": "basic"
+      },
+      "id": 7
+    },
+    {
+      "type": "timeseries",
+      "title": "Cycle time per day (avg and p90)",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select date_day::timestamp as time, avg_cycle_time_seconds as \"avg\", p90_cycle_time_seconds as \"p90\" from analytics.mart_daily_kpis where $__timeFilter(date_day) order by 1",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "id": 8
+    },
+    {
+      "type": "timeseries",
+      "title": "LLM cost per order per day",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select date_day::timestamp as time, llm_cost_per_order_usd as cost_per_order from analytics.mart_daily_kpis where $__timeFilter(date_day) order by 1",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "id": 9
+    },
+    {
+      "type": "timeseries",
+      "title": "LLM cost per service per day",
+      "description": "Pipeline cost per calling service (order, document and shared calls), and evaluation runs separately (ADR-013).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 12,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select date_day::timestamp as time, service as metric, sum(order_cost_usd + document_cost_usd + shared_cost_usd) as cost from analytics.mart_llm_cost where $__timeFilter(date_day) and service in ('classifier', 'extractor', 'agent') group by date_day, service union all select date_day::timestamp, 'evaluations', sum(evaluation_cost_usd) from analytics.mart_llm_cost where $__timeFilter(date_day) group by date_day order by 1",
+          "format": "time_series",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "id": 10
+    },
+    {
+      "type": "table",
+      "title": "Review decisions by action and reviewer",
+      "description": "From the append-only review audit trail.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select reviewer, action, count(*) as decisions, round(avg(seconds_to_decision) / 60) as avg_minutes_to_decision from analytics.mart_reviews where $__timeFilter(decided_at) group by reviewer, action order by decisions desc",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 11
+    },
+    {
+      "type": "table",
+      "title": "Latest 20 orders",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "o2c-analytics"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 20,
+        "w": 16,
+        "h": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "o2c-analytics"
+          },
+          "rawSql": "select extracted_at, po_number, customer_name, customer_number, total_amount, currency, final_status, touchless, issue_codes, round(cycle_time_seconds) as cycle_time_s from analytics.fct_orders order by extracted_at desc limit 20",
+          "format": "table",
+          "rawQuery": true,
+          "editorMode": "code",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "id": 12
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

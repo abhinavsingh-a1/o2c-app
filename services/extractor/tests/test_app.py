@@ -17,6 +17,7 @@ from extractor.app import (
 from fastapi.testclient import TestClient
 from o2c_common.events import Envelope
 from o2c_common.kafka import PermanentError
+from o2c_common.metrics import sample
 from o2c_common.schema import PurchaseOrder
 
 PDF_PATH = REPO_ROOT / "poc" / "data" / "pos" / "PO-0001.pdf"
@@ -287,7 +288,8 @@ def test_make_extractor_passes_the_http_client(fake_llm):
     make_extractor(llm_settings(), http_client=client)("PO text", "session-1")
 
     first, second = fake_llm.instances
-    assert first.kwargs["http_client"] is None  # ChatOpenAI's own client
+    # the service's own client records the LLM cost in o2c_llm_cost_usd_total
+    assert first.kwargs["http_client"].event_hooks["response"]
     assert second.kwargs["http_client"] is client
 
 
@@ -311,3 +313,29 @@ def test_make_extractor_sets_the_given_trace_id(fake_llm):
     metadata = fake_llm.instances[0].kwargs["extra_body"]["metadata"]
     assert metadata["trace_id"] == "a" * 32
     assert metadata["session_id"] == "session-1"
+
+
+# --- metrics ---
+
+
+def test_each_extraction_is_timed(fake_llm):
+    before = sample("o2c_extraction_seconds_count")
+
+    make_extractor(llm_settings())("PO text", "session-1")
+
+    assert sample("o2c_extraction_seconds_count") - before == 1
+
+
+def test_metrics_endpoint_and_request_metrics():
+    client = TestClient(
+        create_app(llm_settings(), start_consumer=False, extract=FakeExtract())
+    )
+    labels = {"method": "GET", "route": "/health", "status": "200"}
+    before = sample("o2c_http_requests_total", **labels)
+
+    client.get("/health")
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "o2c_extraction_seconds" in response.text
+    assert sample("o2c_http_requests_total", **labels) - before == 1

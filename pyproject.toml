@@ -47,8 +47,11 @@ ml = [
     "torch>=2.14.1",
     "transformers>=4.45,<4.47",
 ]
+analytics = [
+    "dbt-postgres>=1.9.1",
+]
 
 [tool.pytest.ini_options]
-testpaths = ["libs", "services", "ml"]
+testpaths = ["libs", "services", "ml", "observability", "analytics"]
 # Services each have tests/test_app.py; importlib mode allows duplicate basenames.
 addopts = ["--import-mode=importlib"]

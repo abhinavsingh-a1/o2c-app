@@ -1,0 +1,3 @@
+# Build output of dbt (compiled SQL), when sqlfluff is run on the whole directory
+target/
+dbt_packages/

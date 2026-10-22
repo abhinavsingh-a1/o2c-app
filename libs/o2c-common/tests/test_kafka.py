@@ -2,7 +2,13 @@ from datetime import datetime
 
 import pytest
 from o2c_common.events import Envelope
-from o2c_common.kafka import DLQ_TOPIC, EventConsumer, InMemoryStore, PermanentError
+from o2c_common.kafka import (
+    DLQ_TOPIC,
+    EventConsumer,
+    InMemoryStore,
+    PermanentError,
+    RawMessageConsumer,
+)
 
 GROUP = "test-group"
 TOPIC = "docs.received"
@@ -172,3 +178,40 @@ def test_dlq_event_is_not_marked_as_processed(producer, store):
     make_consumer(handler, producer, store).process(FakeMessage(event.to_bytes()))
     assert len(dlq_messages(producer)) == 1
     assert not store.seen(GROUP, event.event_id)
+
+
+# --- RawMessageConsumer (orders.dlq copy) ---
+
+
+def raw_consumer(handler) -> RawMessageConsumer:
+    return RawMessageConsumer(
+        bootstrap="unused:9092",
+        group_id="raw-test",
+        topics=[DLQ_TOPIC],
+        handler=handler,
+        base_delay=0,
+    )
+
+
+def test_raw_consumer_hands_over_the_message_even_if_it_is_no_envelope():
+    seen = []
+    msg = FakeMessage(b"not an envelope", topic=DLQ_TOPIC)
+
+    raw_consumer(seen.append).process(msg)
+
+    assert seen == [msg]
+
+
+def test_raw_consumer_retries_until_success_and_never_uses_the_dlq():
+    attempts = []
+
+    def handler(msg):
+        attempts.append(msg)
+        if len(attempts) < 4:
+            raise RuntimeError("database down")
+
+    consumer = raw_consumer(handler)
+    consumer.process(FakeMessage(b"x", topic=DLQ_TOPIC))
+
+    assert len(attempts) == 4
+    assert consumer.producer is None  # nothing can be sent anywhere

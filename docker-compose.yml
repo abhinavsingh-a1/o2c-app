@@ -196,8 +196,11 @@ services:
       dockerfile: docker/python-service.Dockerfile
       args:
         PACKAGE: intake
-    command: gunicorn --bind 0.0.0.0:8200 --workers 2 "intake.app:create_app()"
-    environment: *pipeline-env
+    # 2 workers; bind, workers and the Prometheus multiprocess hooks: intake/gunicorn_conf.py
+    command: gunicorn -c python:intake.gunicorn_conf "intake.app:create_app()"
+    environment:
+      <<: *pipeline-env
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-intake # metrics of both workers (ADR-012)
     ports:
       - "8200:8200"
     depends_on:
@@ -276,6 +279,88 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+  analytics-sink:
+    # Events, DLQ and LiteLLM spend logs -> raw.* for the dbt marts (ADR-013)
+    build:
+      context: .
+      dockerfile: docker/python-service.Dockerfile
+      args:
+        PACKAGE: analytics-sink
+    command: python -m analytics_sink.app
+    environment:
+      <<: *pipeline-env
+      LITELLM_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/litellm
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD} # read-only role grafana_ro
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  audit-archiver:
+    # Decisions and review decisions -> hash-chained JSONL in s3://o2c-audit (ADR-014)
+    build:
+      context: .
+      dockerfile: docker/python-service.Dockerfile
+      args:
+        PACKAGE: audit-archiver
+    command: python -m audit_archiver.app
+    environment:
+      <<: *pipeline-env
+      AUDIT_BUCKET: o2c-audit # created by make buckets
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_started
+      s3:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  # --- Observability (ADR-012) ---
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle # POST /-/reload after changing the config or alerts
+    volumes:
+      - ./observability/prometheus:/etc/prometheus:ro
+      - promdata:/prometheus
+    ports:
+      - "9090:9090"
+
+  kafka-exporter:
+    # Consumer lag per group and topic offsets (DLQ). Restarts until Kafka is reachable.
+    image: danielqsj/kafka-exporter:v1.9.0
+    command: ["--kafka.server=kafka:19092"]
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      # Password of the read-only database role grafana_ro (analytics datasource, ADR-013)
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/o2c-operations.json
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3001:3000" # 3000 is Langfuse
+    depends_on:
+      prometheus:
+        condition: service_started
+
   ui:
     build:
       context: .
@@ -290,3 +375,5 @@ volumes:
   pgdata:
   s3data:
   chdata:
+  promdata:
+  grafanadata:
