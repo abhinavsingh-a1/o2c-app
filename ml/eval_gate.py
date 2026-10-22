@@ -21,6 +21,13 @@ Prints a PASS/FAIL table and the OpenAI cost of the run (the sum of LiteLLM's
 x-litellm-response-cost over every call), writes eval/report.md and eval/report.json
 (git-ignored) and exits 1 if any check fails. A step that cannot run (e.g. MLflow down)
 fails the gate.
+
+The report names the model behind o2c-extract (local/litellm/config.yaml) and counts the
+calls LiteLLM answered through a fallback. A --full run is also saved as
+ml/results/gate-<model>.json: the migration rule (ml/compare_extraction.py, ADR-008)
+requires a passing full gate without fallbacks for a candidate, run with o2c-extract
+temporarily pointed at it, because every LLM call site (classifier, extraction, tolerance,
+material matching, explanations) uses o2c-extract.
 """
 
 import argparse
@@ -36,6 +43,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ML_DIR = REPO_ROOT / "ml"
+RESULTS_DIR = ML_DIR / "results"
 EVAL_DIR = REPO_ROOT / "eval"
 THRESHOLDS = EVAL_DIR / "thresholds.yaml"
 POC_DATA = REPO_ROOT / "poc" / "data"
@@ -358,6 +366,7 @@ def run_gate(mode: str, thresholds: dict, meter) -> dict:
         "passed": all(c.passed for c in checks),
         "cost_usd": round(meter.cost_usd, 6),
         "llm_calls": meter.calls,
+        "llm_fallbacks": meter.fallbacks,
         "steps": steps,
         "checks": [asdict(c) for c in checks],
     }
@@ -388,6 +397,8 @@ def format_markdown(report: dict) -> str:
         f"- Mode: {report['mode']}",
         f"- Run: {report['started_at']} (git {report['git_sha']})",
         f"- OpenAI cost: ${report['cost_usd']:.4f} ({report['llm_calls']} LLM calls)",
+        f"- o2c-extract: {report.get('o2c_extract', 'unknown')}",
+        f"- LiteLLM fallbacks: {report.get('llm_fallbacks', 0)}",
         "- Thresholds: eval/thresholds.yaml",
         "",
         "| Check | Actual | Threshold | Result | Detail |",
@@ -413,13 +424,29 @@ def write_report(report: dict, directory: Path = EVAL_DIR) -> tuple[Path, Path]:
     return md, js
 
 
+def gate_result_path(target: str, results_dir: Path = RESULTS_DIR) -> Path:
+    from litellm_common import target_slug
+
+    return results_dir / f"gate-{target_slug(target)}.json"
+
+
+def save_gate_result(report: dict, results_dir: Path = RESULTS_DIR) -> Path | None:
+    """Keep a full run per o2c-extract model for the migration rule; None for --quick."""
+    if report["mode"] != "full" or not report.get("o2c_extract"):
+        return None
+    path = gate_result_path(report["o2c_extract"], results_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 def load_thresholds(path: Path = THRESHOLDS) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
 def main(argv: list[str] | None = None) -> int:
     from langfuse_common import git_short_sha
-    from litellm_common import CostMeter, use_eval_key
+    from litellm_common import CostMeter, alias_target, use_eval_key
 
     parser = argparse.ArgumentParser(description="Evaluation quality gate.")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -429,21 +456,32 @@ def main(argv: list[str] | None = None) -> int:
     mode = "quick" if args.quick else "full"
 
     using_eval_key = use_eval_key()
+    target = alias_target(MODEL)
     print(
-        f"evaluation gate ({mode}), LiteLLM key: "
+        f"evaluation gate ({mode}), {MODEL} -> {target}, LiteLLM key: "
         f"{'LITELLM_KEY_EVAL' if using_eval_key else 'LITELLM_MASTER_KEY'}"
     )
     started = datetime.now(UTC).isoformat(timespec="seconds")
     meter = CostMeter()
     with meter.active():
         report = run_gate(mode, load_thresholds(), meter)
-    report = {"started_at": started, "git_sha": git_short_sha(), **report}
+    report = {
+        "started_at": started,
+        "git_sha": git_short_sha(),
+        "o2c_extract": target,
+        **report,
+    }
     md, js = write_report(report)
+    saved = save_gate_result(report)
 
     print()
     print(format_table(report["checks"]))
     print()
     print(f"gate: {'PASS' if report['passed'] else 'FAIL'}  (wrote {md}, {js})")
+    if saved:
+        print(f"saved for the migration rule: {saved}")
+    if report["llm_fallbacks"]:
+        print(f"warning: {report['llm_fallbacks']} calls were answered by a fallback")
     print(
         f"OpenAI cost of this run: ${report['cost_usd']:.4f} "
         f"({report['llm_calls']} LLM calls, sum of x-litellm-response-cost)"

@@ -1,15 +1,23 @@
-import json
 from pathlib import Path
 
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from agent.settings import Settings
 
 
 class MaterialMatch(BaseModel):
+    # Strict structured outputs: no extra keys, every field required (ADR-008).
+    model_config = ConfigDict(extra="forbid")
     matnr: str | None
     reason: str
+
+
+def structured_matcher(llm: ChatOpenAI):
+    """The LLM with OpenAI strict structured outputs: the API enforces the schema, so the
+    prompt only describes the fields (the raw schema in the prompt got echoed back wrapped
+    in {"properties": ...} by gpt-6-luna)."""
+    return llm.with_structured_output(MaterialMatch, method="json_schema", strict=True)
 
 
 class MaterialMatcher:
@@ -21,9 +29,7 @@ class MaterialMatcher:
         listing = "\n".join(
             f"{c['matnr']}: {c['maktx']} ({c['meins']})" for c in candidates
         )
-        prompt = self._template.replace("{candidates}", listing).replace(
-            "{schema}", json.dumps(MaterialMatch.model_json_schema())
-        )
+        prompt = self._template.replace("{candidates}", listing)
         result = self._chain.invoke([("system", prompt), ("human", description)])
         valid = {c["matnr"] for c in candidates}
         if result.matnr is not None and result.matnr not in valid:
@@ -42,7 +48,4 @@ def make_material_matcher(settings: Settings) -> MaterialMatcher:
         temperature=0,
         extra_body={"metadata": {"trace_name": "match_material", "tags": ["agent"]}},
     )
-    return MaterialMatcher(
-        llm.with_structured_output(MaterialMatch, method="json_mode"),
-        settings.prompts_dir,
-    )
+    return MaterialMatcher(structured_matcher(llm), settings.prompts_dir)

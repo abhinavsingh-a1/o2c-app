@@ -11,6 +11,7 @@ from eval_gate import (
     main,
     plan,
     run_gate,
+    save_gate_result,
     write_report,
 )
 from litellm_common import CostMeter
@@ -268,6 +269,7 @@ def test_table_and_markdown(fake_runs):
     md = format_markdown(report)
     assert md.startswith("# Evaluation gate: PASS")
     assert "- OpenAI cost: $0.0300 (3 LLM calls)" in md
+    assert "- LiteLLM fallbacks: 0" in md
     assert "| red-team cases passed | 8/8 | >= 8/8 | PASS |  |" in md
 
 
@@ -304,3 +306,20 @@ def test_main_exits_1_on_a_failure(fake_runs, monkeypatch, tmp_path, capsys):
 def test_main_needs_a_mode():
     with pytest.raises(SystemExit):
         main([])
+
+
+def test_full_runs_are_saved_per_o2c_extract_model(tmp_path, fake_runs):
+    _, meter, _ = fake_runs
+    meter.fallbacks = 2
+    full = {"o2c_extract": "openai/gpt-6-luna", **run_gate("full", THRESHOLDS, meter)}
+    quick = {"o2c_extract": "openai/gpt-6-luna", **run_gate("quick", THRESHOLDS, meter)}
+
+    path = save_gate_result(full, tmp_path)
+
+    assert path == tmp_path / "gate-openai-gpt-6-luna.json"
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert (saved["mode"], saved["llm_fallbacks"]) == ("full", 2)
+    assert save_gate_result(quick, tmp_path) is None
+    assert "- o2c-extract: openai/gpt-6-luna" in format_markdown(
+        {"started_at": "t", "git_sha": "s", **full}
+    )

@@ -8,6 +8,7 @@ from compare_extraction import (
     best_candidate,
     compare_dataset,
     format_table,
+    gate_failures,
     load_summaries,
     main,
     mean_summary,
@@ -236,17 +237,67 @@ def test_main_prints_table_decisions_and_best(tmp_path, monkeypatch, capsys):
         holdout=holdout,
     )
     write_results(tmp_path, "untested", *three_runs(perfect=9, accuracy=0.99))
+    write_results(
+        tmp_path, "gateless", *three_runs(perfect=10, accuracy=0.99), holdout=holdout
+    )
     monkeypatch.setattr(
         compare_extraction,
         "load_summaries",
         lambda model: load_summaries(model, tmp_path),
     )
+    monkeypatch.setattr(
+        compare_extraction,
+        "gate_failures",
+        lambda model: ["full gate: not run"] if model == "gateless" else [],
+    )
 
-    decisions = main(["old", "good", "pricey", "untested"])
+    decisions = main(["old", "good", "pricey", "untested", "gateless"])
 
-    assert decisions == {"good": True, "pricey": False, "untested": False}
+    assert decisions == {
+        "good": True,
+        "pricey": False,
+        "untested": False,
+        "gateless": False,
+    }
     out = capsys.readouterr().out
     assert "good PASSES" in out
     assert "pricey fails: poc/data: cost per PO +400%" in out
     assert "untested fails: holdout: not measured" in out
+    assert "gateless fails: full gate: not run" in out
     assert "best passing candidate: good" in out
+
+
+def gate_report(passed=True, fallbacks=0) -> dict:
+    return {
+        "mode": "full",
+        "llm_fallbacks": fallbacks,
+        "checks": [
+            {"name": "red-team cases passed", "shown_actual": "8/8", "passed": True},
+            {
+                "name": "explanations: pass rate",
+                "shown_actual": "80.0%",
+                "passed": passed,
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    ("report", "expected"),
+    [
+        (None, ["full gate: not run with o2c-extract -> openai/gpt-x (make eval)"]),
+        (gate_report(), []),
+        (gate_report(passed=False), ["full gate: explanations: pass rate 80.0%"]),
+        (gate_report(fallbacks=3), ["full gate: 3 calls answered by a fallback"]),
+    ],
+)
+def test_gate_failures(tmp_path, monkeypatch, report, expected):
+    monkeypatch.setattr(
+        compare_extraction, "alias_target", lambda alias: "openai/gpt-x"
+    )
+    if report is not None:
+        (tmp_path / "gate-openai-gpt-x.json").write_text(
+            json.dumps(report), encoding="utf-8"
+        )
+
+    assert gate_failures("candidate", tmp_path) == expected

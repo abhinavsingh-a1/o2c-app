@@ -26,7 +26,8 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from o2c_common.llm import strict_response_format
+from pydantic import BaseModel, ConfigDict, Field
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ML_DIR = REPO_ROOT / "ml"
@@ -42,11 +43,14 @@ PASS_SCORE = 4
 
 
 class CriterionScore(BaseModel):
+    # Strict structured outputs: no extra keys, every field required (ADR-008).
+    model_config = ConfigDict(extra="forbid")
     score: int = Field(ge=1, le=5)
     reason: str
 
 
 class Judgement(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     faithful: CriterionScore
     specific: CriterionScore
     actionable: CriterionScore
@@ -60,8 +64,8 @@ Judge = Callable[[dict, str], tuple[Judgement, float | None]]
 
 
 def load_rubric(prompts_dir: Path = REPO_ROOT / "prompts") -> str:
-    template = (prompts_dir / "judge_explanation.md").read_text(encoding="utf-8")
-    return template.replace("{schema}", json.dumps(Judgement.model_json_schema()))
+    # The schema goes to the API as a strict response_format, not into the prompt.
+    return (prompts_dir / "judge_explanation.md").read_text(encoding="utf-8")
 
 
 def parse_judgement(text: str) -> Judgement:
@@ -91,7 +95,7 @@ def make_judge(settings=None) -> Judge:
     def judge(facts: dict, explanation: str) -> tuple[Judgement, float | None]:
         raw = client.chat.completions.with_raw_response.create(
             model=JUDGE_MODEL,
-            response_format={"type": "json_object"},
+            response_format=strict_response_format(Judgement),
             messages=[
                 {"role": "system", "content": rubric},
                 {

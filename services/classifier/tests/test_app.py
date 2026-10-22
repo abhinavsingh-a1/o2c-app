@@ -4,7 +4,13 @@ from types import SimpleNamespace
 
 import pytest
 from botocore.exceptions import ClientError
-from classifier.app import REPO_ROOT, Classification, load_prompt, make_handler
+from classifier.app import (
+    REPO_ROOT,
+    Classification,
+    classify,
+    load_prompt,
+    make_handler,
+)
 from o2c_common.events import Envelope
 from o2c_common.kafka import PermanentError
 
@@ -136,9 +142,28 @@ def test_invalid_llm_json_raises_so_consumer_retries(received, s3, producer):
     assert producer.sent == []
 
 
-def test_load_prompt_inserts_json_schema():
+def test_load_prompt_describes_the_fields_without_the_raw_schema():
     prompt = load_prompt(PROMPTS_DIR)
 
     assert "{schema}" not in prompt
-    assert json.dumps(Classification.model_json_schema()) in prompt
+    assert '"properties"' not in prompt
+    assert '"doc_type"' in prompt and '"reason"' in prompt
     assert prompt.startswith("You classify documents")
+
+
+def test_classify_uses_strict_structured_outputs(received):
+    llm = FakeLLM(PO_RESPONSE)
+
+    classify(llm, SYSTEM_PROMPT, "text", received)
+
+    fmt = llm.calls[0]["response_format"]
+    assert fmt["type"] == "json_schema"
+    assert fmt["json_schema"]["strict"] is True
+    assert fmt["json_schema"]["schema"] == Classification.model_json_schema()
+
+
+def test_classify_rejects_an_answer_wrapped_in_properties(received):
+    wrapped = '{"properties": {"doc_type": "purchase_order", "reason": "x"}}'
+
+    with pytest.raises(ValueError):
+        classify(FakeLLM(wrapped), SYSTEM_PROMPT, "text", received)
