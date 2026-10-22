@@ -122,6 +122,26 @@ def test_quick_runs_extraction_first_10_red_team_and_injection():
     ]
 
 
+def test_ci_runs_extraction_first_10_and_injection_only():
+    steps = [name for name, _ in plan("ci", THRESHOLDS)]
+    assert steps == ["extraction poc/data (first 10)", "injection detector"]
+
+
+def test_ci_mode_from_the_command_line(fake_runs, monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(
+        eval_gate, "write_report", lambda report: write_report(report, tmp_path)
+    )
+
+    assert main(["--ci"]) == 0
+
+    report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+    assert report["mode"] == "ci"
+    assert [s["step"] for s in report["steps"]] == [
+        "extraction poc/data (first 10)",
+        "injection detector",
+    ]
+
+
 def test_full_runs_everything():
     steps = [name for name, _ in plan("full", THRESHOLDS)]
     assert steps == [

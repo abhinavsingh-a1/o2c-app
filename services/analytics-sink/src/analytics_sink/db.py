@@ -29,6 +29,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID, insert
 from sqlalchemy.engine import Engine
+from sqlalchemy.schema import CreateSchema
 
 log = logging.getLogger(__name__)
 
@@ -226,7 +227,7 @@ def setup(engine: Engine, bi_password: str | None, create_tables=None) -> None:
     from psycopg import sql
 
     with engine.begin() as conn:
-        conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {RAW}"))
+        conn.execute(CreateSchema(RAW, if_not_exists=True))
         (create_tables or metadata.create_all)(conn)
         for statement in MIGRATIONS:
             conn.execute(text(statement))
@@ -234,7 +235,7 @@ def setup(engine: Engine, bi_password: str | None, create_tables=None) -> None:
             log.warning(
                 "GRAFANA_DB_PASSWORD not set: role %s not created/updated", BI_ROLE
             )
-            conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {ANALYTICS}"))
+            conn.execute(CreateSchema(ANALYTICS, if_not_exists=True))
             return
         database = conn.execute(text("SELECT current_database()")).scalar()
         for statement in setup_statements(database):

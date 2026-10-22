@@ -11,6 +11,14 @@
 -- to that day's LLM cost per order.
 with
 
+llm_spend as (
+    select * from {{ ref('stg_llm_spend') }}
+),
+
+documents as (
+    select * from {{ ref('fct_documents') }}
+),
+
 orders as (
     select
         idempotency_key,
@@ -44,10 +52,10 @@ calls as (
             when spend.service = 'agent' then 'shared'
             else 'evaluation'
         end as cost_category
-    from {{ ref('stg_llm_spend') }} as spend
+    from llm_spend as spend
     left join orders
         on spend.session_id = orders.idempotency_key
-    left join {{ ref('fct_documents') }} as documents
+    left join documents
         on spend.session_id = documents.idempotency_key
 ),
 

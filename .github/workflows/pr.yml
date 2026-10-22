@@ -1,0 +1,291 @@
+# PR gates for o2c-app (ADR-015). Every action is pinned to a commit SHA (version in the
+# comment, updated by Dependabot); container images are pinned by version and digest.
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.13.1"
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10"
+  TRIVY_IMAGE: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+  SEMGREP_IMAGE: semgrep/semgrep:1.182.1@sha256:451b3d875c00dac7ed5db5293e584a07de11449a409c10b3c2d2652f429630b6
+
+jobs:
+  lint:
+    name: lint (pre-commit)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: pre-commit run --all-files
+        # eslint (a local hook running pnpm) is checked by the ui job
+        env:
+          SKIP: eslint
+        run: uvx --from pre-commit==4.7.0 pre-commit run --all-files --show-diff-on-failure
+
+  python:
+    name: python (pytest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --all-packages --all-groups --frozen
+      - run: uv run --frozen --all-packages --all-groups pytest
+
+  ui:
+    name: ui (lint, test, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter ui lint
+      - run: pnpm --filter ui test
+      - run: pnpm --filter ui build
+
+  security:
+    name: security (Semgrep, pip-audit, pnpm audit, Trivy, Checkov)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Semgrep (python, typescript, secrets; fails on ERROR)
+        run: >
+          docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE"
+          semgrep scan --config p/python --config p/typescript --config p/secrets
+          --severity ERROR --error --metrics off
+          --exclude node_modules --exclude .venv --exclude ml/data --exclude poc/data
+      - name: pip-audit (exported lock, reviewed ignores in .pip-audit-ignore)
+        run: |
+          uv export --format requirements-txt --all-packages --all-groups \
+            --no-emit-workspace --no-hashes --frozen -o "$RUNNER_TEMP/requirements.txt"
+          ignores=$(grep -v '^#' .pip-audit-ignore | awk 'NF {printf "--ignore-vuln %s ", $1}')
+          # shellcheck disable=SC2086 # one flag per ignored ID
+          uvx --from pip-audit==2.10.1 pip-audit --disable-pip --no-deps \
+            --progress-spinner off -r "$RUNNER_TEMP/requirements.txt" $ignores
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: pnpm audit (fails on high and critical)
+        run: pnpm audit --audit-level high
+      - name: Trivy filesystem scan (fails on CRITICAL, ignores in .trivyignore)
+        run: >
+          docker run --rm -v "$PWD:/repo:ro" "$TRIVY_IMAGE"
+          fs --quiet --scanners vuln,secret --severity CRITICAL --exit-code 1
+          --ignorefile /repo/.trivyignore
+          --skip-dirs /repo/.git --skip-dirs /repo/node_modules --skip-dirs /repo/ui/node_modules
+          --skip-dirs /repo/ml/data --skip-dirs /repo/poc/data /repo
+      - name: Checkov (Dockerfiles, docker-compose.yml; skips in .checkov.yaml)
+        run: uvx --from checkov==3.3.30 checkov --config-file .checkov.yaml -d .
+
+  images:
+    name: image ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: intake, file: docker/python-service.Dockerfile, package: intake }
+          - { name: classifier, file: docker/python-service.Dockerfile, package: classifier }
+          - { name: extractor, file: docker/python-service.Dockerfile, package: extractor }
+          - { name: agent, file: docker/python-service.Dockerfile, package: agent }
+          - { name: analytics-sink, file: docker/python-service.Dockerfile, package: analytics-sink }
+          - { name: audit-archiver, file: docker/python-service.Dockerfile, package: audit-archiver }
+          - { name: erp-mock, file: services/erp-mock/Dockerfile }
+          - { name: hello, file: services/hello/Dockerfile }
+          - { name: ui, file: ui/Dockerfile }
+          - { name: ml, file: docker/ml.Dockerfile }
+          - { name: mlflow, file: local/mlflow/Dockerfile, context: local/mlflow }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build (no push)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ matrix.context || '.' }}
+          file: ${{ matrix.file }}
+          build-args: PACKAGE=${{ matrix.package }}
+          push: false
+          load: true
+          tags: o2c-${{ matrix.name }}:ci
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Trivy image scan (fails on CRITICAL with a fix available)
+        run: >
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          -v "$PWD/.trivyignore:/.trivyignore:ro" "$TRIVY_IMAGE"
+          image --quiet --scanners vuln --severity CRITICAL --ignore-unfixed
+          --exit-code 1 --ignorefile /.trivyignore "o2c-${{ matrix.name }}:ci"
+
+  data:
+    name: data (dbt build --empty, Alembic)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: o2c
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci" --health-interval 5s --health-timeout 5s
+          --health-retries 20
+    env:
+      # analytics/dbt/profiles.yml and erp-mock's Alembic read these
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci
+      DBT_HOST: localhost
+      DBT_DATABASE: o2c
+      ERP_DATABASE_URL: postgresql+psycopg://ci:ci@localhost:5432/erp
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --all-packages --group analytics --frozen
+      - name: raw/analytics schemas and raw tables (the services' own schema code)
+        run: uv run --frozen --all-packages --group analytics python analytics/ci_create_schemas.py postgresql+psycopg://ci:ci@localhost:5432/o2c
+      - name: dbt build --empty (every model and data test on empty relations)
+        # unit tests are excluded here: --empty also empties their fixtures (dbt 1.8)
+        run: uv run --frozen --all-packages --group analytics dbt build --empty --exclude-resource-type unit_test --project-dir analytics/dbt --profiles-dir analytics/dbt
+      - name: dbt unit tests
+        run: uv run --frozen --all-packages --group analytics dbt test --select "test_type:unit" --project-dir analytics/dbt --profiles-dir analytics/dbt
+      - name: erp-mock migrations (upgrade head, then no model drift)
+        run: |
+          PGPASSWORD=ci psql -h localhost -U ci -d o2c -c "CREATE DATABASE erp"
+          uv run --frozen --all-packages alembic -c services/erp-mock/alembic.ini upgrade head
+          uv run --frozen --all-packages alembic -c services/erp-mock/alembic.ini check
+
+  changes:
+    name: changes
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read # paths-filter lists the PR's files through the API
+    outputs:
+      eval: ${{ steps.filter.outputs.eval }}
+    steps:
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            eval:
+              - "prompts/**"
+              - "services/extractor/**"
+              - "libs/o2c-common/**"
+
+  eval:
+    name: eval (extraction, first 10 POs; injection false positives)
+    needs: changes
+    if: needs.changes.outputs.eval == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Not available to PRs from forks or without the secret: the job then skips cleanly
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # Only for the LiteLLM container of this job, not a real secret
+      LITELLM_MASTER_KEY: sk-ci-${{ github.run_id }}
+      LITELLM_BASE_URL: http://localhost:4000
+      LITELLM_IMAGE: ghcr.io/berriai/litellm:main-stable@sha256:b7b9e2c306343721802253d0dd9436b9634a2eb4e14da7c7cf06c5c7b7530802
+    steps:
+      - name: OPENAI_API_KEY available?
+        id: key
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::OPENAI_API_KEY is not available (fork PR or no secret): eval skipped"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.key.outputs.available == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - if: steps.key.outputs.available == 'true'
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - if: steps.key.outputs.available == 'true'
+        run: uv sync --all-packages --group ml --frozen
+      - name: LiteLLM with the repo's model list
+        if: steps.key.outputs.available == 'true'
+        run: |
+          uv run --frozen --all-packages --group ml python ml/ci_litellm_config.py "$RUNNER_TEMP/litellm.yaml"
+          docker run -d --name litellm -p 4000:4000 \
+            -v "$RUNNER_TEMP/litellm.yaml:/app/config.yaml:ro" \
+            -e OPENAI_API_KEY -e LITELLM_MASTER_KEY \
+            "$LITELLM_IMAGE" --config /app/config.yaml --port 4000
+          for _ in $(seq 1 60); do
+            curl -sf http://localhost:4000/health/liveliness > /dev/null && exit 0
+            sleep 2
+          done
+          docker logs litellm
+          exit 1
+      - name: eval gate --ci (thresholds from eval/thresholds.yaml)
+        if: steps.key.outputs.available == 'true'
+        run: uv run --frozen --all-packages --group ml python ml/eval_gate.py --ci
+      - name: Report
+        if: always() && steps.key.outputs.available == 'true'
+        run: |
+          [ -f eval/report.md ] && cat eval/report.md >> "$GITHUB_STEP_SUMMARY"
+          docker logs litellm 2>&1 | tail -50 || true
