@@ -1,5 +1,5 @@
 # Stage 1: build the static files with Node
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 ARG PNPM_VERSION=10
 RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /repo
