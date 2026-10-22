@@ -32,6 +32,9 @@ x-pipeline-env: &pipeline-env
   S3_ACCESS_KEY: ${S3_ACCESS_KEY}
   S3_SECRET_KEY: ${S3_SECRET_KEY}
   LITELLM_BASE_URL: http://litellm:4000
+  # The services read their LiteLLM key from LITELLM_MASTER_KEY (settings field
+  # litellm_master_key, kept for now). Classifier, extractor and agent override it with
+  # their own virtual key (ml/litellm_keys.py); intake makes no LLM calls.
   LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
   EVENTS_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/o2c
   INTAKE_HMAC_SECRET: ${INTAKE_HMAC_SECRET}
@@ -210,7 +213,10 @@ services:
       args:
         PACKAGE: classifier
     command: python -m classifier.app
-    environment: *pipeline-env
+    environment:
+      <<: *pipeline-env
+      LITELLM_MASTER_KEY: ${LITELLM_KEY_CLASSIFIER:-${LITELLM_MASTER_KEY}} # own virtual key
+      MLFLOW_TRACKING_URI: http://mlflow:5000 # DistilBERT classifier; GPT only if unavailable
     depends_on:
       kafka:
         condition: service_started
@@ -228,7 +234,9 @@ services:
       args:
         PACKAGE: extractor
     command: uvicorn extractor.app:create_app --factory --host 0.0.0.0 --port 8300
-    environment: *pipeline-env
+    environment:
+      <<: *pipeline-env
+      LITELLM_MASTER_KEY: ${LITELLM_KEY_EXTRACTOR:-${LITELLM_MASTER_KEY}} # own virtual key
     ports:
       - "8300:8300"
     depends_on:
@@ -250,6 +258,7 @@ services:
     command: uvicorn agent.app:create_app --factory --host 0.0.0.0 --port 8400
     environment:
       <<: *pipeline-env
+      LITELLM_MASTER_KEY: ${LITELLM_KEY_AGENT:-${LITELLM_MASTER_KEY}} # own virtual key
       ERP_BASE_URL: http://erp-mock:8100
       MLFLOW_TRACKING_URI: http://mlflow:5000 # quantity anomaly model; scores 0.0 if unavailable
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}

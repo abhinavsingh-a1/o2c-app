@@ -4,8 +4,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import eval_extraction
+import httpx
 import pytest
 from eval_extraction import (
+    ResponseRecorder,
     evaluate,
     format_row,
     main,
@@ -143,7 +145,7 @@ def test_make_settings_needs_only_litellm(monkeypatch):
 def test_main_writes_results(dataset, tmp_path, monkeypatch, capsys):
     calls = []
 
-    def fake_make_extractor(settings, model):
+    def fake_make_extractor(settings, model, http_client=None):
         calls.append(model)
         return FakeExtract(dataset)
 
@@ -168,7 +170,7 @@ def test_main_defaults_to_o2c_extract(dataset, tmp_path, monkeypatch):
     monkeypatch.setattr(
         eval_extraction,
         "make_extractor",
-        lambda s, model: calls.append(model) or FakeExtract(dataset),
+        lambda s, model, **kw: calls.append(model) or FakeExtract(dataset),
     )
     monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
     monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
@@ -191,7 +193,7 @@ def test_evaluate_with_limit_takes_the_first_documents(dataset):
 
 def test_main_with_limit_names_the_results_file(dataset, tmp_path, monkeypatch):
     monkeypatch.setattr(
-        eval_extraction, "make_extractor", lambda s, model: FakeExtract(dataset)
+        eval_extraction, "make_extractor", lambda s, model, **kw: FakeExtract(dataset)
     )
     monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
     monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
@@ -202,3 +204,249 @@ def test_main_with_limit_names_the_results_file(dataset, tmp_path, monkeypatch):
     saved = json.loads(out.read_text(encoding="utf-8"))
     assert saved["limit"] == 1
     assert saved["summary"]["documents"] == 1
+
+
+def litellm_response(cost: str | None, fallbacks: str | None = None) -> httpx.Response:
+    headers = {}
+    if cost is not None:
+        headers["x-litellm-response-cost"] = cost
+    if fallbacks is not None:
+        headers["x-litellm-attempted-fallbacks"] = fallbacks
+    return httpx.Response(200, headers=headers)
+
+
+def test_response_recorder_sums_cost_and_counts_fallbacks():
+    recorder = ResponseRecorder()
+    recorder(litellm_response("0.0012"))
+    recorder(litellm_response("0.0003", fallbacks="1"))
+    recorder(litellm_response(None, fallbacks="0"))
+
+    assert recorder.take() == {"cost_usd": 0.0015, "fallbacks": 1}
+    assert recorder.take() == {"cost_usd": None, "fallbacks": 0}  # reset
+
+
+def test_response_recorder_client_calls_the_hook():
+    recorder = ResponseRecorder()
+    transport = httpx.MockTransport(lambda request: litellm_response("0.002"))
+    client = recorder.client()
+    client._transport = transport  # the hook is what matters, not the network
+
+    client.post("http://litellm/v1/chat/completions")
+
+    assert recorder.take() == {"cost_usd": 0.002, "fallbacks": 0}
+
+
+class CostlyExtract(FakeExtract):
+    """FakeExtract whose calls show up in the recorder like LiteLLM responses."""
+
+    def __init__(self, dataset: Path, recorder: ResponseRecorder):
+        super().__init__(dataset)
+        self.recorder = recorder
+
+    def __call__(self, text: str, session_id: str) -> PurchaseOrder:
+        self.recorder(
+            litellm_response("0.001", fallbacks="1" if "0002" in session_id else None)
+        )
+        return super().__call__(text, session_id)
+
+
+def test_evaluate_records_latency_cost_and_fallbacks(dataset):
+    recorder = ResponseRecorder()
+    recorder(litellm_response("9.9"))  # before the first document: not counted
+
+    rows = evaluate(dataset, CostlyExtract(dataset, recorder), recorder=recorder)
+
+    assert [row["cost_usd"] for row in rows] == [0.001, 0.001, 0.001]
+    assert [row["fallbacks"] for row in rows] == [0, 1, 0]
+    assert all(row["latency_s"] >= 0 for row in rows)
+
+
+def test_evaluate_without_recorder_has_no_cost(dataset):
+    rows = evaluate(dataset, FakeExtract(dataset))
+
+    assert {row["cost_usd"] for row in rows} == {None}
+    assert {row["fallbacks"] for row in rows} == {0}
+
+
+def test_summarize_latency_cost_and_fallbacks():
+    rows = [
+        {
+            "correct": 1,
+            "total": 1,
+            "errors": [],
+            "latency_s": 1.0,
+            "cost_usd": 0.002,
+            "fallbacks": 0,
+        },
+        {
+            "correct": 1,
+            "total": 1,
+            "errors": [],
+            "latency_s": 2.0,
+            "cost_usd": 0.004,
+            "fallbacks": 1,
+        },
+        {
+            "correct": 0,
+            "total": 1,
+            "errors": ["x"],
+            "latency_s": 3.0,
+            "cost_usd": None,
+            "fallbacks": 0,
+        },
+    ]
+
+    summary = summarize(rows)
+
+    assert summary["avg_latency_s"] == 2.0
+    assert summary["cost_per_po_usd"] == 0.003  # documents without a cost are left out
+    assert summary["fallbacks"] == 1
+    assert summarize([])["avg_latency_s"] is None
+    assert summarize([])["cost_per_po_usd"] is None
+
+
+def test_format_row_shows_latency():
+    row = {
+        "document": "PO-0001",
+        "correct": 20,
+        "total": 20,
+        "errors": [],
+        "latency_s": 2.345,
+    }
+    assert format_row(row) == "PO-0001   20/20   2.3s  perfect"
+
+
+def test_main_gives_the_extractor_a_recording_client(dataset, tmp_path, monkeypatch):
+    clients = []
+    monkeypatch.setattr(
+        eval_extraction,
+        "make_extractor",
+        lambda s, model, http_client=None: (
+            clients.append(http_client) or FakeExtract(dataset)
+        ),
+    )
+    monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
+    monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
+
+    out = main([str(dataset)])
+
+    assert isinstance(clients[0], httpx.Client)
+    summary = json.loads(out.read_text(encoding="utf-8"))["summary"]
+    assert {"avg_latency_s", "cost_per_po_usd", "fallbacks"} <= set(summary)
+
+
+# --- Langfuse dataset runs ---
+
+
+class FakeItem:
+    def __init__(self, item_id: str):
+        self.id = item_id
+        self.links: list[dict] = []
+
+    def link(self, trace_or_observation, run_name, **kwargs):
+        self.links.append(
+            {"trace": trace_or_observation, "run_name": run_name, **kwargs}
+        )
+
+
+class FakeLangfuseClient:
+    def __init__(self, items: list[FakeItem]):
+        self.items = items
+        self.scores: list[dict] = []
+
+    def get_dataset(self, name):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(items=self.items)
+
+    def score(self, **kwargs):
+        self.scores.append(kwargs)
+
+
+class TraceExtract(FakeExtract):
+    """FakeExtract that records the trace ids it was given."""
+
+    def __init__(self, dataset: Path):
+        super().__init__(dataset)
+        self.trace_ids: list[str] = []
+
+    def __call__(self, text, session_id, trace_id=None):
+        self.trace_ids.append(trace_id)
+        return super().__call__(text, session_id)
+
+
+def test_langfuse_run_links_and_scores_every_document(dataset):
+    items = [FakeItem(f"golden-{po_id}") for po_id in PO_IDS]
+    client = FakeLangfuseClient(items)
+    run = eval_extraction.LangfuseRun(
+        client, "golden", "o2c-extract-abc1234", nonce="n"
+    )
+    extract = TraceExtract(dataset)
+
+    rows = evaluate(dataset, extract, langfuse_run=run)
+
+    assert extract.trace_ids == [run.trace_id(po_id) for po_id in PO_IDS]
+    assert len(set(extract.trace_ids)) == 3
+    for item, trace in zip(items, extract.trace_ids, strict=True):
+        assert item.links == [
+            {
+                "trace": None,
+                "run_name": "o2c-extract-abc1234",
+                "trace_id": trace,
+                "run_metadata": {"dataset": "golden"},
+            }
+        ]
+    accuracy = {
+        s["trace_id"]: s["value"]
+        for s in client.scores
+        if s["name"] == "field_accuracy"
+    }
+    perfect = {
+        s["trace_id"]: s["value"] for s in client.scores if s["name"] == "perfect"
+    }
+    first, second, third = extract.trace_ids
+    assert accuracy[first] == 1.0 and perfect[first] == 1.0
+    expected = round(rows[1]["correct"] / rows[1]["total"], 4)
+    assert accuracy[second] == expected and perfect[second] == 0.0
+    assert accuracy[third] == 0.0  # failed extraction
+
+
+def test_langfuse_trace_ids_differ_between_runs():
+    client = FakeLangfuseClient([])
+    first = eval_extraction.LangfuseRun(client, "golden", "run")
+    second = eval_extraction.LangfuseRun(client, "golden", "run")
+
+    assert first.trace_id("PO-0001") != second.trace_id("PO-0001")
+
+
+def test_langfuse_dataset_name():
+    from langfuse_datasets import DATASETS
+
+    assert eval_extraction.langfuse_dataset_name(DATASETS["golden"]) == "golden"
+    assert eval_extraction.langfuse_dataset_name(DATASETS["holdout"]) == "holdout"
+    with pytest.raises(SystemExit):
+        eval_extraction.langfuse_dataset_name(Path("ml/data/train"))
+
+
+def test_run_name():
+    assert eval_extraction.run_name("o2c-extract", "abc1234") == "o2c-extract-abc1234"
+
+
+def test_results_path_of_a_repeated_run():
+    path = results_path(Path("poc/data"), "o2c-extract", run=2)
+    assert path == eval_extraction.RESULTS_DIR / "data-o2c-extract-run2.json"
+    path = results_path(Path("ml/data/train"), "o2c-extract", limit=20, run=3)
+    assert path.name == "train-first20-o2c-extract-run3.json"
+
+
+def test_main_with_run_names_the_results_file(dataset, tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        eval_extraction, "make_extractor", lambda s, model, **kw: FakeExtract(dataset)
+    )
+    monkeypatch.setattr(eval_extraction, "make_settings", lambda: None)
+    monkeypatch.setattr(eval_extraction, "RESULTS_DIR", tmp_path)
+
+    out = main([str(dataset), "--run", "2"])
+
+    assert out.name == "mini-o2c-extract-run2.json"
+    assert json.loads(out.read_text(encoding="utf-8"))["run"] == 2

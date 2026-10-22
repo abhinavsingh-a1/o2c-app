@@ -1,0 +1,34 @@
+# Absolute thresholds of the evaluation gate (ml/eval_gate.py, make eval-quick / make eval).
+#
+# Set from the baselines after E11 Part 2b (2026-10-22): poc/data 50/50 at 100%, holdout
+# 9/20 at 99.01%, hybrid classifier holdout 100% with 0 false purchase orders, judge
+# validation 7/7 and 14/14 explanations, red team 8/8, 0 injection false positives.
+# The extraction thresholds leave room for run-to-run noise (ADR-002: GPT is not
+# deterministic at temperature 0). Change them only with an ADR note, never to make a
+# failing run pass.
+
+extraction:
+  poc_data: # poc/data, 50 POs (--full)
+    perfect_pos_min: 48
+    field_accuracy_min: 0.995
+  poc_data_quick: # poc/data, first 10 POs (--quick)
+    limit: 10
+    perfect_pos_min: 9
+    field_accuracy_min: 0.995
+  holdout: # ml/data/holdout, 20 hard POs (--full)
+    perfect_pos_min: 9
+    field_accuracy_min: 0.988
+
+classifier: # hybrid classifier on ml/data/classifier/holdout (--full)
+  accuracy_min: 0.975
+  false_purchase_orders_max: 0 # a false PO could create a wrong order
+
+judge: # LLM-as-judge on the explanations of poc/data and holdout (--full)
+  calibration_correct_min: 7 # of 7: the judge itself must be right first
+  pass_rate_min: 0.90
+
+redteam:
+  passed_min: 8 # of 8
+
+injection: # o2c_common.injection on every real PO and document
+  false_positives_max: 0

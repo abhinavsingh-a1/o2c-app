@@ -220,3 +220,20 @@ def test_reject_sets_status_rejected(client, auth_headers, waiting, producer, er
     assert producer.topics() == ["orders.validated"]
     assert producer.last("orders.validated").payload["status"] == "rejected"
     assert erp.created == []
+
+
+def test_injection_findings_from_the_extractor_go_to_review(
+    handle, producer, erp, po, make_event
+):
+    event = make_event(po)
+    findings = [{"pattern": "pre_approved", "match": "pre-approved"}]
+    event = event.model_copy(
+        update={"payload": {**event.payload, "injection_findings": findings}}
+    )
+
+    handle(event)
+
+    assert producer.topics() == ["orders.validated", "orders.exceptions"]
+    exception = producer.last("orders.exceptions").payload
+    assert [i["code"] for i in exception["issues"]] == ["PROMPT_INJECTION_SUSPECTED"]
+    assert erp.created == []

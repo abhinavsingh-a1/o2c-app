@@ -127,6 +127,7 @@ def make_handler(graph, producer: EventProducer, reviews: ReviewStore):
             source_event_id=str(event.event_id),
             purchase_order=po,
             source_document={k: p.get(k) for k in DOCUMENT_FIELDS},
+            injection_findings=p.get("injection_findings") or [],
         )
         state = run_or_resume(graph, initial)
         reviews.upsert(state)

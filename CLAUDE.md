@@ -62,6 +62,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - The full system including the UI runs with make up; UI at http://localhost:5180
 - make ml-image / make ml-pipeline-local / make ml-pipeline-compile: build and run the anomaly training pipeline
 - uv run python -m erp_mock.seed_history --reset: regenerate ERP history after customer profiles change
+- make eval-quick / make eval: evaluation gate against eval/thresholds.yaml (report in eval/report.md, exit 1 on FAIL)
+- uv run python ml/litellm_keys.py / ml/litellm_spend.py: create the per-service LiteLLM keys / show spend per key
 
 Local URLs: MLflow http://localhost:5000,
 LiteLLM http://localhost:4000,

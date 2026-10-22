@@ -30,6 +30,7 @@ from classifier_common import (
     summarize,
     write_results,
 )
+from litellm_common import use_eval_key
 from o2c_common.events import Envelope
 from o2c_common.pdf import pdf_text
 from openai import OpenAI
@@ -50,7 +51,7 @@ def evaluate(
 ) -> list[dict]:
     rows = []
     for file, expected in read_labels(dataset):
-        text = pdf_text((dataset / file).read_bytes())
+        text = pdf_text((dataset / file).read_bytes(), drop_invisible=True)
         predicted, reason, usage = ERROR, None, {}
         start = time.perf_counter()
         try:
@@ -118,6 +119,7 @@ def main(argv: list[str] | None = None) -> Path:
     if len(args) != 1:
         sys.exit(__doc__)
     dataset = Path(args[0])
+    use_eval_key()
 
     rows = evaluate(
         dataset,

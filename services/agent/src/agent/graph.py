@@ -55,17 +55,27 @@ def build_graph(deps: Deps, checkpointer=None):
             for c in erp.search_customers(po.customer_name)
             if _norm(c["name1"]) == _norm(po.customer_name)
         ]
-        if len(matches) == 1:
-            return {"customer_number": matches[0]["kunnr"]}
-        return {
-            "issues": [
-                *state.issues,
+        # A printed number that is a real customer under another name is a mix-up or
+        # fraud signal: never ignore it silently. A number unknown to the ERP (e.g. our
+        # supplier number at the customer) is still ignored.
+        issues = list(state.issues)
+        if customer is not None:
+            issues.append(
                 Issue(
-                    code=IssueCode.UNKNOWN_CUSTOMER,
-                    message=f"Customer '{po.customer_name}' was not found in the ERP.",
-                ),
-            ]
-        }
+                    code=IssueCode.CUSTOMER_MISMATCH,
+                    message=f"The printed customer number {po.customer_number} belongs to "
+                    f"'{customer['name1']}', not to '{po.customer_name}'.",
+                )
+            )
+        if len(matches) == 1:
+            return {"customer_number": matches[0]["kunnr"], "issues": issues}
+        issues.append(
+            Issue(
+                code=IssueCode.UNKNOWN_CUSTOMER,
+                message=f"Customer '{po.customer_name}' was not found in the ERP.",
+            )
+        )
+        return {"issues": issues}
 
     def resolve_materials(state: AgentState) -> dict:
         issues, lines, catalogue = list(state.issues), [], None
@@ -208,6 +218,17 @@ def build_graph(deps: Deps, checkpointer=None):
 
     def decide(state: AgentState) -> dict:
         issues = list(state.issues)
+        if state.injection_findings:
+            quoted = "; ".join(
+                f"'{finding['match']}'" for finding in state.injection_findings[:3]
+            )
+            issues.append(
+                Issue(
+                    code=IssueCode.PROMPT_INJECTION_SUSPECTED,
+                    message="The document contains text that looks like instructions to "
+                    f"an AI ({quoted}). Check the original document before approving.",
+                )
+            )
         total = state.purchase_order.total_amount
         if total > deps.auto_post_limit:
             issues.append(

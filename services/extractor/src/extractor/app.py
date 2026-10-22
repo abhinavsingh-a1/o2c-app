@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Annotated
 
 import boto3
+import httpx
 from botocore.exceptions import ClientError
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from langchain_openai import ChatOpenAI
 from o2c_common.events import Envelope
+from o2c_common.injection import detect
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
 from o2c_common.pdf import pdf_text
 from o2c_common.schema import PurchaseOrder
@@ -41,26 +43,42 @@ def load_prompt(prompts_dir: Path) -> str:
     return template.replace("{schema}", json.dumps(PurchaseOrder.model_json_schema()))
 
 
-def make_extractor(settings: Settings, model: str = "o2c-extract") -> Extract:
-    """`model` is a LiteLLM alias; evaluations pass another alias to compare models."""
+def wrap_document(text: str) -> str:
+    """The PDF text as the user message: inside <document> tags, so the prompt can tell
+    the model that everything in them is data, never instructions."""
+    return f"<document>\n{text}\n</document>"
+
+
+def make_extractor(
+    settings: Settings,
+    model: str = "o2c-extract",
+    http_client: httpx.Client | None = None,
+) -> Extract:
+    """`model` is a LiteLLM alias; evaluations pass another alias to compare models,
+    and an `http_client` to read LiteLLM's response headers (cost). `trace_id` lets an
+    evaluation choose the Langfuse trace id of a call (to link it to a dataset item)."""
     system_prompt = load_prompt(settings.prompts_dir)
 
-    def extract(text: str, session_id: str) -> PurchaseOrder:
+    def extract(
+        text: str, session_id: str, trace_id: str | None = None
+    ) -> PurchaseOrder:
+        metadata = {
+            "trace_name": "extract",
+            "session_id": session_id,
+            "tags": ["extractor"],
+        }
+        if trace_id:
+            metadata["trace_id"] = trace_id
         llm = ChatOpenAI(
             model=model,
             base_url=settings.litellm_base_url,
             api_key=settings.litellm_master_key,
             temperature=0,
-            extra_body={
-                "metadata": {
-                    "trace_name": "extract",
-                    "session_id": session_id,
-                    "tags": ["extractor"],
-                }
-            },
+            http_client=http_client,
+            extra_body={"metadata": metadata},
         )
         chain = llm.with_structured_output(PurchaseOrder, method="json_mode")
-        return chain.invoke([("system", system_prompt), ("human", text)])
+        return chain.invoke([("system", system_prompt), ("human", wrap_document(text))])
 
     return extract
 
@@ -77,9 +95,12 @@ def make_handler(s3, extract: Extract, producer: EventProducer):
             if exc.response["Error"]["Code"] in ("NoSuchKey", "404"):
                 raise PermanentError(f"document missing: {p['s3_key']}") from exc
             raise
-        po = extract(pdf_text(pdf), event.correlation_id)
+        po = extract(pdf_text(pdf, drop_invisible=True), event.correlation_id)
         payload = {k: v for k, v in p.items() if k != "reason"}
         payload["purchase_order"] = po.model_dump(mode="json")
+        # On the full text, including invisible text: hidden instructions are reported
+        # even though the model never sees them.
+        payload["injection_findings"] = [f.to_dict() for f in detect(pdf_text(pdf))]
         producer.send(
             "orders.extracted", event.child("orders.extracted", "extractor", payload)
         )
@@ -136,6 +157,6 @@ def create_app(
         data = file.file.read()
         if not data.startswith(b"%PDF-"):
             raise HTTPException(415, "file is not a PDF")
-        return extract(pdf_text(data), f"manual-{file.filename}")
+        return extract(pdf_text(data, drop_invisible=True), f"manual-{file.filename}")
 
     return app
