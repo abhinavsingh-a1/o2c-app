@@ -1,0 +1,18 @@
+{
+  "models": [
+    {
+      "name": "o2c-doc-classifier",
+      "version": "3",
+      "repository": "ghcr.io/abhinavsingh-a1/o2c-model-doc-classifier",
+      "tag": "v3",
+      "digest": "sha256:03dc673583d1e5fe4d2de3f546d4e19119833485a062369b0362408f461d8d50"
+    },
+    {
+      "name": "o2c-quantity-anomaly",
+      "version": "3",
+      "repository": "ghcr.io/abhinavsingh-a1/o2c-model-quantity-anomaly",
+      "tag": "v3",
+      "digest": "sha256:ac11abb6a3ed5cacf9bfa44697d638ea2f472e6a9d3d3684f948b4b156e527e4"
+    }
+  ]
+}
