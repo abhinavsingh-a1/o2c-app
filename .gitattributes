@@ -1,3 +1,6 @@
 # PDFs are binary: never convert line endings (core.autocrlf would break the xref
 # offsets of uncompressed PDFs, see ADR-010).
 *.pdf binary
+
+# Shell scripts run in Linux containers and CI: always LF
+*.sh text eol=lf

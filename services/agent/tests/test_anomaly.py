@@ -224,6 +224,20 @@ def test_fallback_when_the_model_is_not_registered(tmp_path, monkeypatch, caplog
     assert "o2c-quantity-anomaly@champion" in caplog.text
 
 
+def test_the_baked_model_is_loaded_without_mlflow(trained, tmp_path, monkeypatch):
+    model, _, means = trained
+    models_dir = tmp_path / "models"
+    mlflow.pyfunc.save_model(
+        path=models_dir / "o2c-quantity-anomaly", python_model=model
+    )
+    monkeypatch.setenv("O2C_MODELS_DIR", str(models_dir))
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://unreachable.invalid:5000")
+    monkeypatch.setattr(anomaly, "_load", REAL_LOAD)
+    (customer, material), mean = max(means.items(), key=lambda kv: kv[1])
+
+    assert anomaly.anomaly_score(customer, material, round(mean * 20)) > THRESHOLD
+
+
 def test_fallback_when_prediction_fails(monkeypatch, caplog):
     class Broken:
         def predict(self, df):

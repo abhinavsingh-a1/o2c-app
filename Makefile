@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test dbt-build dbt-docs kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test dbt-build dbt-docs kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall models-publish
 
 up:
 	docker compose up -d --build
@@ -168,3 +168,8 @@ dbt-build:
 dbt-docs:
 	$(DBT) docs generate $(DBT_DIRS)
 	$(DBT) docs serve --port 8580 $(DBT_DIRS)
+
+# E14 (ADR-016): push the @champion models to ghcr.io as OCI artifacts (oras, login via
+# gh auth token with write:packages) and pin them in models.lock.json; commit the lock
+models-publish:
+	uv run --all-packages python ml/publish_models.py

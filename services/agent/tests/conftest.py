@@ -256,14 +256,16 @@ def change_line(
 
 @pytest.fixture(autouse=True)
 def no_mlflow_server(monkeypatch, tmp_path):
-    """Tests never load models from a running MLflow server: the anomaly model is
-    unavailable unless a test provides one, and MLflow writes only to a temporary store."""
+    """Tests never load models from a running MLflow server or the image: the anomaly
+    model is unavailable unless a test provides one, and MLflow writes only to a
+    temporary store."""
 
     def unavailable():
         raise ConnectionError("no MLflow server in tests")
 
     monkeypatch.setattr(anomaly, "_load", unavailable)
     monkeypatch.setenv("MLFLOW_TRACKING_URI", (tmp_path / "mlruns").as_uri())
+    monkeypatch.setenv("O2C_MODELS_DIR", str(tmp_path / "no-baked-models"))
     anomaly.reset()
     yield
     anomaly.reset()

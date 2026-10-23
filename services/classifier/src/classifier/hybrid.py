@@ -1,13 +1,15 @@
 """Hybrid document classification with risk-based routing (ADR-009).
 
-DistilBERT (models:/o2c-doc-classifier@champion, trained by ml/train_classifier.py) is
-loaded once at start; restart the classifier to load a new champion. Per document:
+DistilBERT (o2c-doc-classifier, trained by ml/train_classifier.py) is loaded once at
+start: the model baked into the image (ADR-016) or, only if none exists,
+models:/o2c-doc-classifier@champion from MLflow; restart the classifier to load a new
+champion. Per document:
 - DistilBERT says NOT purchase_order with confidence >= the non-PO threshold: accepted.
   A wrong non-PO label cannot create an order.
 - DistilBERT says purchase_order: GPT decides. A false purchase order could create a wrong
   order, so it is always double-checked.
 - DistilBERT says NOT purchase_order below the threshold: GPT decides.
-- MLflow or the model unavailable: GPT decides every document.
+- No model available: GPT decides every document.
 """
 
 import logging
@@ -15,9 +17,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from o2c_common.models import baked_model
+
 log = logging.getLogger(__name__)
 
-MODEL_URI = "models:/o2c-doc-classifier@champion"
+MODEL_NAME = "o2c-doc-classifier"
+MODEL_URI = f"models:/{MODEL_NAME}@champion"
 # Model input, as in training (ml/classifier_common.MAX_CHARS, ml/train_classifier.PARAMS).
 MAX_CHARS = 1500
 MAX_LENGTH = 256
@@ -83,17 +88,22 @@ def download_model(tracking_uri: str) -> Path:
 def load_distilbert(
     tracking_uri: str, download: Callable[[str], Path] = download_model
 ) -> DistilBert | None:
-    """The champion model, or None (with a warning) if MLflow or the model is unavailable."""
+    """The baked model, else the champion from MLflow; None (with a warning) if neither
+    loads. A baked model that fails to load does not fall back to MLflow."""
+    baked = baked_model(MODEL_NAME)
+    source = str(baked) if baked is not None else f"{MODEL_URI} from {tracking_uri}"
     try:
-        model = DistilBert.from_directory(download(tracking_uri))
+        model = DistilBert.from_directory(
+            baked if baked is not None else download(tracking_uri)
+        )
     except Exception as exc:  # noqa: BLE001 - without the model, GPT classifies everything
         log.warning(
             "document classifier %s unavailable, using GPT for every document: %s",
-            MODEL_URI,
+            source,
             exc,
         )
         return None
-    log.info("loaded document classifier %s from %s", MODEL_URI, tracking_uri)
+    log.info("loaded document classifier %s", source)
     return model
 
 
