@@ -1,8 +1,8 @@
 """Quantity anomaly score for one order line: 0.0 = normal, 1.0 = very unusual.
 
-The model (ml/train_anomaly.py) is loaded once from MLflow as
-models:/o2c-quantity-anomaly@champion (MLFLOW_TRACKING_URI, default http://localhost:5000).
-If MLflow or the model is unavailable, a warning is logged and the score is 0.0: the agent
+The model (ml/train_anomaly.py) is loaded once: the model baked into the image (ADR-016)
+or, only if none exists, models:/o2c-quantity-anomaly@champion from MLflow
+(MLFLOW_TRACKING_URI, default http://localhost:5000). If the model is unavailable, a warning is logged and the score is 0.0: the agent
 never fails because of the anomaly model. After a failed load, loading is retried at most
 every RETRY_SECONDS, so the model is picked up once MLflow is reachable.
 """
@@ -13,10 +13,12 @@ import threading
 import time
 
 import pandas as pd
+from o2c_common.models import baked_model
 
 log = logging.getLogger(__name__)
 
-MODEL_URI = "models:/o2c-quantity-anomaly@champion"
+MODEL_NAME = "o2c-quantity-anomaly"
+MODEL_URI = f"models:/{MODEL_NAME}@champion"
 DEFAULT_TRACKING_URI = "http://localhost:5000"
 RETRY_SECONDS = 300.0
 
@@ -28,6 +30,10 @@ _failed_at: float | None = None
 def _load():
     import mlflow  # imported here so that even a broken MLflow install only disables scoring
 
+    baked = baked_model(MODEL_NAME)
+    if baked is not None:
+        log.info("loading anomaly model from %s", baked)
+        return mlflow.pyfunc.load_model(str(baked))
     mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", DEFAULT_TRACKING_URI))
     return mlflow.pyfunc.load_model(MODEL_URI)
 

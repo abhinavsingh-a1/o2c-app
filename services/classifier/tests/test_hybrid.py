@@ -254,6 +254,39 @@ def test_load_distilbert_loads_the_downloaded_model(monkeypatch, tmp_path):
     assert load_distilbert("uri", download=lambda uri: tmp_path) == ("model", tmp_path)
 
 
+def baked(models_dir: Path) -> Path:
+    path = models_dir / "o2c-doc-classifier"
+    path.mkdir(parents=True)
+    (path / "MLmodel").write_text("flavors: {}\n")
+    return path
+
+
+def test_load_distilbert_prefers_the_baked_model(monkeypatch, tmp_path):
+    monkeypatch.setenv("O2C_MODELS_DIR", str(tmp_path))
+    path = baked(tmp_path)
+    monkeypatch.setattr(
+        DistilBert, "from_directory", classmethod(lambda cls, path: ("model", path))
+    )
+
+    def no_mlflow(uri):
+        raise AssertionError("MLflow must not be called when a model is baked")
+
+    assert load_distilbert("uri", download=no_mlflow) == ("model", path)
+
+
+def test_a_broken_baked_model_does_not_fall_back_to_mlflow(
+    monkeypatch, tmp_path, caplog
+):
+    monkeypatch.setenv("O2C_MODELS_DIR", str(tmp_path))
+    baked(tmp_path)  # MLmodel, but no model/ or tokenizer
+    downloads = []
+
+    with caplog.at_level(logging.WARNING):
+        assert load_distilbert("uri", download=downloads.append) is None
+    assert downloads == []
+    assert "using GPT for every document" in caplog.text
+
+
 # --- handler ---
 
 

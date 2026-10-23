@@ -69,6 +69,8 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - uv run python ml/check_env.py: report .env lines the tools read differently (never prints values); quote special values with single quotes
 - uv run python ml/verify_audit.py: verify the hash-chained audit archive in s3://o2c-audit (exit 1 at the first broken record, ADR-014)
 - make dbt-build / make dbt-docs: build and test the analytics marts (analytics/dbt, connection from .env) / dbt docs at http://localhost:8580
+- make models-publish: push the @champion models to ghcr.io as OCI artifacts (oras, gh auth token with write:packages) and pin them in models.lock.json; images bake the pinned model, services fall back to MLflow only without one (ADR-016)
+- scripts/verify_image.sh <image@sha256:digest>: cosign signature + provenance and SBOM attestations of release.yml on main (PASS/FAIL); deploy only by digest
 - Analytics: analytics-sink writes raw.*; dbt builds analytics.*; Grafana reads analytics.* only as grafana_ro (ADR-013). Event payload JSON is read only in the dbt staging models.
 
 Local URLs: MLflow http://localhost:5000,
