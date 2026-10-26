@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from o2c_common import metrics
 from o2c_common.events import Envelope
+from o2c_common.kafka_config import client_config
 from o2c_common.topics import environment, logical, physical
 
 log = logging.getLogger(__name__)
@@ -29,12 +30,14 @@ class EventProducer:
     def __init__(self, bootstrap: str, client_id: str, env: str | None = None):
         self.env = environment(env)
         self._producer = Producer(
-            {
-                "bootstrap.servers": bootstrap,
-                "client.id": client_id,
-                "enable.idempotence": True,  # no duplicates from producer retries
-                "acks": "all",  # wait until Kafka has stored the message safely
-            }
+            client_config(
+                bootstrap,
+                {
+                    "client.id": client_id,
+                    "enable.idempotence": True,  # no duplicates from producer retries
+                    "acks": "all",  # wait until Kafka has stored the message safely
+                },
+            )
         )
         self._errors: list[str] = []
 
@@ -152,12 +155,14 @@ class EventConsumer:
 
     def run(self, max_messages: int | None = None) -> None:
         consumer = Consumer(
-            {
-                "bootstrap.servers": self.bootstrap,
-                "group.id": self.kafka_group,
-                "enable.auto.commit": False,  # we commit only after successful processing
-                "auto.offset.reset": "earliest",
-            }
+            client_config(
+                self.bootstrap,
+                {
+                    "group.id": self.kafka_group,
+                    "enable.auto.commit": False,  # commit only after successful processing
+                    "auto.offset.reset": "earliest",
+                },
+            )
         )
         consumer.subscribe([physical(topic, self.env) for topic in self.topics])
         handled = 0
