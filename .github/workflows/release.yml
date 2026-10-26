@@ -18,6 +18,8 @@ permissions:
   contents: read
 
 env:
+  UV_VERSION: "0.13.1"
+  YAMLLINT_VERSION: "1.38.0" # the same version as o2c-gitops's PR check
   TRIVY_IMAGE: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
   COSIGN_VERSION: v3.1.3
   SYFT_VERSION: v1.54.1
@@ -170,6 +172,15 @@ jobs:
           pattern: digest-*
           path: digests
           merge-multiple: true
+      # This repo, for scripts/set_image.py and the uv.lock that pins ruamel.yaml
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: o2c-app
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: ${{ env.UV_VERSION }}
+          working-directory: o2c-app
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository_owner }}/o2c-gitops
@@ -178,20 +189,33 @@ jobs:
           # Fine-grained token for o2c-gitops only (contents and pull requests: write).
           # Unlike GITHUB_TOKEN, its PR triggers o2c-gitops' own PR checks.
           token: ${{ secrets.GITOPS_TOKEN }}
+      # ruamel.yaml round trip (scripts/set_image.py): only the two values change; comments,
+      # their spacing and quotes stay as they are. (yq rewrote inline comments with one
+      # space before '#', which o2c-gitops's yamllint --strict rejects.)
       - name: Update envs/dev/<service>.yaml (image.repository, image.digest)
-        working-directory: o2c-gitops
         run: |
           shopt -s nullglob
-          files=(../digests/*)
+          files=(digests/*)
           [ "${#files[@]}" -gt 0 ] || { echo "::error::no digests"; exit 1; }
           for f in "${files[@]}"; do
             read -r name repository digest < "$f"
-            values="envs/dev/$name.yaml"
-            [ -f "$values" ] || { echo "::error::$values does not exist"; exit 1; }
-            REPOSITORY="$repository" DIGEST="$digest" \
-              yq -i '.image.repository = strenv(REPOSITORY) | .image.digest = strenv(DIGEST)' "$values"
+            values="$GITHUB_WORKSPACE/o2c-gitops/envs/dev/$name.yaml"
+            [ -f "$values" ] || { echo "::error::envs/dev/$name.yaml does not exist"; exit 1; }
+            (cd o2c-app && uv run --frozen --only-dev python scripts/set_image.py \
+              "$values" "$repository" "$digest")
           done
-          git diff --stat
+          git -C o2c-gitops diff --stat
+      # The same check as o2c-gitops's PR workflow (version, its .yamllint.yaml, --strict):
+      # a file that would block the PR fails the release here instead
+      - name: yamllint the changed values files (o2c-gitops config)
+        working-directory: o2c-gitops
+        run: |
+          mapfile -t changed < <(git diff --name-only -- 'envs/')
+          if [ "${#changed[@]}" -eq 0 ]; then
+            echo "no values files changed"
+            exit 0
+          fi
+          uvx --from "yamllint==$YAMLLINT_VERSION" yamllint --strict -c .yamllint.yaml "${changed[@]}"
       - name: Open the PR and enable auto-merge
         working-directory: o2c-gitops
         env:

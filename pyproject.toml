@@ -20,6 +20,7 @@ torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 dev = [
     "httpx>=0.28.1",
     "pytest>=8",
+    "ruamel-yaml>=0.19.1",
 ]
 poc = [
     "faker>=40.43.0",
@@ -52,6 +53,6 @@ analytics = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["libs", "services", "ml", "observability", "analytics"]
+testpaths = ["libs", "services", "ml", "observability", "analytics", "scripts"]
 # Services each have tests/test_app.py; importlib mode allows duplicate basenames.
 addopts = ["--import-mode=importlib"]
