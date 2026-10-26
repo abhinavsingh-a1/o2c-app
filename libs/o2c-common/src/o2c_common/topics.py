@@ -16,6 +16,8 @@ import time
 from confluent_kafka import KafkaError, KafkaException
 from confluent_kafka.admin import AdminClient, NewTopic
 
+from o2c_common.kafka_config import client_config
+
 ENV_VAR = "O2C_ENV"
 ENVIRONMENTS = ("dev", "test", "prod")
 DAY_MS = 24 * 60 * 60 * 1000
@@ -54,7 +56,7 @@ def logical(name: str, env: str | None) -> str:
 
 
 def create_topics(bootstrap: str, replication: int = 1, env: str | None = None) -> None:
-    admin = AdminClient({"bootstrap.servers": bootstrap})
+    admin = AdminClient(client_config(bootstrap))
     new_topics = [
         NewTopic(
             physical(name, env),
@@ -76,7 +78,7 @@ def create_topics(bootstrap: str, replication: int = 1, env: str | None = None) 
 
 
 def delete_topics(bootstrap: str, env: str | None = None) -> None:
-    admin = AdminClient({"bootstrap.servers": bootstrap})
+    admin = AdminClient(client_config(bootstrap))
     names = [physical(name, env) for name in TOPICS]
     for name, future in admin.delete_topics(names).items():
         try:

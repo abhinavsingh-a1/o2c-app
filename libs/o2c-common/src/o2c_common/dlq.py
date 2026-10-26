@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from confluent_kafka import Consumer, Message
 
 from o2c_common.kafka import DLQ_TOPIC, EventProducer
+from o2c_common.kafka_config import client_config
 from o2c_common.topics import ENV_VAR, ENVIRONMENTS, environment, logical, physical
 
 
@@ -24,12 +25,14 @@ def replay(
     the same environment's original topics."""
     env = environment(env)
     consumer = Consumer(
-        {
-            "bootstrap.servers": bootstrap,
-            "group.id": physical("dlq-replay", env),
-            "enable.auto.commit": False,
-            "auto.offset.reset": "earliest",
-        }
+        client_config(
+            bootstrap,
+            {
+                "group.id": physical("dlq-replay", env),
+                "enable.auto.commit": False,
+                "auto.offset.reset": "earliest",
+            },
+        )
     )
     consumer.subscribe([physical(DLQ_TOPIC, env)])
     producer = EventProducer(bootstrap, "dlq-replay", env=env)
