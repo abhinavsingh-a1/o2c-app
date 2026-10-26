@@ -27,10 +27,15 @@ def _yaml() -> YAML:
     return yaml
 
 
-def set_image(text: str, repository: str, digest: str) -> str:
-    """`text` (a values file) with image.repository and image.digest replaced."""
+def set_image(
+    text: str, repository: str, digest: str, replicas: int | None = None
+) -> str:
+    """`text` (a values file) with image.repository and image.digest replaced, and
+    replicaCount too if `replicas` is given (promotion PRs, scripts/promote_values.py)."""
     if not DIGEST.match(digest):
         raise ValueError(f"not a sha256 digest: {digest!r}")
+    if replicas is not None and replicas < 0:
+        raise ValueError(f"replicas must be >= 0: {replicas}")
     yaml = _yaml()
     values = yaml.load(text)
     image = values.get("image")
@@ -38,6 +43,10 @@ def set_image(text: str, repository: str, digest: str) -> str:
         raise ValueError("values file has no image: mapping")
     image["repository"] = repository
     image["digest"] = DoubleQuotedScalarString(digest)
+    if replicas is not None:
+        if "replicaCount" not in values:
+            raise ValueError("values file has no replicaCount")
+        values["replicaCount"] = replicas
     out = StringIO()
     yaml.dump(values, out)
     return out.getvalue()

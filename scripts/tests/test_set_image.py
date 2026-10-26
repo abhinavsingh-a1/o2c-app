@@ -71,3 +71,24 @@ def test_main_rewrites_the_file_with_lf(tmp_path):
 def test_main_usage(capsys):
     assert main(["only-one-argument"]) == 2
     assert "Usage" in capsys.readouterr().err
+
+
+def test_replicas_are_set_when_given():
+    out = set_image(VALUES, "ghcr.io/abhinavsingh-a1/o2c-agent", NEW, replicas=0)
+    assert out == VALUES.replace(OLD, NEW).replace("replicaCount: 1", "replicaCount: 0")
+
+
+def test_replicas_stay_when_not_given():
+    out = set_image(VALUES, "ghcr.io/abhinavsingh-a1/o2c-agent", NEW)
+    assert "replicaCount: 1\n" in out
+
+
+def test_rejects_negative_replicas():
+    with pytest.raises(ValueError, match="replicas"):
+        set_image(VALUES, "ghcr.io/abhinavsingh-a1/o2c-agent", NEW, replicas=-1)
+
+
+def test_rejects_replicas_without_replica_count():
+    text = VALUES.replace("replicaCount: 1\n", "")
+    with pytest.raises(ValueError, match="replicaCount"):
+        set_image(text, "ghcr.io/abhinavsingh-a1/o2c-agent", NEW, replicas=1)

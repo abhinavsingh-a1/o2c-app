@@ -73,6 +73,7 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - scripts/verify_image.sh <image@sha256:digest>: cosign signature + provenance and SBOM attestations of release.yml on main (PASS/FAIL); deploy only by digest
 - Environments (ADR-017): O2C_ENV=dev|test|prod prefixes Kafka topics and consumer groups (dev.docs.received, group dev.classifier) inside o2c_common only; code always uses logical names. make topics ENV=dev / make dlq-list ENV=dev
 - Local platform (ADR-017): kind cluster o2c, namespaces o2c-dev/test/prod, Argo CD + Kyverno from ../o2c-infra/platform/kind (bootstrap.sh, secrets.sh <ns>, argocd-ui.sh, teardown.sh); infrastructure stays in Compose, reached via host.docker.internal (Kafka :29092)
+- Promotion (ADR-018): Jenkins at http://localhost:18090 (../o2c-infra make jenkins-up, docs/jenkins.md); jobs promote-to-test and promote-to-prod (four-eyes approval, automatic revert PR on failure); they use scripts/promote_values.py and scripts/e2e_send_and_check.py from the promoted commit
 - Analytics: analytics-sink writes raw.*; dbt builds analytics.*; Grafana reads analytics.* only as grafana_ro (ADR-013). Event payload JSON is read only in the dbt staging models.
 
 Local URLs: MLflow http://localhost:5000,
