@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from confluent_kafka import Consumer, Message
 
 from o2c_common.kafka import DLQ_TOPIC, EventProducer
+from o2c_common.topics import ENV_VAR, ENVIRONMENTS, environment, logical, physical
 
 
 def read_headers(msg: Message) -> dict[str, str]:
@@ -13,18 +14,25 @@ def read_headers(msg: Message) -> dict[str, str]:
 
 
 def replay(
-    bootstrap: str, dry_run: bool, max_messages: int, idle_seconds: float = 5.0
+    bootstrap: str,
+    dry_run: bool,
+    max_messages: int,
+    idle_seconds: float = 5.0,
+    env: str | None = None,
 ) -> int:
+    """Replays the DLQ of one environment (`env`, else $O2C_ENV, else unprefixed) into
+    the same environment's original topics."""
+    env = environment(env)
     consumer = Consumer(
         {
             "bootstrap.servers": bootstrap,
-            "group.id": "dlq-replay",
+            "group.id": physical("dlq-replay", env),
             "enable.auto.commit": False,
             "auto.offset.reset": "earliest",
         }
     )
-    consumer.subscribe([DLQ_TOPIC])
-    producer = EventProducer(bootstrap, "dlq-replay")
+    consumer.subscribe([physical(DLQ_TOPIC, env)])
+    producer = EventProducer(bootstrap, "dlq-replay", env=env)
     count, last_message = 0, time.monotonic()
     try:
         while count < max_messages:
@@ -37,7 +45,8 @@ def replay(
             if msg.error():
                 continue
             headers = read_headers(msg)
-            target = headers.get("original_topic")
+            # Logical name (EventConsumer); older or foreign headers may carry the prefix
+            target = logical(headers.get("original_topic") or "", env)
             print(
                 f"{'WOULD REPLAY' if dry_run else 'REPLAY'} -> {target} | "
                 f"failed_at={headers.get('failed_at')} | error={headers.get('error', '')[:80]}"
@@ -61,7 +70,7 @@ def replay(
     return count
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Replay messages from the dead-letter queue."
     )
@@ -71,9 +80,12 @@ def main() -> None:
     parser.add_argument(
         "--max", type=int, default=1000, help="maximum messages to handle"
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--env", choices=ENVIRONMENTS, help=f"environment prefix (default: ${ENV_VAR})"
+    )
+    args = parser.parse_args(argv)
     bootstrap = os.environ.get("KAFKA_BOOTSTRAP", "localhost:9092")
-    count = replay(bootstrap, args.dry_run, args.max)
+    count = replay(bootstrap, args.dry_run, args.max, env=args.env)
     print(f"{count} message(s) {'listed' if args.dry_run else 'replayed'}")
 
 

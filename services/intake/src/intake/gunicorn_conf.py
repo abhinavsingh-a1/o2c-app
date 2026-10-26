@@ -15,6 +15,9 @@ from prometheus_client import multiprocess
 
 bind = "0.0.0.0:8200"
 workers = 2
+# gunicorn >= 26 opens a control socket under $HOME by default. Intake does not use it,
+# and $HOME is read-only in Kubernetes (readOnlyRootFilesystem, ADR-017).
+control_socket_disable = True
 
 
 def on_starting(server) -> None:

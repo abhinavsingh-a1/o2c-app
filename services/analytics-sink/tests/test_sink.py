@@ -467,3 +467,9 @@ def test_settings_defaults(monkeypatch):
 def test_raw_tables_are_in_the_raw_schema():
     assert {t.schema for t in (events, dlq, llm_spend)} == {"raw"}
     assert db.BI_ROLE == "grafana_ro"
+
+
+def test_dlq_row_stores_the_logical_dlq_topic_in_every_environment(monkeypatch):
+    monkeypatch.setenv("O2C_ENV", "dev")
+    row = dlq_row(FakeMessage(b"{}", topic="dev.orders.dlq"))
+    assert row["topic"] == "orders.dlq"  # dbt and Grafana see one name (ADR-017)
