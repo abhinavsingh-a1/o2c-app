@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from o2c_common import metrics
 from o2c_common.events import Envelope
+from o2c_common.topics import environment, logical, physical
 
 log = logging.getLogger(__name__)
 DLQ_TOPIC = "orders.dlq"
@@ -22,7 +23,11 @@ class PermanentError(Exception):
 
 
 class EventProducer:
-    def __init__(self, bootstrap: str, client_id: str):
+    """Sends to logical topic names; with an environment (`env`, else $O2C_ENV) the
+    Kafka topic is prefixed: send("docs.received") goes to dev.docs.received."""
+
+    def __init__(self, bootstrap: str, client_id: str, env: str | None = None):
+        self.env = environment(env)
         self._producer = Producer(
             {
                 "bootstrap.servers": bootstrap,
@@ -48,7 +53,11 @@ class EventProducer:
         headers: list[tuple[str, bytes]] | None = None,
     ) -> None:
         self._producer.produce(
-            topic, key=key, value=value, headers=headers, on_delivery=self._on_delivery
+            physical(topic, self.env),
+            key=key,
+            value=value,
+            headers=headers,
+            on_delivery=self._on_delivery,
         )
         self._producer.poll(0)
 
@@ -116,6 +125,11 @@ class PostgresStore:
 
 
 class EventConsumer:
+    """Consumes logical topics as a logical group. With an environment (`env`, else
+    $O2C_ENV) Kafka sees prefixed names (dev.docs.received, group dev.classifier), and
+    so does the processed-events store, which environments may share. Metrics labels
+    and DLQ headers keep the logical names."""
+
     def __init__(
         self,
         *,
@@ -127,8 +141,11 @@ class EventConsumer:
         store: ProcessedStore,
         max_attempts: int = 3,
         base_delay: float = 1.0,
+        env: str | None = None,
     ):
         self.bootstrap, self.group_id, self.topics = bootstrap, group_id, topics
+        self.env = environment(env)
+        self.kafka_group = physical(group_id, self.env)
         self.handler, self.producer, self.store = handler, producer, store
         self.max_attempts, self.base_delay = max_attempts, base_delay
         metrics.init_consumer_metrics(group_id)
@@ -137,12 +154,12 @@ class EventConsumer:
         consumer = Consumer(
             {
                 "bootstrap.servers": self.bootstrap,
-                "group.id": self.group_id,
+                "group.id": self.kafka_group,
                 "enable.auto.commit": False,  # we commit only after successful processing
                 "auto.offset.reset": "earliest",
             }
         )
-        consumer.subscribe(self.topics)
+        consumer.subscribe([physical(topic, self.env) for topic in self.topics])
         handled = 0
         try:
             while max_messages is None or handled < max_messages:
@@ -159,8 +176,10 @@ class EventConsumer:
             consumer.close()
 
     def process(self, msg: Message) -> None:
-        group = self.group_id
-        metrics.EVENTS_CONSUMED.labels(group).inc()
+        group = (
+            self.kafka_group
+        )  # processed-events store: one key space per environment
+        metrics.EVENTS_CONSUMED.labels(self.group_id).inc()
         try:
             event = Envelope.from_bytes(msg.value())
         except ValidationError as exc:
@@ -173,7 +192,7 @@ class EventConsumer:
 
         if self.store.seen(group, event.event_id):
             log.info("duplicate %s skipped", event.event_id)
-            metrics.EVENTS_DUPLICATE.labels(group).inc()
+            metrics.EVENTS_DUPLICATE.labels(self.group_id).inc()
             return
 
         error: Exception | None = None
@@ -184,7 +203,7 @@ class EventConsumer:
                 self.handler(event)
                 self.producer.flush()  # outgoing events are stored before we mark and commit
                 self.store.mark(group, event.event_id)
-                metrics.HANDLER_SECONDS.labels(group).observe(
+                metrics.HANDLER_SECONDS.labels(self.group_id).observe(
                     time.perf_counter() - start
                 )
                 return
@@ -214,7 +233,7 @@ class EventConsumer:
 
     def _to_dlq(self, msg: Message, error: str, reason: str) -> None:
         headers = [
-            ("original_topic", msg.topic().encode()),
+            ("original_topic", logical(msg.topic(), self.env).encode()),
             ("original_partition", str(msg.partition()).encode()),
             ("original_offset", str(msg.offset()).encode()),
             ("consumer_group", self.group_id.encode()),
@@ -244,6 +263,7 @@ class RawMessageConsumer(EventConsumer):
         handler: Callable[[Message], None],
         base_delay: float = 1.0,
         max_delay: float = 60.0,
+        env: str | None = None,
     ):
         super().__init__(
             bootstrap=bootstrap,
@@ -253,6 +273,7 @@ class RawMessageConsumer(EventConsumer):
             producer=None,
             store=InMemoryStore(),
             base_delay=base_delay,
+            env=env,
         )
         self.max_delay = max_delay
 

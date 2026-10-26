@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 
 from confluent_kafka import Message
 from o2c_common.events import Envelope
+from o2c_common.topics import environment, logical
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -112,7 +113,7 @@ def _decode(value: bytes | None) -> str | None:
 def dlq_row(msg: Message) -> dict:
     kind, millis = msg.timestamp() if hasattr(msg, "timestamp") else (0, None)
     return {
-        "topic": msg.topic(),
+        "topic": logical(msg.topic(), environment()),  # orders.dlq in every environment
         "kafka_partition": msg.partition(),
         "kafka_offset": msg.offset(),
         "kafka_key": _decode(msg.key()),

@@ -51,20 +51,21 @@ erp-api:
 erp-seed-history:
 	uv run python -m erp_mock.seed_history
 
+# ENV=dev|test|prod prefixes topics and groups (ADR-017); default: none
 topics:
-	uv run python -m o2c_common.topics
+	uv run python -m o2c_common.topics $(if $(ENV),--env $(ENV))
 
 dlq-list:
-	uv run python -m o2c_common.dlq --dry-run
+	uv run python -m o2c_common.dlq --dry-run $(if $(ENV),--env $(ENV))
 
 dlq-replay:
-	uv run python -m o2c_common.dlq
+	uv run python -m o2c_common.dlq $(if $(ENV),--env $(ENV))
 
 lag:
 	docker compose exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --all-groups
 
 topics-reset:
-	uv run python -m o2c_common.topics --reset
+	uv run python -m o2c_common.topics --reset $(if $(ENV),--env $(ENV))
 
 intake:
 	uv run flask --app "intake.app:create_app" run --port 8200
