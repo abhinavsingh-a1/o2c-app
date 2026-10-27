@@ -319,7 +319,10 @@ def judge_step(t: dict) -> list[Check]:
         return checks
     passed = sum(r["passed"] for r in explanations)
     failed = ", ".join(
-        f"{r['dataset']} {r['po_id']}" for r in explanations if not r["passed"]
+        f"{r['dataset']} {r['po_id']}"
+        + (" (error)" if r.get("status") == "error" else "")
+        for r in explanations
+        if not r["passed"]
     )
     checks.append(
         at_least(

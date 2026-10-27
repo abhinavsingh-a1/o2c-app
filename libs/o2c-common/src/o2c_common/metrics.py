@@ -47,6 +47,7 @@ ALLOWED_LABELS = frozenset(
         "action",  # review action: approve | edit | reject
         "service",  # classifier | extractor | agent
         "result",  # ok | error (periodic jobs)
+        "call",  # agent ERP client read (ERP_CALLS)
     }
 )
 HTTP_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
@@ -60,6 +61,14 @@ CLASSIFIED_BY = ("distilbert", "gpt")
 ORDER_OUTCOMES = ("posted", "awaiting_review", "rejected", "failed")
 DECIDED_BY = ("agent", "reviewer")
 REVIEW_ACTIONS = ("approve", "edit", "reject")
+ERP_CALLS = (
+    "get_customer",
+    "search_customers",
+    "get_material",
+    "search_materials",
+    "get_price",
+    "get_order",
+)
 
 LATENCY_BUCKETS = (0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60)
 LLM_BUCKETS = (0.5, 1, 2, 5, 10, 20, 30, 60, 120)
@@ -132,6 +141,12 @@ ANOMALY_SCORING_FAILURES = Counter(
     "Order lines the agent scored 0.0 because the quantity anomaly model was "
     "unavailable or its prediction failed (the fallback: anomaly detection is off)",
     ["reason"],
+)
+ERP_RETRIES = Counter(
+    "o2c_erp_retries_total",
+    "ERP reads the agent retried after a timeout, connection error or 502/503/504 "
+    "(GET only; creates and cancels are never retried)",
+    ["call"],
 )
 LLM_COST = Counter(
     "o2c_llm_cost_usd_total",

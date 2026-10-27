@@ -1,4 +1,4 @@
-.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test dbt-build dbt-docs kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall models-publish
+.PHONY: up down ps logs buckets lint clean sync test ui cluster-up cluster-down poc erp-migrate erp-api erp-seed-history dlq-list dlq-replay lag topics-reset intake classifier extractor send contracts-ingest agent gen-api  ui-test ml-data ml-image ml-pipeline-local ml-pipeline-compile eval-quick eval grafana prom-alerts prom-test dbt-build dbt-docs kfp-install kfp-load-image kfp-ui kfp-run kfp-uninstall models-publish audit-check
 
 up:
 	docker compose up -d --build
@@ -174,3 +174,9 @@ dbt-docs:
 # gh auth token with write:packages) and pin them in models.lock.json; commit the lock
 models-publish:
 	uv run --all-packages python ml/publish_models.py
+
+# E16: signatures and attestations of the images in envs/prod (or envs/test) of o2c-gitops,
+# promotion/rollback PRs, Jenkins audit trail and the audit hash chain; exit 1 on any FAIL.
+# Run in Git Bash (cosign, gh, docker, uv on PATH).
+audit-check:
+	bash scripts/audit_check.sh

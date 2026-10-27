@@ -16,6 +16,9 @@ Usage: uv run --group ml python ml/judge_explanations.py [--dataset poc/data|hol
 4. Attaches the scores to the explain_exception trace in Langfuse (judge_<criterion>,
    judge_pass) and prints: explanations judged, pass rate, average per criterion, judge
    cost (x-litellm-response-cost). Writes ml/results/judge-explanations.json.
+5. If running the agent or judging one PO raises, it is tried once more (with a fresh
+   thread id); if that fails too, the PO is recorded with status "error" and counts as
+   not passed, and the remaining POs are still judged.
 LiteLLM is called with LITELLM_KEY_EVAL when it is set (ml/litellm_common.py).
 """
 
@@ -161,18 +164,24 @@ def results_path(datasets: list[str] | None) -> Path:
 
 
 def summarize(rows: list[dict]) -> dict:
+    """Pass rate over every row (an "error" row counts as not passed); averages and
+    verdict disagreements over the rows that got a judgement."""
     n = len(rows)
+    scored = [r for r in rows if r.get("scores")]
     costs = [r["cost_usd"] for r in rows if r.get("cost_usd") is not None]
     return {
         "judged": n,
+        "errors": n - len(scored),
         "pass_rate": round(sum(r["passed"] for r in rows) / n, 4) if n else 0.0,
         "average": {
-            c: round(sum(r["scores"][c] for r in rows) / n, 2) if n else 0.0
+            c: round(sum(r["scores"][c] for r in scored) / len(scored), 2)
+            if scored
+            else 0.0
             for c in CRITERIA
         },
         "judge_cost_usd": round(sum(costs), 6) if costs else None,
         "verdict_disagreements": sum(
-            (r["judge_verdict"] == "pass") != r["passed"] for r in rows
+            (r["judge_verdict"] == "pass") != r["passed"] for r in scored
         ),
     }
 
@@ -181,6 +190,7 @@ def format_table(summary: dict) -> str:
     lines = [
         f"explanations judged: {summary['judged']}",
         f"pass rate:           {summary['pass_rate']:.1%}",
+        f"errors:              {summary.get('errors', 0)}",
         *(f"average {c + ':':<12}{summary['average'][c]:.2f}" for c in CRITERIA),
         "judge cost:          "
         + (
@@ -208,6 +218,44 @@ def attach_scores(client, trace_id: str, row: dict) -> None:
     )
 
 
+ERROR = "error"
+
+
+def error_row(label: str, po_id: str, error: Exception) -> dict:
+    """A PO whose agent run or judgement failed twice: counted as not passed."""
+    return {
+        "dataset": label,
+        "po_id": po_id,
+        "status": ERROR,
+        "issues": [],
+        "explanation": None,
+        "trace_id": None,
+        "scores": None,
+        "passed": False,
+        "judge_verdict": None,
+        "reason": None,
+        "criteria_reasons": None,
+        "cost_usd": None,
+        "error": f"{type(error).__name__}: {error}",
+    }
+
+
+def judge_with_retry(
+    attempt: Callable[[str], dict], name: str, label: str, po_id: str
+) -> dict:
+    """attempt(name) runs the agent on one PO and judges it. On an exception it is
+    retried once under a new name (a fresh thread id, so a half-finished checkpoint is
+    not resumed); a second failure becomes an error row instead of stopping the run."""
+    try:
+        return attempt(name)
+    except Exception as first:  # noqa: BLE001 - any failure of one PO is retried once
+        print(f"{label:9} {po_id}  retrying after {type(first).__name__}: {first}")
+    try:
+        return attempt(f"{name}-retry")
+    except Exception as second:  # noqa: BLE001 - recorded as an error row, run goes on
+        return error_row(label, po_id, second)
+
+
 def judge_agent_explanations(
     judge: Judge, langfuse=None, datasets: list[str] | None = None
 ) -> list[dict]:
@@ -233,21 +281,35 @@ def judge_agent_explanations(
                     encoding="utf-8"
                 )
             )
-            state = run_agent(graph, po, f"judge-{directory.name}-{po_id}")
-            row = {
-                "dataset": label,
-                "po_id": po_id,
-                "status": state.status,
-                "issues": [i.code.value for i in state.issues],
-                "explanation": state.explanation,
-                "trace_id": trace_id(nonce, state.idempotency_key),
-            }
-            row.update(judge_row(judge, explanation_facts(state), state.explanation))
-            if langfuse:
+
+            def attempt(name: str, po=po, label=label, po_id=po_id) -> dict:
+                state = run_agent(graph, po, name)
+                row = {
+                    "dataset": label,
+                    "po_id": po_id,
+                    "status": state.status,
+                    "issues": [i.code.value for i in state.issues],
+                    "explanation": state.explanation,
+                    "trace_id": trace_id(nonce, state.idempotency_key),
+                }
+                row.update(
+                    judge_row(judge, explanation_facts(state), state.explanation)
+                )
+                return row
+
+            row = judge_with_retry(
+                attempt, f"judge-{directory.name}-{po_id}", label, po_id
+            )
+            if langfuse and row["status"] != ERROR:
                 attach_scores(langfuse, row["trace_id"], row)
             print(
-                f"{label:9} {po_id}  {'PASS' if row['passed'] else 'FAIL'}  "
-                f"{row['scores']}  {row['reason'][:100]}",
+                f"{label:9} {po_id}  "
+                + (
+                    f"ERROR  {row['error'][:100]}"
+                    if row["status"] == ERROR
+                    else f"{'PASS' if row['passed'] else 'FAIL'}  "
+                    f"{row['scores']}  {row['reason'][:100]}"
+                ),
                 flush=True,
             )
             rows.append(row)

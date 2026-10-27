@@ -3,11 +3,13 @@ import json
 import pytest
 from judge_explanations import (
     CRITERIA,
+    ERROR,
     Judgement,
     attach_scores,
     calibrate,
     format_table,
     judge_row,
+    judge_with_retry,
     load_calibration,
     load_rubric,
     parse_judgement,
@@ -225,3 +227,76 @@ def test_results_path_per_dataset():
     assert results_path(None) == RESULTS
     assert results_path(["poc/data"]).name == "judge-explanations-poc_data.json"
     assert results_path(["holdout"]).name == "judge-explanations-holdout.json"
+
+
+def flaky_attempt(failures: int):
+    """attempt(name) that raises `failures` times, then returns a judged row."""
+    names: list[str] = []
+
+    def attempt(name: str) -> dict:
+        names.append(name)
+        if len(names) <= failures:
+            raise TimeoutError(f"LiteLLM timed out ({len(names)})")
+        row = {"dataset": "holdout", "po_id": "PO-1", "status": "awaiting_review"}
+        row.update(judge_row(fake_judge({"e": answer()}), {}, "e"))
+        return row
+
+    return attempt, names
+
+
+def test_judge_with_retry_succeeds_first_time():
+    attempt, names = flaky_attempt(0)
+
+    row = judge_with_retry(attempt, "judge-holdout-PO-1", "holdout", "PO-1")
+
+    assert row["passed"] is True
+    assert names == ["judge-holdout-PO-1"]
+
+
+def test_judge_with_retry_retries_once_with_a_fresh_name():
+    attempt, names = flaky_attempt(1)
+
+    row = judge_with_retry(attempt, "judge-holdout-PO-1", "holdout", "PO-1")
+
+    assert row["passed"] is True
+    assert names == ["judge-holdout-PO-1", "judge-holdout-PO-1-retry"]
+
+
+def test_judge_with_retry_records_an_error_after_two_failures():
+    attempt, names = flaky_attempt(2)
+
+    row = judge_with_retry(attempt, "judge-holdout-PO-1", "holdout", "PO-1")
+
+    assert len(names) == 2
+    assert row["status"] == ERROR
+    assert row["passed"] is False
+    assert row["scores"] is None
+    assert row["error"] == "TimeoutError: LiteLLM timed out (2)"
+    assert (row["dataset"], row["po_id"]) == ("holdout", "PO-1")
+
+
+def test_summarize_counts_errors_as_not_passed():
+    ok, _ = flaky_attempt(0)
+    broken, _ = flaky_attempt(2)
+    rows = [
+        judge_with_retry(ok, "a", "holdout", "PO-1"),
+        judge_with_retry(broken, "b", "holdout", "PO-2"),
+    ]
+
+    summary = summarize(rows)
+
+    assert summary["judged"] == 2
+    assert summary["errors"] == 1
+    assert summary["pass_rate"] == 0.5
+    assert summary["average"]["faithful"] == 5.0  # averages over judged rows only
+    assert summary["verdict_disagreements"] == 0
+    assert "errors:              1" in format_table(summary)
+
+
+def test_summarize_only_errors():
+    broken, _ = flaky_attempt(2)
+
+    summary = summarize([judge_with_retry(broken, "b", "holdout", "PO-2")])
+
+    assert summary["pass_rate"] == 0.0
+    assert summary["average"] == {c: 0.0 for c in CRITERIA}
