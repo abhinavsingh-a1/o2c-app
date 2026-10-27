@@ -287,6 +287,17 @@ def test_explanation_pass_rate_below_90_percent_fails(fake_runs):
     assert check["detail"] == "poc/data PO-0, poc/data PO-1"
 
 
+def test_an_explanation_error_counts_as_not_passed(fake_runs):
+    state, meter, _ = fake_runs
+    state["explanations"][0].update(passed=False, status="error")
+
+    checks = by_name(run_gate("full", THRESHOLDS, meter))
+
+    check = checks["explanation pass rate (13/14)"]
+    assert check["passed"]  # 92.9% >= 90%
+    assert check["detail"] == "poc/data PO-0 (error)"
+
+
 def test_a_wrong_judge_fails_and_explanations_are_not_judged(fake_runs):
     state, meter, _ = fake_runs
     state["calibration"][3]["ok"] = False

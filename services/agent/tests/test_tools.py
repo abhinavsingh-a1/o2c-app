@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 import httpx
@@ -81,6 +82,135 @@ def test_server_error_raises_http_status_error():
 
     with pytest.raises(httpx.HTTPStatusError):
         client.get_customer("1000107")
+
+
+class Flaky:
+    """MockTransport handler that fails with the given outcomes, then answers 200."""
+
+    def __init__(self, *failures):
+        self.failures = list(failures)
+        self.requests: list[httpx.Request] = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if self.failures:
+            failure = self.failures.pop(0)
+            if isinstance(failure, Exception):
+                raise failure
+            return httpx.Response(failure, text="unavailable")
+        return httpx.Response(200, json=CUSTOMER)
+
+
+def retrying_erp(handler) -> tuple[ErpClient, list[float]]:
+    waits: list[float] = []
+    http = httpx.Client(transport=httpx.MockTransport(handler), base_url="http://erp")
+    return ErpClient("http://erp", client=http, sleep=waits.append), waits
+
+
+def retries(call: str) -> float:
+    from o2c_common.metrics import sample
+
+    return sample("o2c_erp_retries_total", call=call)
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        502,
+        503,
+        504,
+        httpx.ReadTimeout("slow"),
+        httpx.ConnectError("refused"),
+    ],
+)
+def test_get_retries_transient_errors(failure):
+    handler = Flaky(failure, failure)
+    client, waits = retrying_erp(handler)
+    before = retries("get_customer")
+
+    assert client.get_customer("1000107") == CUSTOMER
+
+    assert len(handler.requests) == 3
+    assert len(waits) == 2
+    assert retries("get_customer") - before == 2
+
+
+def test_get_gives_up_after_three_attempts():
+    handler = Flaky(503, 503, 503, 503)
+    client, waits = retrying_erp(handler)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        client.get_price("400103", "1000107", date(2026, 1, 1))
+
+    assert len(handler.requests) == 3
+    assert len(waits) == 2
+
+
+def test_get_raises_the_last_transport_error():
+    handler = Flaky(*[httpx.ConnectError("refused")] * 3)
+    client, _ = retrying_erp(handler)
+
+    with pytest.raises(httpx.ConnectError):
+        client.search_materials("Keilriemen")
+
+    assert len(handler.requests) == 3
+
+
+@pytest.mark.parametrize("status", [500, 404, 400])
+def test_get_does_not_retry_other_statuses(status):
+    handler = Flaky(status)
+    client, waits = retrying_erp(handler)
+
+    try:
+        client.get_material("400103")
+    except httpx.HTTPStatusError:
+        pass
+
+    assert len(handler.requests) == 1
+    assert waits == []
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda c: c.create_order({"kunnr": "1000107", "items": []}),
+        lambda c: c.cancel_order("0000001234"),
+    ],
+)
+@pytest.mark.parametrize("failure", [503, httpx.ReadTimeout("slow")])
+def test_posts_are_never_retried(call, failure):
+    handler = Flaky(failure)
+    client, waits = retrying_erp(handler)
+
+    with pytest.raises((httpx.HTTPStatusError, httpx.ReadTimeout)):
+        call(client)
+
+    assert len(handler.requests) == 1
+    assert waits == []
+
+
+def test_backoff_grows_exponentially_with_jitter():
+    from agent.erp import BACKOFF_BASE, backoff
+
+    for attempt in (1, 2):
+        delay = BACKOFF_BASE * 2 ** (attempt - 1)
+        waits = [backoff(attempt) for _ in range(50)]
+        assert all(delay <= w <= 2 * delay for w in waits)
+        assert len(set(waits)) > 1  # jitter
+
+
+def test_retry_counter_is_initialised_for_every_read():
+    from o2c_common.metrics import ERP_CALLS, REGISTRY
+
+    erp(lambda request: httpx.Response(200, json={}))
+    names = {
+        s.labels["call"]
+        for family in REGISTRY.collect()
+        if family.name == "o2c_erp_retries"
+        for s in family.samples
+        if s.name == "o2c_erp_retries_total"
+    }
+    assert set(ERP_CALLS) <= names
 
 
 # --- contract tolerance (RAG) ---

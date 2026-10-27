@@ -231,3 +231,6 @@ ml/pipelines/local_outputs/
 # Evaluation gate reports (ml/eval_gate.py)
 eval/report.md
 eval/report.json
+
+# DR backups (docs/operations/dr-plan.md): order data, never committed
+backups/

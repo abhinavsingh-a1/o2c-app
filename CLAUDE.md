@@ -68,12 +68,14 @@ PostgreSQL + pgvector, Kafka, LiteLLM, Langfuse, MLflow.
 - Metrics: define them only in o2c_common.metrics; labels only from ALLOWED_LABELS (never idempotency keys, ids or raw paths, ADR-012)
 - uv run python ml/check_env.py: report .env lines the tools read differently (never prints values); quote special values with single quotes
 - uv run python ml/verify_audit.py: verify the hash-chained audit archive in s3://o2c-audit (exit 1 at the first broken record, ADR-014)
+- make audit-check (Git Bash): cosign + attestations of the images in ../o2c-gitops envs/prod (or test), promotion/rollback PRs, Jenkins audit trail, audit chain; PASS/FAIL table, exit 1 on FAIL
 - make dbt-build / make dbt-docs: build and test the analytics marts (analytics/dbt, connection from .env) / dbt docs at http://localhost:8580
 - make models-publish: push the @champion models to ghcr.io as OCI artifacts (oras, gh auth token with write:packages) and pin them in models.lock.json; images bake the pinned model, services fall back to MLflow only without one (ADR-016)
 - scripts/verify_image.sh <image@sha256:digest>: cosign signature + provenance and SBOM attestations of release.yml on main (PASS/FAIL); deploy only by digest
 - Environments (ADR-017): O2C_ENV=dev|test|prod prefixes Kafka topics and consumer groups (dev.docs.received, group dev.classifier) inside o2c_common only; code always uses logical names. make topics ENV=dev / make dlq-list ENV=dev
 - Local platform (ADR-017): kind cluster o2c, namespaces o2c-dev/test/prod, Argo CD + Kyverno from ../o2c-infra/platform/kind (bootstrap.sh, secrets.sh <ns>, argocd-ui.sh, teardown.sh); infrastructure stays in Compose, reached via host.docker.internal (Kafka :29092)
 - Promotion (ADR-018): Jenkins at http://localhost:18090 (../o2c-infra make jenkins-up, docs/jenkins.md); jobs promote-to-test and promote-to-prod (four-eyes approval, automatic revert PR on failure); they use scripts/promote_values.py and scripts/e2e_send_and_check.py from the promoted commit
+- Governance and operations docs: docs/governance/ (AI Act, DPIA, model cards, registers, threat model), docs/operations/ (runbooks, SLOs, DR)
 - Analytics: analytics-sink writes raw.*; dbt builds analytics.*; Grafana reads analytics.* only as grafana_ro (ADR-013). Event payload JSON is read only in the dbt staging models.
 
 Local URLs: MLflow http://localhost:5000,
