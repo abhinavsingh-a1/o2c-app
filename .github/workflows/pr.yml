@@ -20,6 +20,7 @@ env:
   PNPM_VERSION: "10"
   TRIVY_IMAGE: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
   SEMGREP_IMAGE: semgrep/semgrep:1.182.1@sha256:451b3d875c00dac7ed5db5293e584a07de11449a409c10b3c2d2652f429630b6
+  GITLEAKS_IMAGE: zricethezav/gitleaks:v8.30.0@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9
 
 jobs:
   lint:
@@ -30,6 +31,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # gitleaks scans every commit of the PR
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           version: ${{ env.UV_VERSION }}
@@ -39,10 +41,18 @@ jobs:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: pre-commit run --all-files
-        # eslint (a local hook running pnpm) is checked by the ui job
+        # eslint (a local hook running pnpm) is checked by the ui job; the gitleaks hook
+        # scans staged changes only, of which a checkout has none (next step)
         env:
-          SKIP: eslint
+          SKIP: eslint,gitleaks
         run: uvx --from pre-commit==4.7.0 pre-commit run --all-files --show-diff-on-failure
+      - name: gitleaks (every commit of the PR)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" "$GITLEAKS_IMAGE"
+          git /repo --redact --verbose --no-banner --log-opts "$BASE_SHA..$HEAD_SHA"
 
   python:
     name: python (pytest)

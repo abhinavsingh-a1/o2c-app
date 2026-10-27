@@ -55,6 +55,7 @@ source = { editable = "services/agent" }
 dependencies = [
     { name = "boto3" },
     { name = "fastapi" },
+    { name = "fastapi-swagger" },
     { name = "httpx" },
     { name = "langchain-openai" },
     { name = "langchain-postgres" },
@@ -76,6 +77,7 @@ dependencies = [
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.115" },
     { name = "fastapi", specifier = ">=0.149.0" },
+    { name = "fastapi-swagger", specifier = ">=0.4.64" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain-openai", specifier = ">=1.7.2" },
     { name = "langchain-postgres", specifier = ">=0.0.19" },
@@ -1143,6 +1145,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b9/37/6e7ec4dbe12d9721902066ddb83dd9c6e7adb1cee81e094502c43024e4d1/fastapi-0.149.0.tar.gz", hash = "sha256:aba5779358d0c5233759ddcddd84fe7269d71f775fd754b653b608f770558a41", size = 483369, upload-time = "2026-10-19T17:22:29.495Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/6c/78c324bd6725f69ebbac46e0d6a9a59744e108cececac4c1c8500c567512/fastapi-0.149.0-py3-none-any.whl", hash = "sha256:fc4a5cf7e14f607a48eb1ab98147e9140943e88ccd0c8791d72c0a89b1159a35", size = 145182, upload-time = "2026-10-19T17:22:27.753Z" },
+]
+
+[[package]]
+name = "fastapi-swagger"
+version = "0.4.64"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastapi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/f9/9575c862d1a442341964e52f19e86745dfbb4e4b8a5ca9d2bf399c53030e/fastapi_swagger-0.4.64.tar.gz", hash = "sha256:853e0459d4947f6b909c8f4627cd81eb555df36a992041782544ae95df85e489", size = 479267, upload-time = "2026-10-20T03:25:45.763Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f6/d5/788160b8e67dce1a434fa7f6f7cc8e04c67d9679e807389d8b992b2e055e/fastapi_swagger-0.4.64-py3-none-any.whl", hash = "sha256:bb6efa38afe8082fa66872477876f57b573dd519bc5aefb622d88430ad7ea740", size = 482611, upload-time = "2026-10-20T03:25:44.042Z" },
 ]
 
 [[package]]

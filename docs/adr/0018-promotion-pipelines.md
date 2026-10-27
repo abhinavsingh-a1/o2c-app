@@ -39,7 +39,11 @@ The cluster's API server and the Compose services are reachable only from this m
 
      A run marker after the PDF's `%%EOF` gives each run a new idempotency key, so the
      order is processed again instead of being skipped as a duplicate.
-   - **OWASP ZAP baseline** of the test UI and the agent API: no high-risk alerts;
+   - **OWASP ZAP baseline** of the test UI and the agent API: no high-risk alerts, and
+     no alert of a FAIL rule in o2c-infra `jenkins/zap-baseline.conf`: the security
+     headers (10020, 10021, 10036, 10038, 10055, 10063), Spectre site isolation (90004),
+     SRI and cross-domain or vulnerable scripts (90003, 10017, 10098, 10003).
+     Informational rules (10049, 10109) stay WARN;
    - **k6 load test**: 20 virtual users for 30 s on intake `/health` and the UI. Thresholds:
      p95 < 500 ms and errors < 1%;
    - **`make eval`** of o2c-app at the promoted commit, against the thresholds in
@@ -76,6 +80,10 @@ The cluster's API server and the Compose services are reachable only from this m
 - **Rollback is a Git revert, never a change in the cluster,** so Git keeps saying what
   runs.
 - **The build stays failed.** Rolling back does not make a promotion successful.
+- **No merge, no rollback.** When the SLO check fails but the build merged no PR
+  (`envs/prod` already had the test images), this build did not change prod and there
+  is nothing to revert. The log and `reports/rollback.txt` say "SLO breached; nothing to
+  roll back: this run did not change prod (envs/prod unchanged)"; the build stays failed.
 
 ### Jenkins and Ansible run locally
 - **The pipelines need what only this machine has:**
@@ -137,3 +145,64 @@ The cluster's API server and the Compose services are reachable only from this m
   single-user machine, never for a shared Jenkins.
 - **The Jenkinsfiles come from o2c-infra main,** so a pipeline change takes effect only
   after its PR is merged.
+
+## Findings from E14 (2026-10-27)
+The first promotions found problems that no unit test or PR gate had found. Each is fixed;
+the evidence is in the Jenkins builds (promote-to-test #1-#9, promote-to-prod #1-#7) and
+the linked documents.
+
+- **kindnet loses the DNS queries of pods a NetworkPolicy selects** (o2c-infra
+  `platform/README.md`). kind's CNI enforces NetworkPolicies in userspace: every DNS query
+  of a selected pod waits in netfilter queue 101 for kindnet's verdict. kindnet lost
+  verdicts (665 to 882 packets stuck, `no buffer space available`) and stalled under load,
+  so Argo CD's lookups timed out for minutes, for `github.com` and for
+  `argocd-repo-server` alike. The Argo CD chart creates a policy per component, so exactly
+  Argo CD was affected.
+  - Fix: Argo CD without NetworkPolicies (`global.networkPolicy.create: false`);
+    `bootstrap.sh` warns about any remaining policy and restarts kindnet when packets
+    wait in its queue. Measured: 12 of 800 lookups failed before, 0 of 1600 after.
+  - Trade-off: any pod may reach Argo CD. Acceptable on a local single-node cluster only.
+- **Retries cover blips, not outages.** The Argo CD and kubectl steps retry transient
+  network errors (`retry_transient`, pauses 20, 40, 60 s; `transient_error` tells a
+  lookup timeout from a failed sync and is tested by `jenkins/tests/transient_error.sh`).
+  promote-to-prod #5 retried four times over six minutes and still failed: the retries
+  could not fix kindnet's queue, only the platform fix did.
+- **MLflow's sync gunicorn worker was killed mid-download.** The eval stage downloads the
+  ~490 MB classifier weights through MLflow's artifact proxy; with the 30 s default worker
+  timeout, promote-to-test #7 failed with `InvalidChunkLength` (`WORKER TIMEOUT` in
+  MLflow). Fix: `--gunicorn-opts "--timeout 600"` and `--workers 4` (see Consequences).
+- **The eval gate caught dependency drift that every test missed.** promote-to-test #8
+  failed red team 7/8: RT-08 (40x quantity) was posted. Dependabot's major bumps had moved
+  pandas to 3, MLflow 2.17's schema enforcement rejected every prediction, and the agent's
+  0.0 fallback hid it (ADR-006). Fix: pins with a test that fails when they are lifted, a
+  counter and a critical alert for every fallback, and an "anomaly model scores" step in
+  the eval gate; promote-to-test #9 passed it. The full eval in promote-to-test is the
+  gate that found it, not the PR checks.
+- **Four-eyes approval works.** promote-to-prod #3 was approved by the user who started it
+  and failed: "four-eyes rule: abhinav started this build and cannot approve it". Every
+  later build records `started by: abhinav`, `approved by: approver` in
+  `reports/approval.txt`.
+- **The rollback works, and it was needed for real.** promote-to-prod #4 and #5 merged their
+  prod PR (o2c-gitops `6c19131`, `e8b038f`), then the Argo CD sync failed on the kindnet DNS
+  problem. Both reverted the merge (`b375173`, `ce21c35`), synced prod back and checked
+  the previous images; both stayed failed. #6 promoted successfully (SLO check p95 53.6 ms).
+- **An SLO breach without a merge has nothing to roll back.** promote-to-prod #7
+  (`SIMULATE_SLO_BREACH`) found `envs/prod` up to date, so it merged no PR, and the SLO
+  check then failed on purpose. The rollback rule correctly did nothing, but the build
+  did not say so. It now does (Rollback rule, "No merge, no rollback"). To see a real
+  rollback, the breach must be simulated on a build that changes prod.
+- **ZAP warnings became failures.** promote-to-test #5-#9 passed ZAP with 8 (UI) and
+  9 (agent API) warnings: no CSP, no anti-clickjacking or nosniff headers, the nginx
+  version, no Permissions-Policy or site isolation, and Swagger UI from a CDN without
+  SRI. The UI's nginx and the agent (`agent.security`, Swagger UI served by the agent)
+  now send these headers, and the matching rules FAIL the gate. Locally only
+  informational alerts remain. Self-hosted, Swagger UI is scanned by ZAP, which a CDN
+  copy never was: the first package tried (fastapi-offline, Swagger UI 5.32.6) bundles
+  DOMPurify 3.4.0 with known CVEs, and rule 10003 (now FAIL) caught it before it shipped.
+  The agent uses fastapi-swagger (Swagger UI 5.34.0, DOMPurify 3.4.16), which follows
+  Swagger UI's releases.
+- **The CI gates were proven red on purpose** (docs/gates-evidence.md). That exercise
+  found that no CI gate caught a fake AWS key in a test fixture. The lint job's gitleaks
+  hook scans only staged changes, so it never failed in CI, and Trivy's secret scanner
+  skips `tests/` directories. The lint job now runs gitleaks over every commit of the PR
+  (ADR-015).
