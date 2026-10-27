@@ -123,6 +123,13 @@ The cluster's API server and the Compose services are reachable only from this m
 - **The test environment shares the Compose infrastructure with dev** (ADR-017): Postgres,
   Kafka with prefixes, LiteLLM, the ERP database. The integration test therefore creates
   a real order in the shared ERP mock.
+- **The eval downloads the @champion models through the MLflow artifact proxy**
+  (MLflow → SeaweedFS). The classifier's `model-00001-of-00002.safetensors` (~490 MB)
+  streams through one sync gunicorn worker for over a minute, so the MLflow server runs
+  with `--gunicorn-opts "--timeout 600"` and `--workers 4` (docker-compose.yml). With the
+  30 s default the worker was killed mid-download (`WORKER TIMEOUT`, client
+  `InvalidChunkLength`). `--workers` is MLflow's own flag: a `-w` inside
+  `--gunicorn-opts` is overridden by the `-w` MLflow appends.
 - **The load test and the SLO check measure through `kubectl port-forward`.** Their
   numbers show regressions between promotions, not production capacity.
 - **Builds run on the Jenkins controller** (2 executors, no agents). The controller has
