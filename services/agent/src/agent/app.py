@@ -14,6 +14,8 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from o2c_common.events import Envelope
 from o2c_common.kafka import EventConsumer, EventProducer, PermanentError, PostgresStore
 from o2c_common.metrics import (
+    ANOMALY_FAILURE_REASONS,
+    ANOMALY_SCORING_FAILURES,
     DECIDED_BY,
     ISSUES,
     ORDER_OUTCOMES,
@@ -250,6 +252,7 @@ def create_app(
     init_labels(ORDERS, ORDER_OUTCOMES, DECIDED_BY)
     init_labels(REVIEWS, REVIEW_ACTIONS)
     init_labels(ISSUES, [code.value for code in IssueCode])
+    init_labels(ANOMALY_SCORING_FAILURES, ANOMALY_FAILURE_REASONS)
 
     def _state(request: Request, idempotency_key: str):
         snapshot = request.app.state.graph.get_state(thread_config(idempotency_key))

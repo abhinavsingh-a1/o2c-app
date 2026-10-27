@@ -5,17 +5,18 @@ Usage: uv run --group ml python ml/eval_gate.py --quick | --full | --ci
 
 Runs the evaluations and compares each result with the absolute thresholds in
 eval/thresholds.yaml:
-  --quick  extraction on the first 10 POs of poc/data, red team, injection false
-           positives (a few minutes, about one cent; unit tests are not included:
-           run uv run pytest for those)
+  --quick  extraction on the first 10 POs of poc/data, anomaly model scores, red team,
+           injection false positives (a few minutes, about one cent; unit tests are
+           not included: run uv run pytest for those)
   --full   extraction on poc/data (50) and ml/data/holdout (20), hybrid classifier on
            ml/data/classifier/holdout, judge validation and explanation pass rate
-           (poc/data and holdout), red team, injection false positives
+           (poc/data and holdout), anomaly model scores, red team, injection false
+           positives
   --ci     GitHub Actions (ADR-015): --quick without the red team, so only LiteLLM
            is needed (thresholds of the quick section)
 
-Needs the local stack (make up): LiteLLM, the ERP mock, the contract index and, for
---full, MLflow with o2c-doc-classifier@champion. LiteLLM is called with LITELLM_KEY_EVAL
+Needs the local stack (make up): LiteLLM, the ERP mock, the contract index, MLflow with
+o2c-quantity-anomaly@champion and, for --full, o2c-doc-classifier@champion. LiteLLM is called with LITELLM_KEY_EVAL
 when it is set (ml/litellm_common.py). The holdout is only measured here, never used to
 tune anything.
 
@@ -34,6 +35,7 @@ material matching, explanations) uses o2c-extract.
 
 import argparse
 import json
+import os
 import sys
 import time
 from collections.abc import Callable
@@ -65,7 +67,7 @@ class Check:
     step: str
     name: str
     actual: float | int | None
-    op: str  # ">=" or "<="
+    op: str  # ">=", "<=", "<" or ">"
     threshold: float | int
     shown_actual: str
     shown_threshold: str
@@ -99,6 +101,28 @@ def at_most(step, name, actual, maximum, fmt=str, detail="") -> Check:
         actual <= maximum,
         detail,
     )
+
+
+def below(step, name, actual, limit, fmt=str, detail="") -> Check:
+    """Strictly below `limit`; a missing value (None) fails."""
+    passed = actual is not None and actual < limit
+    shown = "none" if actual is None else fmt(actual)
+    return Check(
+        step, name, actual, "<", limit, shown, "< " + fmt(limit), passed, detail
+    )
+
+
+def above(step, name, actual, limit, fmt=str, detail="") -> Check:
+    """Strictly above `limit`; a missing value (None) fails."""
+    passed = actual is not None and actual > limit
+    shown = "none" if actual is None else fmt(actual)
+    return Check(
+        step, name, actual, ">", limit, shown, "> " + fmt(limit), passed, detail
+    )
+
+
+def score(value: float) -> str:
+    return f"{value:.3f}"
 
 
 def pct(value: float) -> str:
@@ -155,6 +179,41 @@ def run_judge() -> tuple[list, list]:
     if not all(r["ok"] for r in calibration):
         return calibration, []
     return calibration, judge_agent_explanations(judge, None, None)
+
+
+def run_anomaly_scores(outlier_factor: float) -> dict:
+    """Load models:/o2c-quantity-anomaly@champion from MLflow (never the baked model) and
+    score, through the agent's own agent.anomaly.score_line without its 0.0 fallback, a
+    normal line (the median quantity of the customer-material with the most history)
+    and the same line at `outlier_factor` times the median. A load error raises (the
+    step fails); a scoring error is counted and its score is None."""
+    import mlflow
+    from agent.anomaly import DEFAULT_TRACKING_URI, MODEL_NAME, MODEL_URI, score_line
+    from mlflow import MlflowClient
+
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", DEFAULT_TRACKING_URI))
+    version = MlflowClient().get_model_version_by_alias(MODEL_NAME, "champion").version
+    model = mlflow.pyfunc.load_model(MODEL_URI)
+    stats = model.unwrap_python_model().stats
+    (customer, material), s = max(stats.items(), key=lambda kv: (kv[1]["count"], kv[0]))
+    scores, errors = {}, []
+    for label, quantity in (
+        ("normal", s["median"]),
+        ("outlier", s["median"] * outlier_factor),
+    ):
+        try:
+            scores[label] = score_line(model, customer, material, quantity)
+        except Exception as exc:  # noqa: BLE001 - reported as a scoring error
+            scores[label] = None
+            # MLflow repeats the whole input and schema; the cause follows "Error: "
+            cause = str(exc).rsplit("Error: ", 1)[-1][:200]
+            errors.append(f"{label}: {type(exc).__name__}: {cause}")
+    return {
+        "model": f"{MODEL_NAME} v{version}",
+        "line": f"{customer}/{material} median {s['median']:g}",
+        **scores,
+        "errors": errors,
+    }
 
 
 def run_redteam_cases() -> list[dict]:
@@ -275,6 +334,36 @@ def judge_step(t: dict) -> list[Check]:
     return checks
 
 
+def anomaly_step(t: dict) -> list[Check]:
+    r = run_anomaly_scores(t["outlier_factor"])
+    factor = f"{t['outlier_factor']:g}x"
+    return [
+        below(
+            "anomaly",
+            "anomaly model: normal line score",
+            r["normal"],
+            t["normal_score_max"],
+            score,
+            f"{r['model']}, {r['line']}",
+        ),
+        above(
+            "anomaly",
+            f"anomaly model: {factor} line score",
+            r["outlier"],
+            t["outlier_score_min"],
+            score,
+            f"{r['model']}, {r['line']} x {t['outlier_factor']:g}",
+        ),
+        at_most(
+            "anomaly",
+            "anomaly model: scoring errors",
+            len(r["errors"]),
+            t["scoring_errors_max"],
+            detail="; ".join(r["errors"]),
+        ),
+    ]
+
+
 def redteam_step(t: dict) -> list[Check]:
     results = run_redteam_cases()
     passed = sum(r["passed"] for r in results)
@@ -333,8 +422,11 @@ def plan(mode: str, thresholds: dict) -> list[tuple[str, Callable[[], list[Check
             ("hybrid classifier", lambda: classifier_step(thresholds["classifier"])),
             ("judge", lambda: judge_step(thresholds["judge"])),
         ]
-    if mode != "ci":  # the red team needs the agent's stack (ERP mock, contracts)
-        steps.append(("red team", lambda: redteam_step(thresholds["redteam"])))
+    if mode != "ci":  # MLflow and the agent's stack (ERP mock, contracts) are local
+        steps += [
+            ("anomaly model scores", lambda: anomaly_step(thresholds["anomaly"])),
+            ("red team", lambda: redteam_step(thresholds["redteam"])),
+        ]
     steps.append(
         ("injection detector", lambda: injection_step(thresholds["injection"]))
     )

@@ -18,6 +18,8 @@ from agent.anomaly_model import (
     train,
 )
 from agent.graph import ANOMALY_THRESHOLD
+from mlflow.models import infer_signature
+from o2c_common.metrics import sample
 
 REAL_LOAD = anomaly._load  # conftest replaces it with an unavailable loader
 
@@ -168,6 +170,47 @@ def test_raw_scores_increase_with_the_quantity(trained):
 # --- agent.anomaly: loading from MLflow and fallback ------------------------
 
 
+def failures(reason: str) -> float:
+    return sample("o2c_anomaly_scoring_failures_total", reason=reason)
+
+
+def test_pandas_is_the_major_version_mlflow_2_17_supports():
+    # MLflow 2.17's schema enforcement rejects pandas 3 string columns ("Can not safely
+    # convert str to <U0"): every line would get the 0.0 fallback (ADR-006).
+    assert mlflow.__version__.startswith("2.17.")
+    assert pd.__version__.startswith("2."), pd.__version__
+
+
+def test_a_signed_pyfunc_model_scores_with_the_locked_pandas(
+    trained, tmp_path, monkeypatch
+):
+    # Saved as ml/train_anomaly.register logs it: with signature and input example, so
+    # MLflow enforces the input schema on every predict, as for the registered model.
+    model, _, means = trained
+    (customer, material), mean = max(means.items(), key=lambda kv: kv[1])
+    example = lines((customer, material, float(round(mean))), (customer, material, 1.0))
+    mlflow.pyfunc.save_model(
+        path=tmp_path / "model",
+        python_model=model,
+        input_example=example,
+        signature=infer_signature(example, model.score(example)),
+    )
+    loaded = mlflow.pyfunc.load_model(str(tmp_path / "model"))
+    assert loaded.metadata.get_input_schema().input_names() == [
+        "customer_number",
+        "material_number",
+        "quantity",
+    ]
+    monkeypatch.setattr(anomaly, "_load", lambda: loaded)
+    before = failures("model_unavailable"), failures("prediction_error")
+
+    normal = anomaly.anomaly_score(customer, material, round(mean))
+    unusual = anomaly.anomaly_score(customer, material, round(mean * 20))
+
+    assert 0.0 < normal < THRESHOLD < unusual <= 1.0  # 0.0 would be the fallback
+    assert (failures("model_unavailable"), failures("prediction_error")) == before
+
+
 def test_anomaly_score_with_a_saved_pyfunc_model(trained, tmp_path, monkeypatch):
     model, _, means = trained
     mlflow.pyfunc.save_model(path=tmp_path / "model", python_model=model)
@@ -189,12 +232,14 @@ def test_fallback_returns_0_when_mlflow_is_unavailable(monkeypatch, caplog):
         raise ConnectionError("mlflow:5000 refused")
 
     monkeypatch.setattr(anomaly, "_load", unavailable)
+    before = failures("model_unavailable")
 
     with caplog.at_level(logging.WARNING, logger="agent.anomaly"):
         assert anomaly.anomaly_score("1000107", "400101", 10_000) == 0.0
         assert anomaly.anomaly_score("1000107", "400101", 10_000) == 0.0
 
     assert len(calls) == 1  # no reload on every line
+    assert failures("model_unavailable") - before == 2  # but every line is counted
     assert "unavailable" in caplog.text
 
 
@@ -244,6 +289,22 @@ def test_fallback_when_prediction_fails(monkeypatch, caplog):
             raise ValueError("schema mismatch")
 
     monkeypatch.setattr(anomaly, "_load", Broken)
+    before = failures("prediction_error")
     with caplog.at_level(logging.WARNING, logger="agent.anomaly"):
         assert anomaly.anomaly_score("1000107", "400101", 25) == 0.0
     assert "scoring failed" in caplog.text
+    assert failures("prediction_error") - before == 1
+
+
+def test_score_line_raises_instead_of_falling_back():
+    class Broken:
+        def predict(self, df):
+            assert list(df.columns) == [
+                "customer_number",
+                "material_number",
+                "quantity",
+            ]
+            raise ValueError("schema mismatch")
+
+    with pytest.raises(ValueError, match="schema mismatch"):
+        anomaly.score_line(Broken(), "1000107", "400101", 25)
