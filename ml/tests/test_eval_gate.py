@@ -3,8 +3,10 @@ import json
 import eval_gate
 import pytest
 from eval_gate import (
+    above,
     at_least,
     at_most,
+    below,
     format_markdown,
     format_table,
     load_thresholds,
@@ -54,7 +56,18 @@ def fake_runs(monkeypatch):
         ],
         "redteam": [{"case": f"RT-0{i}", "passed": True} for i in range(1, 9)],
         "injection": {"checked": 200, "flagged": {}},
+        "anomaly": {
+            "model": "o2c-quantity-anomaly v3",
+            "line": "1000101/400101 median 40",
+            "normal": 0.31,
+            "outlier": 0.97,
+            "errors": [],
+        },
     }
+
+    def run_anomaly_scores(outlier_factor):
+        calls.append(f"anomaly x{outlier_factor:g}")  # MLflow only: no LLM cost
+        return state["anomaly"]
 
     def run_extraction(dataset, limit):
         if limit:
@@ -77,6 +90,7 @@ def fake_runs(monkeypatch):
     monkeypatch.setattr(
         eval_gate, "injection_findings", lambda: costs("injection", state["injection"])
     )
+    monkeypatch.setattr(eval_gate, "run_anomaly_scores", run_anomaly_scores)
     return state, meter, calls
 
 
@@ -99,6 +113,12 @@ def test_thresholds_file_has_the_agreed_values():
     assert t["judge"] == {"calibration_correct_min": 7, "pass_rate_min": 0.9}
     assert t["redteam"] == {"passed_min": 8}
     assert t["injection"] == {"false_positives_max": 0}
+    assert t["anomaly"] == {
+        "normal_score_max": 0.8,
+        "outlier_factor": 20,
+        "outlier_score_min": 0.8,
+        "scoring_errors_max": 0,
+    }
 
 
 def test_at_least_and_at_most():
@@ -113,10 +133,24 @@ def test_at_least_and_at_most():
     )
 
 
+def test_below_and_above_are_strict_and_fail_without_a_value():
+    assert below("s", "n", 0.79, 0.8).passed
+    assert not below("s", "n", 0.8, 0.8).passed
+    assert above("s", "n", 0.81, 0.8).passed
+    assert not above("s", "n", 0.8, 0.8).passed
+    check = above("s", "n", None, 0.8, lambda v: f"{v:.3f}")
+    assert (check.passed, check.shown_actual, check.shown_threshold) == (
+        False,
+        "none",
+        "> 0.800",
+    )
+
+
 def test_quick_runs_extraction_first_10_red_team_and_injection():
     steps = [name for name, _ in plan("quick", THRESHOLDS)]
     assert steps == [
         "extraction poc/data (first 10)",
+        "anomaly model scores",
         "red team",
         "injection detector",
     ]
@@ -149,6 +183,7 @@ def test_full_runs_everything():
         "extraction holdout",
         "hybrid classifier",
         "judge",
+        "anomaly model scores",
         "red team",
         "injection detector",
     ]
@@ -160,18 +195,21 @@ def test_full_gate_passes_at_the_baselines(fake_runs):
     report = run_gate("full", THRESHOLDS, meter)
 
     assert report["passed"]
-    assert len(report["checks"]) == 10
+    assert len(report["checks"]) == 13
     assert calls == [
         "extraction poc_data",
         "extraction holdout",
         "classifier",
         "judge",
+        "anomaly x20",
         "redteam",
         "injection",
     ]
     assert report["cost_usd"] == pytest.approx(0.06)
-    assert [s["cost_usd"] for s in report["steps"]] == [0.01] * 6
+    assert [s["cost_usd"] for s in report["steps"]] == [0.01] * 4 + [0.0] + [0.01] * 2
     checks = by_name(report)
+    assert checks["anomaly model: 20x line score"]["shown_actual"] == "0.970"
+    assert checks["anomaly model: normal line score"]["shown_threshold"] == "< 0.800"
     assert checks["poc/data: perfect POs"]["shown_actual"] == "50/50"
     assert checks["poc/data: perfect POs"]["shown_threshold"] == ">= 48/50"
     assert checks["holdout: field accuracy"]["shown_actual"] == "99.01%"
@@ -184,7 +222,7 @@ def test_quick_gate_uses_the_first_10_pos(fake_runs):
     report = run_gate("quick", THRESHOLDS, meter)
 
     assert report["passed"]
-    assert calls == ["extraction quick", "redteam", "injection"]
+    assert calls == ["extraction quick", "anomaly x20", "redteam", "injection"]
     assert by_name(report)["poc/data first 10: perfect POs"]["shown_actual"] == "10/10"
 
 
@@ -212,6 +250,14 @@ def test_quick_gate_uses_the_first_10_pos(fake_runs):
         (
             lambda s: s["redteam"][4].update(passed=False),
             "red-team cases passed",
+        ),
+        (
+            lambda s: s["anomaly"].update(normal=0.85),
+            "anomaly model: normal line score",
+        ),
+        (
+            lambda s: s["anomaly"].update(outlier=0.62),
+            "anomaly model: 20x line score",
         ),
         (
             lambda s: s["injection"]["flagged"].update({"poc/data/pos/PO-1.pdf": []}),
@@ -251,6 +297,26 @@ def test_a_wrong_judge_fails_and_explanations_are_not_judged(fake_runs):
     assert checks["judge validation: correct verdicts"]["shown_actual"] == "6/7"
     assert checks["explanation pass rate"]["shown_actual"] == "not judged"
     assert not checks["explanation pass rate"]["passed"]
+
+
+def test_the_pandas_3_fallback_fails_every_anomaly_check(fake_runs):
+    # What the agent hid with its 0.0 fallback: both lines raise in schema enforcement.
+    state, meter, _ = fake_runs
+    error = "MlflowException: Incompatible input types for column customer_number"
+    state["anomaly"].update(
+        normal=None, outlier=None, errors=[f"normal: {error}", f"outlier: {error}"]
+    )
+
+    checks = by_name(run_gate("quick", THRESHOLDS, meter))
+
+    failed = [name for name, c in checks.items() if not c["passed"]]
+    assert failed == [
+        "anomaly model: normal line score",
+        "anomaly model: 20x line score",
+        "anomaly model: scoring errors",
+    ]
+    assert checks["anomaly model: scoring errors"]["shown_actual"] == "2"
+    assert "customer_number" in checks["anomaly model: scoring errors"]["detail"]
 
 
 def test_a_step_that_raises_fails_the_gate_and_the_others_still_run(
@@ -343,3 +409,46 @@ def test_full_runs_are_saved_per_o2c_extract_model(tmp_path, fake_runs):
     assert "- o2c-extract: openai/gpt-6-luna" in format_markdown(
         {"started_at": "t", "git_sha": "s", **full}
     )
+
+
+def test_run_anomaly_scores_loads_the_champion_and_scores_without_fallback(
+    tmp_path, monkeypatch
+):
+    # A real (file) MLflow registry with a signed champion, as ml/train_anomaly.py logs it.
+    import mlflow
+    import numpy as np
+    import pandas as pd
+    from agent.anomaly_model import train
+    from mlflow import MlflowClient
+    from mlflow.models import infer_signature
+
+    rng = np.random.default_rng(3)
+    rows = [("1000101", "400101", float(round(rng.normal(40, 8)))) for _ in range(60)]
+    rows += [("1000101", "400102", float(round(rng.normal(5, 1)))) for _ in range(20)]
+    rows += [("1000101", "400101", 800.0), ("1000101", "400102", 120.0)]
+    history = pd.DataFrame(
+        rows, columns=["customer_number", "material_number", "quantity"]
+    )
+    model, _ = train(history, np.array([False] * 80 + [True, True]))
+    uri = (tmp_path / "mlruns").as_uri()
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", uri)
+    # set_tracking_uri is global: restore it for the other tests
+    monkeypatch.setattr(mlflow.tracking._tracking_service.utils, "_tracking_uri", None)
+    mlflow.set_tracking_uri(uri)
+    example = history.head(3)
+    with mlflow.start_run():
+        mlflow.pyfunc.log_model(
+            artifact_path="model",
+            python_model=model,
+            input_example=example,
+            signature=infer_signature(example, model.score(example)),
+            registered_model_name="o2c-quantity-anomaly",
+        )
+    MlflowClient().set_registered_model_alias("o2c-quantity-anomaly", "champion", "1")
+
+    r = eval_gate.run_anomaly_scores(20)
+
+    assert r["errors"] == []
+    assert r["model"] == "o2c-quantity-anomaly v1"
+    assert r["line"].startswith("1000101/400101 median ")  # most history lines
+    assert 0.0 < r["normal"] < 0.8 < r["outlier"] <= 1.0

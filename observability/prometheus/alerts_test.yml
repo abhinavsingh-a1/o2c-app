@@ -167,3 +167,25 @@ tests:
           - exp_labels: { severity: warning, group: agent }
             exp_annotations:
               summary: "Consumer group agent: 10% of events fail (> 5%)"
+
+  - name: an anomaly scoring failure
+    interval: 1m
+    input_series:
+      - series: 'o2c_anomaly_scoring_failures_total{job="agent", reason="prediction_error"}'
+        values: "0x5 1x20"
+      - series: 'o2c_anomaly_scoring_failures_total{job="agent", reason="model_unavailable"}'
+        values: "0x25"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: AnomalyScoringFailing
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: AnomalyScoringFailing
+        exp_alerts:
+          - exp_labels: { severity: critical, job: agent, reason: prediction_error }
+            exp_annotations:
+              summary: "agent: anomaly scoring failed (prediction_error, about 1 lines in 10 minutes)"
+              description: "Order lines got the 0.0 fallback score, so quantity anomalies are not detected. Check the agent log (anomaly model ... unavailable / anomaly scoring failed) and the pinned pandas/MLflow versions."
+      - eval_time: 20m # no new failure for 10 minutes
+        alertname: AnomalyScoringFailing
+        exp_alerts: []

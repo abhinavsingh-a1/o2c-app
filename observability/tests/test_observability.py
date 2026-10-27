@@ -79,6 +79,7 @@ def test_the_agreed_alerts():
         "LlmCostHigh",
         "HttpErrorRateHigh",
         "EventErrorRateHigh",
+        "AnomalyScoringFailing",
     }
     assert (r["ServiceDown"]["expr"], r["ServiceDown"]["for"]) == ("up == 0", "2m")
     assert "[10m]" in r["DeadLetterQueueReceivedMessages"]["expr"]
@@ -90,6 +91,9 @@ def test_the_agreed_alerts():
     assert "> 0.5" in r["LlmCostHigh"]["expr"] and "[1h]" in r["LlmCostHigh"]["expr"]
     for name in ("HttpErrorRateHigh", "EventErrorRateHigh"):
         assert "> 0.05" in r[name]["expr"]
+    anomaly = r["AnomalyScoringFailing"]  # any 0.0 fallback in 10 minutes, at once
+    assert "[10m]" in anomaly["expr"] and "> 0" in anomaly["expr"]
+    assert "for" not in anomaly and anomaly["labels"]["severity"] == "critical"
     for rule in r.values():
         assert rule["labels"]["severity"] in {"critical", "warning"}
         assert rule["annotations"]["summary"]

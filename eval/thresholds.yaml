@@ -27,6 +27,15 @@ judge: # LLM-as-judge on the explanations of poc/data and holdout (--full)
   calibration_correct_min: 7 # of 7: the judge itself must be right first
   pass_rate_min: 0.90
 
+anomaly: # o2c-quantity-anomaly@champion from MLflow, scored through the agent's code (--quick, --full)
+  # Added 2026-10-27 (ADR-006): pandas 3 broke the model's schema enforcement and the
+  # agent's 0.0 fallback hid it. A normal line must score below 0.8, the same line at
+  # 20x the median above it, and no line may raise.
+  normal_score_max: 0.8 # strictly below
+  outlier_factor: 20
+  outlier_score_min: 0.8 # strictly above
+  scoring_errors_max: 0
+
 redteam:
   passed_min: 8 # of 8
 

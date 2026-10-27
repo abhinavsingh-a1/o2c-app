@@ -81,3 +81,13 @@ groups:
           severity: warning
         annotations:
           summary: "Consumer group {{ $labels.group }}: {{ $value | humanizePercentage }} of events fail (> 5%)"
+
+      - alert: AnomalyScoringFailing
+        # Every failure means a line was scored 0.0: quantity anomaly detection is off for
+        # it (ADR-006). No `for`: one failure is enough, the fallback is silent otherwise.
+        expr: sum by (job, reason) (increase(o2c_anomaly_scoring_failures_total[10m])) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }}: anomaly scoring failed ({{ $labels.reason }}, about {{ $value | printf \"%.0f\" }} lines in 10 minutes)"
+          description: "Order lines got the 0.0 fallback score, so quantity anomalies are not detected. Check the agent log (anomaly model ... unavailable / anomaly scoring failed) and the pinned pandas/MLflow versions."

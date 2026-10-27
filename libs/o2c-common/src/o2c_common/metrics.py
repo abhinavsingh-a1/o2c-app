@@ -37,7 +37,7 @@ ALLOWED_LABELS = frozenset(
         "route",  # route template such as /reviews/{idempotency_key}, or "unmatched"
         "status",  # HTTP status code
         "group",  # Kafka consumer group
-        "reason",  # DLQ reason (DLQ_REASONS)
+        "reason",  # DLQ reason (DLQ_REASONS) or anomaly fallback reason (ANOMALY_FAILURE_REASONS)
         "source",  # intake: email | upload; audit: the 3 order topics | review_decisions
         "doc_type",  # purchase_order | invoice | remittance | other
         "classified_by",  # distilbert | gpt
@@ -51,6 +51,7 @@ ALLOWED_LABELS = frozenset(
 )
 HTTP_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
 DLQ_REASONS = ("invalid_envelope", "permanent_error", "retries_exhausted")
+ANOMALY_FAILURE_REASONS = ("model_unavailable", "prediction_error")
 UNMATCHED_ROUTE = "unmatched"  # 404s: never the raw path (scanners would explode it)
 METRICS_PATH = "/metrics"
 SOURCES = ("email", "upload")
@@ -126,6 +127,12 @@ ISSUES = Counter(
     "o2c_issues_total", "Issues found by the agent's checks, by issue code", ["code"]
 )
 REVIEWS = Counter("o2c_reviews_total", "Review decisions by action", ["action"])
+ANOMALY_SCORING_FAILURES = Counter(
+    "o2c_anomaly_scoring_failures_total",
+    "Order lines the agent scored 0.0 because the quantity anomaly model was "
+    "unavailable or its prediction failed (the fallback: anomaly detection is off)",
+    ["reason"],
+)
 LLM_COST = Counter(
     "o2c_llm_cost_usd_total",
     "OpenAI cost in USD from LiteLLM's x-litellm-response-cost header",

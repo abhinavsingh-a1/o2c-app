@@ -97,3 +97,40 @@ never-ordered pair is used once, with a normal quantity for that material.
   feature stronger; until then, quantity is what the model reliably catches.
 - The remaining 2 false alarms (poc/data) are normal quantities at the top of the
   generator's range for a customer-material with a low median.
+
+### Dependency drift silently disabled the model (2026-10-27)
+- **What happened.** Dependabot's first run (#37 turned it on) opened major-update PRs.
+  Two of them were merged on 2026-10-22: #49 (pandas 2.3.3 -> 3.0.6) and #50
+  (transformers 4.46.3 -> 5.20.2). Dependabot rewrote the ranges in the pyproject files
+  (`pandas>=3.0.6,<4`, `transformers>=5.20.2,<5.21`), not only `uv.lock`. Twenty minutes
+  later, #52 added the Dependabot ignores for `pandas>=3` and `transformers>=4.47`. They
+  stop future PRs, but they did not revert the two bumps already on main.
+- **Effect.** MLflow 2.17's schema enforcement rejects the pandas 3 string dtype:
+  `Incompatible input types for column customer_number. Can not safely convert str to
+  <U0`. This happens on every `predict` of a signed model, whichever pandas version
+  logged it. The agent caught the error and scored 0.0, so every image built from
+  `uv.lock` (dev and test) ran without quantity anomaly detection and logged only a
+  warning. Red-team case RT-08 (40x quantity) was posted.
+- **Why the tests passed.** The pyfunc test saved the model without a signature, so
+  MLflow never enforced the schema. The rest of the agent tests use a fake anomaly score.
+- **Caught by** the Jenkins evaluation gate (red team 7/8), not by monitoring.
+- **Fix.**
+  - `pandas>=2.2,<3` in the agent and the `ml` group, and `transformers>=4.45,<4.47` in
+    the classifier and the `ml` group. One uv workspace has one resolution, so all of
+    them move together.
+  - transformers 5 breaks `mlflow.transformers.save_model` (`cannot import name
+    'FlaxPreTrainedModel'`), so `ml/train_classifier.py` could no longer register a
+    classifier. Serving (`classifier.hybrid`) loads with transformers directly and would
+    have kept working.
+- **Made loud.**
+  - `o2c_anomaly_scoring_failures_total{reason=model_unavailable|prediction_error}`
+    counts every 0.0 fallback.
+  - The alert `AnomalyScoringFailing` (critical) fires on any failure in 10 minutes.
+  - The eval gate step "anomaly model scores" (`--quick` and `--full`, thresholds in
+    `eval/thresholds.yaml`) loads `@champion` from MLflow. It scores a normal line and a
+    20x line through `agent.anomaly.score_line`, which has no fallback, and expects
+    < 0.8, > 0.8 and zero scoring errors.
+  - A test scores a *signed* pyfunc model and asserts pandas 2.x with MLflow 2.17.
+- **Rule.** A fallback that hides a model must be counted and alerted on. A pin that
+  protects a model also needs a test that fails when the pin is lifted. A Dependabot
+  ignore is not enough on its own.
