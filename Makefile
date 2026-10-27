@@ -83,7 +83,7 @@ contracts-ingest:
 	uv run python -m agent.contracts
 
 agent:
-	uv run uvicorn agent.app:create_app --factory --port 8400
+	uv run uvicorn agent.app:create_app --factory --port 8400 --no-server-header
 
 gen-api:
 	pnpm --dir ui gen:api

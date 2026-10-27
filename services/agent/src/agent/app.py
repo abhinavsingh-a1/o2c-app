@@ -52,6 +52,7 @@ from agent.reviews import (
     ReviewStore,
     ReviewSummary,
 )
+from agent.security import add_security
 from agent.settings import Settings
 from agent.state import AgentState, IssueCode, Review
 
@@ -247,7 +248,14 @@ def create_app(
         if pool is not None:
             pool.close()
 
-    app = FastAPI(title="Order agent", version="0.3.0", lifespan=lifespan)
+    app = FastAPI(
+        title="Order agent",
+        version="0.3.0",
+        lifespan=lifespan,
+        docs_url=None,  # self-hosted by add_security, no CDN
+        redoc_url=None,
+    )
+    add_security(app)
     instrument_fastapi(app)
     init_labels(ORDERS, ORDER_OUTCOMES, DECIDED_BY)
     init_labels(REVIEWS, REVIEW_ACTIONS)

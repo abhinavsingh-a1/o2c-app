@@ -17,7 +17,7 @@ A new push cancels the older run of the same PR. The workflow token can only rea
 
 | Job | What | Blocks |
 |---|---|---|
-| lint | `pre-commit run --all-files`: whitespace, YAML, gitleaks, ruff, ruff format, sqlfluff (eslint runs in ui) | style drift, committed secrets, invalid SQL/YAML |
+| lint | `pre-commit run --all-files`: whitespace, YAML, ruff, ruff format, sqlfluff (eslint runs in ui); gitleaks over every commit of the PR (the pre-commit hook scans staged changes only, none in CI; found by the gate evidence, docs/gates-evidence.md) | style drift, committed secrets, invalid SQL/YAML |
 | python | `uv sync --all-packages --all-groups`, `uv run pytest` (uv cache) | any failing unit test (recorded LLM responses only) |
 | ui | `pnpm install --frozen-lockfile`, lint (oxlint), test (Vitest), build | broken UI, lockfile drift |
 | security | see the table below | known vulnerabilities, insecure code, misconfigured images |
