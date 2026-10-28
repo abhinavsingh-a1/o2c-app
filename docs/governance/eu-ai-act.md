@@ -19,16 +19,16 @@ Checked: 2026-10-28. Owner: Abhinav (o2c-app CODEOWNERS).
 | 20 Jul 2026 | Commission guidelines on the Art. 50 transparency obligations (non-binding) | [Commission][ec-art50] |
 | 27 Jul 2026 | Omnibus enters into force | [Commission][ec-fw] |
 | 2 Aug 2026 | The Act applies generally, including Art. 50 transparency. The Commission's enforcement powers over GPAI providers apply. | [Commission][ec-fw], [Commission][ec-art50], [Commission GPAI page][ec-gpai] |
-| 2 Dec 2026 | Art. 50(2) marking deadline for generative systems placed on the market before 2 Aug 2026 (Art. 111(4) as amended). New prohibition 9 (non-consensual intimate content and CSAM) | [AI Act Explorer][aiact-omnibus], [Commission][ec-fw] |
+| 2 Dec 2026 | Two new prohibited practices apply: Art. 5(1)(ba) non-consensual intimate material and Art. 5(1)(bb) child sexual abuse material (Art. 113 as amended). Art. 50(2) marking deadline for generative systems placed on the market before 2 Aug 2026 (Art. 111(4) as amended). Neither prohibition applies to this system (section 3). | [AI Act Explorer][aiact-omnibus], [Commission][ec-fw] |
 | 2 Dec 2027 | High-risk obligations for Annex III systems (was 2 Aug 2026) | [Commission][ec-fw], [AI Act Explorer][aiact-omnibus] |
 | 2 Aug 2028 | High-risk obligations for Annex I systems (safety components of regulated products) | [Commission][ec-fw], [AI Act Explorer][aiact-omnibus] |
 
 **Postponements.** The Omnibus that moved the high-risk dates is *adopted and in force*.
 I found no further pending postponement on the date checked.
 
-The Omnibus also amended Art. 4. Providers and deployers still have to "take measures
-to support the development of AI literacy" of their staff, and the Commission and
-Member States support them ([AI Act Explorer][aiact-omnibus]).
+The Omnibus also replaced Art. 4 (AI literacy) and softened it: the duty to ensure "a
+sufficient level of AI literacy" became a duty to "support the development" of it
+(section 7).
 
 **What was not read directly.** The EUR-Lex page of 2026/1744 did not render for the
 tool I used. The article texts quoted above come from the AI Act Explorer copy of the
@@ -64,13 +64,21 @@ The prohibited practices are:
 - emotion recognition at work or in education;
 - biometric categorisation by sensitive traits;
 - real-time remote biometric identification for law enforcement;
-- from 2 Dec 2026, generating non-consensual intimate content or CSAM.
+- from 2 Dec 2026 (added by the Omnibus):
+  - (ba) generating or manipulating realistic images, video, audio or similar material
+    of an identifiable person's intimate parts or sexual activity without their consent;
+  - (bb) generating or manipulating child sexual abuse material.
 
 None applies. The system:
 - reads purchase orders;
 - does not process biometric data;
 - does not profile, score or influence people;
 - generates only short business explanations for staff.
+
+**The two 2 Dec 2026 prohibitions.** Both target systems that generate or manipulate
+images, video, audio or similar material. This system generates no media at all: its
+only generated output is structured PO data and short text explanations for internal
+reviewers, from prompts about purchase orders. Neither (ba) nor (bb) applies.
 
 ## 4. High-risk (Art. 6, Annex I and III): not high-risk
 
@@ -141,19 +149,35 @@ system crossed one of these lines:
   PDF" is a small open item (risk R-09 in [risk-register.md](risk-register.md)).
 
 ## 7. AI literacy (Art. 4)
-Applies since 2 Feb 2025 and is amended by the Omnibus (section 1). What exists:
+Applied since 2 Feb 2025. The Omnibus replaced the whole article (Art. 1(5) of
+Regulation (EU) 2026/1744) and softened the duty ([AI Act Explorer][aiact-omnibus]):
+
+| | Before (2024/1689) | After (2026/1744) |
+|---|---|---|
+| Duty | "take measures to ensure, to their best extent, a sufficient level of AI literacy" | "take measures to support the development of AI literacy" |
+| Level required | A sufficient level | No "specific level of AI literacy of any individual" |
+| Others | - | Commission and Member States support and facilitate (especially SMEs); the Commission publishes practical examples; the Board adopts recommendations |
+
+**What remains for this project as deployer (and provider):**
+- A duty to take measures, not to reach a result. It covers staff and others who
+  operate the AI systems on its behalf, here the reviewers.
+- The measures should fit their technical knowledge, experience and training, the
+  context of use, and the people affected.
+
+What exists:
 - The ADRs explain each model's limits.
 - The model cards ([model-cards/](model-cards/)) and [human-oversight.md](human-oversight.md)
   tell a reviewer what the AI does and does not decide.
 
-A real deployment adds reviewer onboarding on these documents, with a record of who
-completed it.
+A real deployment adds reviewer onboarding on these documents. A record of who completed
+it is no longer implied by a "sufficient level" duty, but it is still the simplest
+evidence that measures were taken.
 
 ## 8. Classification and reasoning
 
 **Classification: not prohibited, not high-risk, Art. 50 not triggered (one point open,
 section 6). Deployer of third-party GPAI models, not a GPAI provider. Art. 4 AI literacy
-applies.** In the common shorthand: a minimal-risk system with limited transparency
+applies, as amended by the Omnibus.** In the common shorthand: a minimal-risk system with limited transparency
 exposure.
 
 Reasoning:
