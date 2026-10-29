@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "boto3>=1.43.115",
+    "boto3>=1.43.118",
     "flask>=3.1.3",
     "gunicorn>=26.2.0",
     "o2c-common",
