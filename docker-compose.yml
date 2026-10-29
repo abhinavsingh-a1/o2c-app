@@ -78,7 +78,7 @@ services:
       KAFKA_NUM_PARTITIONS: 3
 
   s3:
-    image: chrislusf/seaweedfs:4.48
+    image: chrislusf/seaweedfs:4.50
     command: server -dir=/data -s3
     ports:
       - "8333:8333"
@@ -131,7 +131,7 @@ services:
         condition: service_healthy
 
   clickhouse:
-    image: clickhouse/clickhouse-server:26.6
+    image: clickhouse/clickhouse-server:26.10
     environment:
       CLICKHOUSE_DB: default
       CLICKHOUSE_USER: clickhouse
@@ -330,7 +330,7 @@ services:
 
   # --- Observability (ADR-012) ---
   prometheus:
-    image: prom/prometheus:v3.15.0
+    image: prom/prometheus:v3.15.1
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
@@ -343,7 +343,7 @@ services:
 
   kafka-exporter:
     # Consumer lag per group and topic offsets (DLQ). Restarts until Kafka is reachable.
-    image: danielqsj/kafka-exporter:v1.10.0
+    image: danielqsj/kafka-exporter:v1.11.0
     command: ["--kafka.server=kafka:19092"]
     restart: unless-stopped
     depends_on:
