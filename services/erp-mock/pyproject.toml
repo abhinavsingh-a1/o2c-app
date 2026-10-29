@@ -13,7 +13,7 @@ dependencies = [
     "o2c-common",
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.16.0",
-    "sqlalchemy>=2.1.5",
+    "sqlalchemy>=2.1.6",
     "uvicorn>=0.54.0",
 ]
 
