@@ -1,7 +1,7 @@
 # ML image for the Kubeflow pipelines (ml/pipelines): Python 3.12, uv, the workspace with
 # the "ml" dependency group (torch from the CPU-only index), ml/ and the data the steps read.
 # Build: make ml-image   (docker build -f docker/ml.Dockerfile -t o2c-ml:dev .)
-FROM python:3.12-slim
+FROM python:3.15-slim
 COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /bin/uv
 
 ENV UV_HTTP_TIMEOUT=300 \
