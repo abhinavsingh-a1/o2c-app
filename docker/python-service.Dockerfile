@@ -5,7 +5,7 @@
 # (the other services, local Compose and PR builds) /app/models stays empty and the
 # services fall back to MLflow.
 
-FROM ghcr.io/oras-project/oras:v1.3.4@sha256:f7bc056d54d97baa399414ed5048ecc67c3371b750d4bbce1d871827a5758179 AS model
+FROM ghcr.io/oras-project/oras:v1.3.6@sha256:9cfb578be975b762fd898b9d004243d8003aeb807a3e15b2ed212cdd1326c9eb AS model
 ARG MODEL_REF=""
 # Optional registry token as a BuildKit secret: passed to oras on stdin, never stored
 # in a layer or the build cache. Public packages need none.
@@ -21,7 +21,7 @@ RUN --mount=type=secret,id=registry_token,required=false \
       test -n "$(find /models -mindepth 2 -maxdepth 2 -name MLmodel)" || { echo "no MLflow model in $MODEL_REF" >&2; exit 1; }; \
     fi
 
-FROM python:3.12-slim
+FROM python:3.15-slim
 COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /bin/uv
 
 ENV UV_HTTP_TIMEOUT=120 \
