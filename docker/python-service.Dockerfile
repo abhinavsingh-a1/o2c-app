@@ -5,7 +5,7 @@
 # (the other services, local Compose and PR builds) /app/models stays empty and the
 # services fall back to MLflow.
 
-FROM ghcr.io/oras-project/oras:v1.3.4@sha256:f7bc056d54d97baa399414ed5048ecc67c3371b750d4bbce1d871827a5758179 AS model
+FROM ghcr.io/oras-project/oras:v1.4.0@sha256:5fabb4e523de1781443c227fca62782a51aeacd044413c07f54dc64935d7f013 AS model
 ARG MODEL_REF=""
 # Optional registry token as a BuildKit secret: passed to oras on stdin, never stored
 # in a layer or the build cache. Public packages need none.
